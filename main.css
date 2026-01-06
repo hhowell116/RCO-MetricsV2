@@ -1,0 +1,595 @@
+
+/* RCO Metrics - Shared Styles & Unified Color Palette */
+
+/* ========================================
+   CSS VARIABLES - Tan Color Scheme
+   ======================================== */
+:root {
+  /* Primary Tan Colors */
+  --tan-light: #d2b48c;
+  --tan-medium: #c4a57b;
+  --tan-dark: #8b7355;
+  --tan-darker: #a0906f;
+  
+  /* Background Gradients */
+  --bg-gradient-start: #f5f5f0;
+  --bg-gradient-end: #e8e4d9;
+  
+  /* Card Backgrounds */
+  --card-bg-start: #ffffff;
+  --card-bg-end: #faf8f5;
+  
+  /* Header Backgrounds */
+  --header-bg-start: #ffffff;
+  --header-bg-end: #f5f0e8;
+  
+  /* Medal Colors */
+  --gold: #ffd700;
+  --silver: #c0c0c0;
+  --bronze: #cd7f32;
+  
+  /* Status Colors */
+  --rate-excellent: #5a8c5a;
+  --rate-good: #7ca87c;
+  --rate-warning: #d4a05c;
+  --rate-poor: #c67b7b;
+  
+  /* Neutral Colors */
+  --text-primary: #6b5d4f;
+  --text-secondary: #b8a68f;
+  --border-light: rgba(210, 180, 140, 0.15);
+  --border-medium: rgba(210, 180, 140, 0.3);
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 10px rgba(139, 115, 85, 0.05);
+  --shadow-md: 0 5px 20px rgba(139, 115, 85, 0.1);
+  --shadow-lg: 0 10px 30px rgba(139, 115, 85, 0.15);
+  --shadow-xl: 0 15px 40px rgba(139, 115, 85, 0.2);
+}
+
+/* ========================================
+   GLOBAL RESETS
+   ======================================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ========================================
+   MAIN NAVIGATION
+   ======================================== */
+.main-nav {
+  background: linear-gradient(135deg, var(--card-bg-start) 0%, var(--card-bg-end) 100%);
+  padding: 20px 30px;
+  box-shadow: var(--shadow-lg);
+  border-bottom: 3px solid var(--tan-light);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-brand h1 {
+  color: var(--tan-dark);
+  font-size: 1.8em;
+  margin-bottom: 5px;
+}
+
+.nav-brand p {
+  color: var(--text-secondary);
+  font-size: 0.9em;
+  margin-bottom: 15px;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.nav-tab {
+  background: white;
+  color: var(--tan-dark);
+  border: 2px solid var(--tan-light);
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.nav-tab:hover {
+  background: var(--card-bg-end);
+  border-color: var(--tan-medium);
+  transform: translateY(-2px);
+}
+
+.nav-tab.active {
+  background: linear-gradient(135deg, var(--tan-light) 0%, var(--tan-medium) 100%);
+  color: white;
+  border-color: var(--tan-medium);
+  box-shadow: var(--shadow-md);
+}
+
+/* ========================================
+   CONTAINER
+   ======================================== */
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 25px;
+}
+
+/* ========================================
+   TYPOGRAPHY
+   ======================================== */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--tan-dark);
+  font-weight: 600;
+}
+
+h1 {
+  font-size: 2.5em;
+  letter-spacing: -0.5px;
+}
+
+h2 {
+  font-size: 2em;
+}
+
+h3 {
+  font-size: 1.5em;
+}
+
+p {
+  line-height: 1.6;
+}
+
+/* ========================================
+   BUTTONS
+   ======================================== */
+.btn-primary {
+  background: linear-gradient(135deg, var(--tan-light) 0%, var(--tan-medium) 100%);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(210, 180, 140, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(210, 180, 140, 0.4);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  background: white;
+  color: var(--tan-dark);
+  border: 2px solid var(--tan-light);
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--card-bg-end);
+  border-color: var(--tan-medium);
+}
+
+.btn-secondary.active {
+  background: var(--tan-light);
+  color: white;
+  border-color: var(--tan-medium);
+}
+
+/* ========================================
+   CARDS
+   ======================================== */
+.card {
+  background: linear-gradient(135deg, var(--card-bg-start) 0%, var(--card-bg-end) 100%);
+  border-radius: 15px;
+  padding: 25px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.card-header {
+  background: linear-gradient(135deg, var(--tan-dark) 0%, var(--tan-darker) 100%);
+  color: white;
+  padding: 20px;
+  border-radius: 10px 10px 0 0;
+  font-weight: 700;
+  text-align: center;
+  font-size: 1.2em;
+}
+
+/* ========================================
+   STAT CARDS
+   ======================================== */
+.stat-card {
+  background: linear-gradient(135deg, var(--card-bg-start) 0%, var(--card-bg-end) 100%);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  transition: transform 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-label {
+  color: var(--tan-darker);
+  font-size: 0.9em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.stat-value {
+  color: var(--tan-dark);
+  font-size: 2.5em;
+  font-weight: 700;
+}
+
+.stat-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.85em;
+  margin-top: 8px;
+}
+
+/* ========================================
+   INPUTS & SELECTS
+   ======================================== */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+select {
+  background: white;
+  border: 2px solid var(--tan-light);
+  border-radius: 10px;
+  padding: 12px 20px;
+  font-size: 1em;
+  color: var(--tan-dark);
+  transition: all 0.3s ease;
+}
+
+input:focus,
+select:focus {
+  outline: none;
+  border-color: var(--tan-medium);
+  box-shadow: 0 0 0 3px rgba(210, 180, 140, 0.2);
+}
+
+input:hover,
+select:hover {
+  border-color: var(--tan-darker);
+}
+
+select {
+  cursor: pointer;
+}
+
+/* ========================================
+   TABLES
+   ======================================== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: linear-gradient(135deg, var(--tan-dark) 0%, var(--tan-darker) 100%);
+  color: white;
+}
+
+th {
+  padding: 18px 15px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.9em;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+td {
+  padding: 15px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-primary);
+}
+
+tbody tr {
+  transition: background 0.2s ease;
+}
+
+tbody tr:hover {
+  background: var(--card-bg-end);
+}
+
+/* Table Rate Classes */
+.rate-excellent {
+  color: var(--rate-excellent);
+  font-weight: 600;
+}
+
+.rate-good {
+  color: var(--rate-good);
+  font-weight: 600;
+}
+
+.rate-warning {
+  color: var(--rate-warning);
+  font-weight: 600;
+}
+
+.rate-poor {
+  color: var(--rate-poor);
+  font-weight: 600;
+}
+
+/* ========================================
+   LOADING & SPINNERS
+   ======================================== */
+.loading {
+  text-align: center;
+  padding: 50px;
+  color: var(--tan-dark);
+}
+
+.spinner {
+  border: 4px solid rgba(210, 180, 140, 0.3);
+  border-top: 4px solid var(--tan-light);
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading::after {
+  content: '...';
+  animation: dots 1.5s steps(4, end) infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: '.'; }
+  40% { content: '..'; }
+  60%, 100% { content: '...'; }
+}
+
+/* ========================================
+   MODALS
+   ======================================== */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: linear-gradient(135deg, var(--card-bg-start) 0%, var(--card-bg-end) 100%);
+  border-radius: 15px;
+  padding: 40px;
+  max-width: 600px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  border: 2px solid var(--border-medium);
+}
+
+.close-modal {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  font-size: 2em;
+  cursor: pointer;
+  color: var(--tan-darker);
+  transition: color 0.3s ease;
+}
+
+.close-modal:hover {
+  color: var(--tan-dark);
+}
+
+/* ===== IFRAME WRAPPERS ===== */
+.iframe-wrapper {
+  display: none;
+  width: 100%;
+  height: calc(100vh - 140px);
+}
+
+.iframe-wrapper.active {
+  display: block;
+}
+
+.iframe-wrapper iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ========================================
+   RESPONSIVE UTILITIES
+   ======================================== */
+@media (max-width: 768px) {
+  .main-nav {
+    padding: 15px 20px;
+  }
+
+  .nav-brand h1 {
+    font-size: 1.4em;
+  }
+
+  .nav-tab {
+    padding: 10px 18px;
+    font-size: 0.9em;
+  }
+
+  h1 {
+    font-size: 1.8em;
+  }
+  
+  h2 {
+    font-size: 1.5em;
+  }
+  
+  .card {
+    padding: 15px;
+  }
+  
+  .stat-value {
+    font-size: 2em;
+  }
+  
+  .modal-content {
+    padding: 25px;
+  }
+
+  .container {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.5em;
+  }
+  
+  h2 {
+    font-size: 1.2em;
+  }
+  
+  .stat-value {
+    font-size: 1.8em;
+  }
+
+  .nav-tabs {
+    flex-direction: column;
+  }
+
+  .nav-tab {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+.text-center {
+  text-align: center;
+}
+
+.text-secondary {
+  color: var(--text-secondary);
+}
+
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 2rem; }
+
+.p-1 { padding: 0.5rem; }
+.p-2 { padding: 1rem; }
+.p-3 { padding: 1.5rem; }
+.p-4 { padding: 2rem; }
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.pulse {
+  animation: pulse 0.5s ease-in-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-right {
+  animation: slideInRight 0.5s ease-out;
+}

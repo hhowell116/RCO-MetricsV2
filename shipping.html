@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Daily ShipStation Leaderboard</title>
+  <style>
+
+    /* =========================================
+   HIDE DASHBOARD SCROLLBARS (VISUAL ONLY)
+========================================= */
+
+/* Chrome, Edge, Safari */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* Firefox */
+html, body {
+  scrollbar-width: none;
+}
+
+    :root{
+      --header-grad: linear-gradient(90deg, #8b7355, #a0906f);
+      --bg-start:#f5f5f0;
+      --bg-end:#e8e4d9;
+      --tan-light:#d2b48c;
+      --tan-dark:#8b7355;
+      --first-place: linear-gradient(135deg, #c4a57b 0%, #b8a68f 100%);
+      --second-place: linear-gradient(135deg, #d2b48c 0%, #c4a57b 100%);
+      --third-place: linear-gradient(135deg, #e8dcc8 0%, #d2b48c 100%);
+      --row-light:#f8f9fa;
+      --row-dark:#eef1f3;
+      --card-bg: rgba(255,255,255,0.98);
+    }
+    html,body{height:100%;margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,var(--bg-start),var(--bg-end));color:#111;}
+.wrap {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 20px 45px 45px;
+  box-sizing: border-box;   /* ✅ THIS is the key */
+}
+
+
+    
+  .header{
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 18px 22px;     /* ✅ MATCHES others */
+  border-radius: 15px;    /* ✅ MATCHES others */
+  background: #ffffff;
+  box-shadow: 0 10px 40px rgba(139,115,85,0.15);
+  color: #8b7355;
+  border: 1px solid rgba(210,180,140,0.3);
+}
+
+
+
+    }
+    .header-center{
+  text-align: center;
+  max-width: 900px;
+  margin: 0 auto;          /* ✅ hard center */
+  pointer-events: none;    /* prevents accidental interaction */
+}
+
+    .title{
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-size: 1.8em;   /* ✅ same as Fulfillment */
+  margin: 0;
+  padding: 0;
+}
+
+
+.meta{
+  font-size: 1em;         /* ✅ same scale */
+  color: #b8a68f;
+  margin-top: 6px;
+  font-weight: 600;
+  text-align: center;
+}
+
+
+
+
+
+    .boards{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;margin-top:22px}
+    .card{
+      background:var(--card-bg);
+      border-radius:10px;
+      overflow:hidden;
+      box-shadow:0 10px 30px rgba(139,115,85,0.15);
+      display:flex;
+      flex-direction:column;
+      height:calc(100vh - 220px);
+      min-height:700px;
+      border:1px solid rgba(210,180,140,0.2);
+    }
+    .card-head{padding:18px 14px;color:#fff;font-weight:700;text-align:center;font-size:22px;background:var(--tan-light);}
+    .card-body{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0;background:#faf8f5}
+    
+    .table-container{display:flex;flex-direction:column;height:100%;overflow:hidden}
+    
+    .header-table{width:100%;border-collapse:collapse;flex-shrink:0;table-layout:fixed}
+    .header-table thead th{
+      padding:10px 4px;
+      text-align:center;
+      font-weight:700;
+      color:white;
+      background:var(--tan-dark);
+      font-size:clamp(9.5px, 1.05vw, 13.5px);
+      white-space:nowrap;
+      box-sizing:border-box;
+      line-height:1.2;
+    }
+    
+    .header-table thead th.col-avg{
+      white-space:normal;
+      line-height:1.1;
+      padding:8px 2px;
+    }
+    
+    .scroll-wrapper{
+      flex:1;
+      position:relative;
+      overflow:hidden;
+    }
+    
+    .scroll-content{
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      will-change:transform;
+    }
+    
+    .body-table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+    }
+    
+    .body-table tbody tr{
+      display:table;
+      width:100%;
+      table-layout:fixed;
+    }
+    
+    .body-table td{
+      padding:10px 4px;
+      text-align:center;
+      border-bottom:1px solid rgba(210,180,140,0.1);
+      vertical-align:middle;
+      font-size:clamp(11px, 1.2vw, 15px);
+      color:#6b5d4f;
+      box-sizing:border-box;
+      overflow-wrap:break-word;
+    }
+    
+    .medal-gold, .medal-silver, .medal-bronze{
+      font-weight:700;
+      position:relative;
+    }
+    
+    .medal-gold td{
+      background:transparent;
+      color:#6b5d4f;
+      border-top:none;
+      border-bottom:3px solid #8b7355;
+      border-left:none;
+      border-right:none;
+    }
+    
+    .medal-silver td{
+      background:transparent;
+      color:#6b5d4f;
+      border-top:none;
+      border-bottom:3px solid #c4a57b;
+      border-left:none;
+      border-right:none;
+    }
+    
+    .medal-bronze td{
+      background:transparent;
+      color:#6b5d4f;
+      border-top:none;
+      border-bottom:3px solid #e8dcc8;
+      border-left:none;
+      border-right:none;
+    }
+    
+    .col-rank{font-size:clamp(13px, 1.4vw, 17px);font-weight:700;width:10%}
+    .col-employee{
+      text-align:center;
+      padding-left:4px;
+      padding-right:4px;
+      font-size:clamp(11px, 1.2vw, 15px);
+      font-weight:600;
+      white-space:normal;
+      word-wrap:break-word;
+      width:32%;
+      line-height:1.3;
+    }
+    .col-prod{font-size:clamp(11px, 1.2vw, 15px);font-weight:600;width:19%}
+    .col-orders{font-size:clamp(11px, 1.2vw, 15px);font-weight:600;width:17%}
+    .col-avg{font-size:clamp(10px, 1.1vw, 13px);font-weight:600;width:22%}
+
+    .body-table tbody tr:nth-child(odd) td{background:#ffffff}
+    .body-table tbody tr:nth-child(even) td{background:#faf8f5}
+
+    .empty{color:#b8a68f;padding:20px;text-align:center;font-style:italic}
+
+    @media (max-width:1100px){
+      .boards{grid-template-columns:1fr;}
+      .card{height:600px;margin-bottom:15px}
+      .col-employee{width:auto}
+    }
+    
+    @media (max-width:768px){
+      body{padding:10px;}
+      .wrap{padding:10px;margin:10px auto;}
+      
+      .header{padding:20px;gap:10px;}
+      .title{font-size:24px;letter-spacing:0.5px}
+      .meta{font-size:16px;}
+      
+      .boards{gap:12px;margin-top:12px}
+      .card{height:500px;}
+      .card-head{padding:10px;font-size:14px;}
+      
+      .header-table thead th{padding:8px 4px;font-size:11px}
+      .body-table td{padding:8px 4px;font-size:11px}
+      
+      .col-rank{width:45px;font-size:11px}
+      .col-employee{font-size:11px;padding-left:6px;padding-right:6px;white-space:normal;word-break:break-word}
+      .col-prod{width:17%;font-size:10px}
+      .col-orders{width:17%;font-size:10px}
+      .col-avg{width:16%;font-size:10px}
+    }
+    
+    @media (max-width:480px){
+      .title{font-size:20px;}
+      .meta{font-size:14px;}
+      
+      .card{height:450px;}
+      .card-head{font-size:12px;padding:8px;}
+      
+      .header-table thead th{padding:6px 3px;font-size:10px}
+      .body-table td{padding:6px 3px;font-size:10px}
+      
+      .col-rank{width:40px;font-size:10px}
+      .col-employee{font-size:10px;padding-left:4px;padding-right:4px}
+      .col-prod{width:17%;font-size:9px}
+      .col-orders{width:17%;font-size:9px}
+      .col-avg{width:16%;font-size:9px}
+    }
+
+    .notice{grid-column:1/-1;padding:12px;border-radius:8px;background:rgba(210,180,140,0.1);color:#8b7355;text-align:center}
+    
+    .tv-view-btn{
+      background:linear-gradient(135deg,#d2b48c 0%,#c4a57b 100%);
+      color:white;
+      border:none;
+      padding:10px 16px;
+      border-radius:8px;
+      font-weight:600;
+      cursor:pointer;
+      transition:all 0.3s ease;
+      box-shadow:0 3px 10px rgba(139,115,85,0.2);
+      font-size:0.75em;
+      white-space:nowrap;
+    }
+    
+    .tv-view-btn:hover{
+      transform:translateY(-2px);
+      box-shadow:0 5px 15px rgba(139,115,85,0.3);
+    }
+
+    /* Fullscreen icon button — MATCHES ORDERS DASHBOARD */
+.fullscreen-btn {
+  position: absolute;      /* ✅ THIS is the key */
+  top: 12px;
+  right: 12px;
+
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #d2b48c 0%, #c4a57b 100%);
+  border: 2px solid rgba(139,115,85,0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(139,115,85,0.25);
+  z-index: 10;
+}
+/* Fullscreen button hover — matches Orders dashboard */
+.fullscreen-btn:hover {
+  background: #ffffff;
+  border-color: #c4a57b;
+  box-shadow: 0 4px 12px rgba(210,180,140,0.35);
+}
+
+/* Keep icon visible on white */
+.fullscreen-btn:hover .fullscreen-icon::before,
+.fullscreen-btn:hover .fullscreen-icon::after {
+  border-color: #8b7355;
+}
+
+.fullscreen-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(139,115,85,0.3);
+}
+
+/* ICON */
+.fullscreen-icon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  transition: transform 0.25s ease;
+}
+
+/* TOP-LEFT ARROW */
+.fullscreen-icon::before,
+.fullscreen-icon::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #fff;
+}
+
+/* ↖ arrow */
+.fullscreen-icon::before {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+
+/* ↘ arrow */
+.fullscreen-icon::after {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+
+/* EXIT FULLSCREEN = INVERT ARROWS */
+.fullscreen-btn.exit .fullscreen-icon {
+  transform: rotate(180deg);
+}
+
+    
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header" role="banner">
+  <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Toggle Fullscreen">
+    <div class="fullscreen-icon"></div>
+  </button>
+
+  <div class="header-center">
+    <div class="title">Today's Shipping Leaderboard</div>
+    <div id="weekRange" class="meta">Week: loading…</div>
+  </div>
+</div>
+
+
+    <div id="boards" class="boards" aria-live="polite" style="margin-top:18px">
+      <div class="notice">Loading data...</div>
+    </div>
+  </div>
+  
+  <div id="debug" style="display:none"></div>
+
+<script>
+(async function(){
+  const SHEET_ID = '1-S1OU7nw_085IXVbfiOY5qDPuRcPx2RqQJg8pnOqU9I';
+  const GID = '165470098';
+  const CSV_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${GID}`;
+
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'TV_VIEW_STATE') {
+    document.body.classList.toggle('tv-view-active', event.data.active);
+  }
+});
+
+  
+  const debugEl = document.getElementById('debug');
+  function log(msg, isError = false){
+    console.log(msg);
+    if(debugEl){
+      debugEl.classList.add('show');
+      debugEl.innerHTML += `<div style="color:${isError?'#f00':'#0f0'}">${new Date().toLocaleTimeString()}: ${msg}</div>`;
+    }
+  }
+
+  log(`Starting load from: ${CSV_URL}`);
+
+  function parseCSV(text){
+    const rows = [];
+    const lines = text.replace(/\r\n/g,'\n').split('\n');
+    for(const line of lines){
+      const row = [];
+      let cur = '';
+      let inQuotes = false;
+      for(let i=0;i<line.length;i++){
+        const ch = line[i];
+        if(ch === '"' ){
+          if(inQuotes && line[i+1] === '"'){ cur += '"'; i++; continue; }
+          inQuotes = !inQuotes;
+          continue;
+        }
+        if(ch === ',' && !inQuotes){
+          row.push(cur);
+          cur = '';
+          continue;
+        }
+        cur += ch;
+      }
+      row.push(cur);
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  async function fetchCSV(){
+    log('Fetching CSV...');
+    const res = await fetch(CSV_URL);
+    log(`Fetch response status: ${res.status}`);
+    if(!res.ok) throw new Error('Failed to load sheet — make sure it is published. Status: '+res.status);
+    const txt = await res.text();
+    log(`Received ${txt.length} characters`);
+    return parseCSV(txt);
+  }
+
+  function findMeta(grid){
+    for(let r=0;r<8 && r<grid.length;r++){
+      const text = (grid[r] || []).join(' ').trim();
+      if(!text) continue;
+      if(/week[:\s]/i.test(text) || /\b(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(text)){
+        return {row:r, text};
+      }
+    }
+    return null;
+  }
+
+  function findRankHeaders(grid){
+    const headers = [];
+    for(let r=0;r<12 && r<grid.length;r++){
+      for(let c=0;c<(grid[r]||[]).length;c++){
+        const cell = ((grid[r]||[])[c]||'').toString().trim().toLowerCase();
+        if(cell === 'rank') headers.push({row:r,col:c});
+      }
+    }
+    return headers;
+  }
+
+  function extractBlock(grid, header){
+    const out = [];
+    const start = header.row + 1;
+    const col = header.col;
+    let empties = 0;
+    for(let r=start;r<grid.length;r++){
+      const row = grid[r] || [];
+      const rank = (row[col] || '').toString().trim();
+      const employee = (row[col+1] || '').toString().trim();
+      const products = (row[col+2] || '').toString().trim();
+      const orders = (row[col+3] || '').toString().trim();
+      const avg = (row[col+4] || '').toString().trim();
+      if(!rank && !employee && !products && !orders && !avg){ 
+        empties++; 
+        if(empties>=3) break; 
+        else continue; 
+      }
+      if(employee && (products || orders)) {
+        out.push({rank, employee, products, orders, avg});
+      }
+    }
+    return out;
+  }
+
+  function nice(x){ 
+    if(!x) return ''; 
+    const n = Number(x.toString().replace(/[,]/g,'')); 
+    return Number.isFinite(n) ? n.toLocaleString() : x; 
+  }
+
+  function buildCard(title,color,rows){
+    const head = `<div class="card-head" style="background:${color}">${title.toUpperCase()}</div>`;
+    
+    const validRows = rows.filter(r => {
+      const hasEmployee = r.employee && r.employee.trim() !== '';
+      const hasOrders = r.orders && r.orders !== '0' && r.orders.trim() !== '';
+      const hasProducts = r.products && r.products !== '0' && r.products.trim() !== '';
+      return hasEmployee && (hasOrders || hasProducts);
+    });
+    
+    if(!validRows || validRows.length === 0) {
+      return `<div class="card" style="display:none;" data-category="${title}"></div>`;
+    }
+    
+    const rowsHtml = validRows.map((r,idx)=>{
+      const cls = idx===0? 'medal-gold' : idx===1? 'medal-silver' : idx===2? 'medal-bronze' : '';
+      const displayRank = (idx + 1).toString();
+      const fullName = (r.employee || '').trim();
+      let employeeName = fullName;
+      if(fullName.length > 15) {
+        const nameParts = fullName.split(/\s+/);
+        if(nameParts.length >= 2) {
+          const firstName = nameParts.slice(0, -1).join(' ');
+          const lastName = nameParts[nameParts.length - 1];
+          employeeName = `${firstName}<br>${lastName}`;
+        }
+      }
+      return `<tr class="${cls}"><td class="col-rank">${displayRank}</td><td class="col-employee">${employeeName}</td><td class="col-prod">${nice(r.products)}</td><td class="col-orders">${nice(r.orders)}</td><td class="col-avg">${r.avg||''}</td></tr>`;
+    }).join('');
+    
+    return `
+      <div class="card" data-category="${title}">
+        ${head}
+        <div class="card-body">
+          <div class="table-container">
+            <table class="header-table">
+              <thead>
+                <tr>
+                  <th class="col-rank">Rank</th>
+                  <th class="col-employee">Employee</th>
+                  <th class="col-prod">Products</th>
+                  <th class="col-orders">Orders</th>
+                  <th class="col-avg">Avg<br>Item/Order</th>
+                </tr>
+              </thead>
+            </table>
+            <div class="scroll-wrapper">
+              <div class="scroll-content">
+                <table class="body-table">
+                  <tbody>${rowsHtml}</tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  try{
+    const raw = await fetchCSV();
+    log(`Parsed ${raw.length} rows`);
+    
+    const meta = findMeta(raw);
+    if(meta) {
+      document.getElementById('weekRange').textContent = meta.text.replace(/\s{2,}/g,' ').trim();
+      log(`Found meta: ${meta.text}`);
+    }
+
+    const headers = findRankHeaders(raw);
+    log(`Found ${headers.length} rank headers at: ${JSON.stringify(headers)}`);
+    
+    let chosen = headers.slice(0,3);
+    if(chosen.length < 3){
+      log('Using fallback header positions');
+      const fallback = [{row:3,col:1},{row:3,col:7},{row:3,col:13}];
+      chosen = fallback.slice(0,3);
+    }
+
+    chosen.sort((a,b)=>a.col - b.col);
+
+    const cats = ['Full-time','Part-Time','Wholesale'];
+    const cols = {'Full-time':'var(--tan-light)','Part-Time':'var(--tan-light)','Wholesale':'var(--tan-light)'};
+    const boards = document.getElementById('boards');
+    boards.innerHTML = '';
+
+    for(let i=0;i<3;i++){
+      const h = chosen[i];
+      const rows = h ? extractBlock(raw,h) : [];
+      log(`${cats[i]}: extracted ${rows.length} rows from col ${h.col}`);
+      boards.insertAdjacentHTML('beforeend', buildCard(cats[i], cols[cats[i]], rows));
+    }
+    
+    const visibleCards = boards.querySelectorAll('.card:not([style*="display:none"])');
+    log(`Visible cards: ${visibleCards.length}`);
+    if(visibleCards.length === 2) {
+      boards.style.gridTemplateColumns = 'repeat(2, 1fr)';
+    } else if(visibleCards.length === 1) {
+      boards.style.gridTemplateColumns = '1fr';
+      visibleCards[0].style.maxWidth = '800px';
+      visibleCards[0].style.margin = '0 auto';
+    }
+
+    function startAutoScrollWhenReady() {
+  let startedAny = false;
+
+  document.querySelectorAll('.scroll-wrapper').forEach(wrapper => {
+    if (wrapper.dataset.started) return;
+
+    const scrollContent = wrapper.querySelector('.scroll-content');
+    if (!scrollContent) return;
+
+    const wrapperHeight = wrapper.getBoundingClientRect().height;
+    const contentHeight = scrollContent.getBoundingClientRect().height;
+
+    if (wrapperHeight === 0 || contentHeight === 0) return;
+    if (contentHeight <= wrapperHeight) return;
+
+    wrapper.dataset.started = 'true';
+    startedAny = true;
+
+    let position = 0;
+    let direction = 1;
+    const scrollSpeed = 30;
+    const maxScroll = contentHeight - wrapperHeight;
+    const pauseDuration = 2500;
+    let lastTime = performance.now();
+    let isPaused = false;
+    let pauseStartTime = 0;
+
+    function animate(currentTime) {
+      if (isPaused) {
+        if (currentTime - pauseStartTime >= pauseDuration) {
+          isPaused = false;
+          lastTime = currentTime;
+        } else {
+          requestAnimationFrame(animate);
+          return;
+        }
+      }
+
+      const deltaTime = (currentTime - lastTime) / 1000;
+      lastTime = currentTime;
+
+      position += scrollSpeed * deltaTime * direction;
+
+      if (direction === 1 && position >= maxScroll) {
+        position = maxScroll;
+        direction = -1;
+        isPaused = true;
+        pauseStartTime = currentTime;
+      } else if (direction === -1 && position <= 0) {
+        position = 0;
+        direction = 1;
+        isPaused = true;
+        pauseStartTime = currentTime;
+      }
+
+      scrollContent.style.transform = `translateY(-${position}px)`;
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  });
+
+  // Keep retrying until at least one scroll starts
+  if (!startedAny) {
+    requestAnimationFrame(startAutoScrollWhenReady);
+  }
+}
+
+    log('✓ Dashboard loaded successfully!');
+    requestAnimationFrame(startAutoScrollWhenReady);
+
+
+  } catch(err){
+    log(`ERROR: ${err.message}`, true);
+    console.error(err);
+    document.getElementById('boards').innerHTML = `<div class="notice">⚠️ Error loading data: ${err.message}<br><br>Make sure the Google Sheet is published to web</div>`;
+  }
+})();
+
+// Fullscreen icon toggle
+const fullscreenBtn = document.getElementById('fullscreenBtn');
+
+fullscreenBtn.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+document.addEventListener('fullscreenchange', () => {
+  if (document.fullscreenElement) {
+    fullscreenBtn.classList.add('exit');
+  } else {
+    fullscreenBtn.classList.remove('exit');
+  }
+});
+
+</script>
+</body>
+</html>
