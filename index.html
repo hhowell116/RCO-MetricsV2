@@ -659,6 +659,12 @@ async function updateOrderCount() {
 updateOrderCount();
 setInterval(updateOrderCount, 600000);
 </script>
+<!-- Firebase Authentication Check -->
+<script type="module" src="auth-check.js"></script>
 
+<!-- Optional: Add Sign Out Button to your UI -->
+<button onclick="signOutUser()" style="position: fixed; top: 16px; right: 16px; z-index: 10000; background: #fff; color: #5f4b3c; border: 2px solid #d7d1ca; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+  Sign Out
+</button>
 </body>
 </html>
