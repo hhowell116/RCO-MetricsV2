@@ -17,19 +17,26 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+let hasCheckedAuth = false;
+
 // Check authentication status
 onAuthStateChanged(auth, (user) => {
+  // Prevent multiple redirects
+  if (hasCheckedAuth) return;
+  hasCheckedAuth = true;
+
   if (!user) {
     // Not signed in, redirect to login page
-    window.location.href = 'login.html';
+    console.log('No user signed in, redirecting to login...');
+    window.location.replace('login.html');
   } else {
-    // User is signed in, show their info if you want
+    // User is signed in
     console.log('Signed in as:', user.email);
     
     // Optional: Display user avatar if you add it to your UI
     const userAvatar = document.getElementById('userAvatar');
-    if (userAvatar) {
-      userAvatar.src = user.photoURL || '';
+    if (userAvatar && user.photoURL) {
+      userAvatar.src = user.photoURL;
     }
   }
 });
@@ -37,8 +44,9 @@ onAuthStateChanged(auth, (user) => {
 // Sign out function (call this from a sign-out button)
 window.signOutUser = async function() {
   try {
+    hasCheckedAuth = false; // Reset flag
     await firebaseSignOut(auth);
-    window.location.href = 'login.html';
+    window.location.replace('login.html');
   } catch (error) {
     console.error('Sign out error:', error);
     alert('Failed to sign out. Please try again.');
