@@ -33,17 +33,24 @@ body {
 }
 
 .login-logo {
-  width: 120px;
-  height: 120px;
-  margin: 0 auto 30px;
+  width: 260px;              /* BIGGER */
+  height: 140px;             /* RECTANGLE */
+  margin: 0 auto 36px;
   background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-  border-radius: 50%;
+  border-radius: 18px;       /* soft rectangle */
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 48px;
+  box-shadow: 0 10px 24px rgba(95, 75, 60, 0.25);
+}
+.login-logo-img {
+  width: 90%;
+  height: 90%;
+  object-fit: contain;
+  display: block;
 }
 
+  
 .login-title {
   font-size: 2.2em;
   font-weight: 700;
@@ -129,11 +136,11 @@ body {
   }
   
   .login-logo {
-    width: 100px;
-    height: 100px;
-    font-size: 40px;
+    width: 220px;
+    height: 120px;
   }
 }
+
 
 @media (max-width: 480px) {
   .login-container {
@@ -141,9 +148,8 @@ body {
   }
   
   .login-logo {
-    width: 90px;
-    height: 90px;
-    font-size: 36px;
+    width: 200px;
+    height: 110px;
   }
   
   .login-title {
@@ -154,6 +160,7 @@ body {
     font-size: 0.9em;
   }
 }
+
 </style>
 </head>
 <body>
