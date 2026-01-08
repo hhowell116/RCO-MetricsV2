@@ -194,11 +194,18 @@ body {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
+  let hasCheckedAuth = false;
+
   // Check if already signed in
   onAuthStateChanged(auth, (user) => {
+    // Prevent multiple redirects
+    if (hasCheckedAuth) return;
+    hasCheckedAuth = true;
+
     if (user) {
       // User is signed in, redirect to main app
-      window.location.href = 'index.html';
+      console.log('User already signed in, redirecting to dashboard...');
+      window.location.replace('index.html');
     }
   });
 
