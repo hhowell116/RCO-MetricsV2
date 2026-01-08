@@ -20,6 +20,8 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
+  /* Ensure this page also uses brand typography */
+  font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* ====== LAYOUT ====== */
@@ -42,7 +44,9 @@ body {
   margin: 0;
   font-size: 2em;
   font-weight: 600;
-  color: #5F4B3C;
+  /* Headings use accent serif per brand guide */
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+  color: var(--tan-dark);
 }
 
 .fulfillment-header {
@@ -69,7 +73,8 @@ body {
   margin: 0;
   font-size: 1.8em;
   font-weight: 600;
-  color: #5F4B3C;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+  color: var(--tan-dark);
 }
 
 .header-left,
@@ -117,15 +122,17 @@ body::-webkit-scrollbar {
   background: white;
   border-radius: 15px;
   padding: 20px;
-  box-shadow: 0 5px 20px rgba(95, 75, 60, 0.1);
+  box-shadow: 0 5px 20px rgba(0,0,0,0.06);
+  border: 1px solid var(--border-light);
 }
 
 .month-header {
-  color: #5F4B3C;
+  color: var(--tan-dark);
   font-size: 1.2em;
   font-weight: 600;
   margin-bottom: 15px;
   text-align: center;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
 }
 
 .calendar-days {
@@ -137,7 +144,7 @@ body::-webkit-scrollbar {
 .day-label {
   text-align: center;
   font-size: 0.75em;
-  color: #8D8173;
+  color: var(--text-secondary);
   font-weight: 600;
   padding: 6px 2px;
 }
@@ -178,25 +185,25 @@ body::-webkit-scrollbar {
   font-weight: 600;
 }
 
-/* ===== Rate colors - Using Supporting Tones ===== */
+/* ===== Rate colors ===== */
 .cal-rate-excellent {
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
-  color: #4D4933;
+  color: #2e7d32;
 }
 
 .cal-rate-good {
   background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
-  color: #5a8c5a;
+  color: #558b2f;
 }
 
 .cal-rate-warning {
   background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
-  color: #B08979;
+  color: #e65100;
 }
 
 .cal-rate-poor {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
-  color: #492426;
+  color: #c62828;
 }
 
 .cal-rate-none {
@@ -207,8 +214,8 @@ body::-webkit-scrollbar {
 /* ===== Tooltip ===== */
 .tooltip {
   position: fixed;
-  background: linear-gradient(135deg, #393D46 0%, #25282A 100%);
-  color: #D7D1CA;
+  background: linear-gradient(135deg, var(--tan-dark) 0%, var(--tan-darker) 100%);
+  color: var(--rco-cream);
   padding: 14px 16px;
   border-radius: 10px;
   font-size: 0.8em;
@@ -218,7 +225,7 @@ body::-webkit-scrollbar {
   display: none;
   max-width: 260px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
-  border: 1px solid rgba(189, 153, 121, 0.25);
+  border: 1px solid rgba(141, 129, 115, 0.25);
 }
 
 .tooltip.show {
@@ -230,31 +237,31 @@ body::-webkit-scrollbar {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #BD9979 0%, #AB9071 100%);
+  background: linear-gradient(135deg, var(--tan-light) 0%, var(--tan-medium) 100%);
   border: 2px solid rgba(95, 75, 60, 0.35);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  box-shadow: 0 3px 8px rgba(95, 75, 60, 0.25);
+  box-shadow: 0 3px 8px rgba(95, 75, 60, 0.22);
   flex-shrink: 0;
 }
 
 .fullscreen-btn:hover {
   background: #ffffff;
-  border-color: #AB9071;
-  box-shadow: 0 4px 12px rgba(189, 153, 121, 0.35);
+  border-color: var(--tan-medium);
+  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.22);
 }
 
 .fullscreen-btn:hover .fullscreen-icon::before,
 .fullscreen-btn:hover .fullscreen-icon::after {
-  border-color: #5F4B3C;
+  border-color: var(--tan-dark);
 }
 
 .fullscreen-btn:active {
   transform: scale(0.96);
-  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.3);
+  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.26);
 }
 
 /* ICON */
@@ -322,8 +329,9 @@ body::-webkit-scrollbar {
   background: white;
   padding: 24px;
   border-radius: 15px;
-  box-shadow: 0 5px 20px rgba(95, 75, 60, 0.1);
+  box-shadow: var(--shadow-md);
   margin-bottom: 20px;
+  border: 1px solid var(--border-light);
 }
 
 .chart-wrapper {
@@ -333,13 +341,13 @@ body::-webkit-scrollbar {
 
 /* FORCE Year/Month selects to display text */
 #yearSelect, #monthSelect {
-  color: #5F4B3C !important;
+  color: var(--tan-dark) !important;
   background: #ffffff !important;
   font-size: 14px !important;
   line-height: 1.2 !important;
   padding: 10px 36px 10px 14px !important;
   min-width: 140px;
-  border: 2px solid #BD9979 !important;
+  border: 2px solid var(--tan-light) !important;
   border-radius: 10px !important;
   appearance: auto;
   -webkit-appearance: menulist;
@@ -359,20 +367,20 @@ button,
 button:hover,
 .btn-secondary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(189, 153, 121, 0.3);
+  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.18);
 }
 
 button:active,
 .btn-secondary:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(189, 153, 121, 0.25);
+  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.18);
 }
 
 .btn-secondary.active {
-  background: linear-gradient(135deg, #BD9979 0%, #AB9071 100%);
+  background: linear-gradient(135deg, var(--tan-light) 0%, var(--tan-medium) 100%);
   color: #ffffff;
-  border-color: #AB9071;
-  box-shadow: 0 4px 15px rgba(189, 153, 121, 0.35);
+  border-color: var(--tan-medium);
+  box-shadow: 0 4px 15px rgba(95, 75, 60, 0.22);
 }
 
 .kpi-header,
@@ -384,7 +392,7 @@ button:active,
 .kpi-header.card,
 .kpi-header.card:hover {
   background: white !important;
-  box-shadow: 0 10px 40px rgba(95, 75, 60, 0.15) !important;
+  box-shadow: 0 10px 40px rgba(95, 75, 60, 0.14) !important;
   transition: none !important;
 }
 
@@ -669,6 +677,7 @@ button:active,
   }
 }
 </style>
+
 </head>
 
 <body>
