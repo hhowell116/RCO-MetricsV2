@@ -273,42 +273,56 @@ body {
 
   // Sign in with Google
   async function signInWithGoogle() {
-    const provider = new GoogleAuthProvider();
-    const loadingText = document.getElementById('loadingText');
-    const errorMessage = document.getElementById('errorMessage');
-    const signInBtn = document.getElementById('googleSignInBtn');
-    
-    try {
-      signInBtn.disabled = true;
-      loadingText.classList.remove('hidden');
-      errorMessage.classList.add('hidden');
-      
-      const result = await signInWithPopup(auth, provider);
-      
-      // Force immediate redirect after successful sign-in
-      if (result.user) {
-        console.log('Sign in successful, redirecting...');
-        window.location.replace('index.html');
-      }
-      
-    } catch (error) {
-      console.error('Sign in error:', error);
-      
+  const provider = new GoogleAuthProvider();
+
+  // 👇 HINT Google to prefer your Workspace accounts
+  provider.setCustomParameters({
+    hd: "rowecasaorganics.com"
+  });
+
+  const loadingText = document.getElementById('loadingText');
+  const errorMessage = document.getElementById('errorMessage');
+  const signInBtn = document.getElementById('googleSignInBtn');
+
+  try {
+    signInBtn.disabled = true;
+    loadingText.classList.remove('hidden');
+    errorMessage.classList.add('hidden');
+
+    const result = await signInWithPopup(auth, provider);
+
+    const email = result.user?.email?.toLowerCase() || "";
+
+    // 🚫 HARD CHECK — enforce domain
+    if (!email.endsWith("@rowecasaorganics.com")) {
+      await auth.signOut();
+
+      errorMessage.textContent =
+        "Access denied. Please sign in with your @rowecasaorganics.com email.";
+      errorMessage.classList.remove('hidden');
+
       signInBtn.disabled = false;
       loadingText.classList.add('hidden');
-      
-      // Show user-friendly error message
-      let message = 'Failed to sign in. Please try again.';
-      if (error.code === 'auth/popup-closed-by-user') {
-        message = 'Sign in was cancelled. Please try again.';
-      } else if (error.code === 'auth/popup-blocked') {
-        message = 'Pop-up was blocked. Please allow pop-ups for this site.';
-      }
-      
-      errorMessage.textContent = message;
-      errorMessage.classList.remove('hidden');
+      return;
     }
+
+    // ✅ Allowed
+    window.location.replace('index.html');
+
+  } catch (error) {
+    console.error('Sign in error:', error);
+
+    signInBtn.disabled = false;
+    loadingText.classList.add('hidden');
+
+    errorMessage.textContent =
+      error.code === 'auth/popup-closed-by-user'
+        ? 'Sign in was cancelled.'
+        : 'Failed to sign in. Please try again.';
+    errorMessage.classList.remove('hidden');
   }
+}
+
 
   // Event listener
   document.getElementById('googleSignInBtn').addEventListener('click', signInWithGoogle);
