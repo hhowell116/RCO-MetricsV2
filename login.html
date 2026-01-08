@@ -221,8 +221,13 @@ body {
       loadingText.classList.remove('hidden');
       errorMessage.classList.add('hidden');
       
-      await signInWithPopup(auth, provider);
-      // Redirect happens automatically via onAuthStateChanged
+      const result = await signInWithPopup(auth, provider);
+      
+      // Force immediate redirect after successful sign-in
+      if (result.user) {
+        console.log('Sign in successful, redirecting...');
+        window.location.replace('index.html');
+      }
       
     } catch (error) {
       console.error('Sign in error:', error);
