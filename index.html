@@ -47,7 +47,32 @@ body {
   transition: all 0.25s ease;
   box-shadow: 0 4px 12px rgba(95, 75, 60, 0.18);
 }
+.sign-out-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10001;
+  background: white;
+  color: #5f4b3c;
+  border: 2px solid #d7d1ca;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.25s ease;
+}
 
+.sign-out-btn:hover {
+  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
+  color: white;
+  border-color: #bd9979;
+  transform: translateY(-2px);
+}
+
+.main-nav.collapsed .sign-out-btn {
+  display: none;
+}
 .kiosk-btn:hover {
   background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
   color: #ffffff;
@@ -662,7 +687,7 @@ setInterval(updateOrderCount, 600000);
 </script>
 <!-- Firebase Authentication Check -->
 <script type="module" src="auth-check.js"></script>
-
+<button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
 
 </body>
 </html>
