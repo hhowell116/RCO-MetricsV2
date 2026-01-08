@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Daily ShipStation Leaderboard</title>
-  <style>
+<style>
 
     /* =========================================
    HIDE DASHBOARD SCROLLBARS (VISUAL ONLY)
@@ -23,19 +23,44 @@ html, body {
 }
 
     :root{
-      --header-grad: linear-gradient(90deg, #8b7355, #a0906f);
-      --bg-start:#f5f5f0;
-      --bg-end:#e8e4d9;
-      --tan-light:#d2b48c;
-      --tan-dark:#8b7355;
-      --first-place: linear-gradient(135deg, #c4a57b 0%, #b8a68f 100%);
-      --second-place: linear-gradient(135deg, #d2b48c 0%, #c4a57b 100%);
-      --third-place: linear-gradient(135deg, #e8dcc8 0%, #d2b48c 100%);
-      --row-light:#f8f9fa;
-      --row-dark:#eef1f3;
+      /* RCO Brand Palette (from Brand Guide HEX) */
+      --rco-cream:#d7d1ca;
+      --rco-stone:#d6d1c3;
+      --rco-taupe:#8d8173;
+      --rco-brown:#5f4b3c;
+      --rco-charcoal:#25282a;
+
+      --rco-soft-camel:#bd9979;
+      --rco-warm-tan:#ab9071;
+      --rco-olive:#4d4933;
+      --rco-clay:#b08979;
+      --rco-bluegray:#393d46;
+      --rco-plum:#492426;
+      --rco-lightgray:#aaa0a1;
+
+      /* Map existing tokens used throughout this stylesheet */
+      --header-grad: linear-gradient(90deg, var(--rco-brown), var(--rco-taupe));
+      --bg-start:#ffffff;
+      --bg-end:var(--rco-stone);
+      --tan-light:var(--rco-cream);
+      --tan-dark:var(--rco-brown);
+
+      --first-place: linear-gradient(135deg, var(--rco-soft-camel) 0%, var(--rco-taupe) 100%);
+      --second-place: linear-gradient(135deg, var(--rco-cream) 0%, var(--rco-soft-camel) 100%);
+      --third-place: linear-gradient(135deg, #fbfaf8 0%, var(--rco-cream) 100%);
+
+      --row-light:#ffffff;
+      --row-dark:#fbfaf8;
+
       --card-bg: rgba(255,255,255,0.98);
     }
-    html,body{height:100%;margin:0;font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;background:linear-gradient(135deg,var(--bg-start),var(--bg-end));color:#111;}
+    html,body{
+      height:100%;
+      margin:0;
+      font-family:"Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background:linear-gradient(135deg,var(--bg-start),var(--bg-end));
+      color:var(--rco-charcoal);
+    }
 .wrap {
   width: 100%;
   max-width: none;
@@ -54,14 +79,13 @@ html, body {
   padding: 18px 22px;     /* ✅ MATCHES others */
   border-radius: 15px;    /* ✅ MATCHES others */
   background: #ffffff;
-  box-shadow: 0 10px 40px rgba(139,115,85,0.15);
-  color: #8b7355;
-  border: 1px solid rgba(210,180,140,0.3);
+  box-shadow: 0 10px 40px rgba(95,75,60,0.14);
+  color: var(--tan-dark);
+  border: 1px solid rgba(141,129,115,0.30);
 }
 
 
 
-    }
     .header-center{
   text-align: center;
   max-width: 900px;
@@ -75,12 +99,13 @@ html, body {
   font-size: 1.8em;   /* ✅ same as Fulfillment */
   margin: 0;
   padding: 0;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
 }
 
 
 .meta{
   font-size: 1em;         /* ✅ same scale */
-  color: #b8a68f;
+  color: var(--rco-taupe);
   margin-top: 6px;
   font-weight: 600;
   text-align: center;
@@ -95,15 +120,15 @@ html, body {
       background:var(--card-bg);
       border-radius:10px;
       overflow:hidden;
-      box-shadow:0 10px 30px rgba(139,115,85,0.15);
+      box-shadow:0 10px 30px rgba(95,75,60,0.14);
       display:flex;
       flex-direction:column;
       height:calc(100vh - 220px);
       min-height:700px;
-      border:1px solid rgba(210,180,140,0.2);
+      border:1px solid rgba(141,129,115,0.20);
     }
     .card-head{padding:18px 14px;color:#fff;font-weight:700;text-align:center;font-size:22px;background:var(--tan-light);}
-    .card-body{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0;background:#faf8f5}
+    .card-body{flex:1;display:flex;flex-direction:column;overflow:hidden;padding:0;background:#fbfaf8}
     
     .table-container{display:flex;flex-direction:column;height:100%;overflow:hidden}
     
@@ -155,10 +180,10 @@ html, body {
     .body-table td{
       padding:10px 4px;
       text-align:center;
-      border-bottom:1px solid rgba(210,180,140,0.1);
+      border-bottom:1px solid rgba(141,129,115,0.12);
       vertical-align:middle;
       font-size:clamp(11px, 1.2vw, 15px);
-      color:#6b5d4f;
+      color:var(--rco-charcoal);
       box-sizing:border-box;
       overflow-wrap:break-word;
     }
@@ -170,27 +195,27 @@ html, body {
     
     .medal-gold td{
       background:transparent;
-      color:#6b5d4f;
+      color:var(--rco-charcoal);
       border-top:none;
-      border-bottom:3px solid #8b7355;
+      border-bottom:3px solid var(--rco-brown);
       border-left:none;
       border-right:none;
     }
     
     .medal-silver td{
       background:transparent;
-      color:#6b5d4f;
+      color:var(--rco-charcoal);
       border-top:none;
-      border-bottom:3px solid #c4a57b;
+      border-bottom:3px solid var(--rco-soft-camel);
       border-left:none;
       border-right:none;
     }
     
     .medal-bronze td{
       background:transparent;
-      color:#6b5d4f;
+      color:var(--rco-charcoal);
       border-top:none;
-      border-bottom:3px solid #e8dcc8;
+      border-bottom:3px solid #fbfaf8;
       border-left:none;
       border-right:none;
     }
@@ -212,9 +237,9 @@ html, body {
     .col-avg{font-size:clamp(10px, 1.1vw, 13px);font-weight:600;width:22%}
 
     .body-table tbody tr:nth-child(odd) td{background:#ffffff}
-    .body-table tbody tr:nth-child(even) td{background:#faf8f5}
+    .body-table tbody tr:nth-child(even) td{background:#fbfaf8}
 
-    .empty{color:#b8a68f;padding:20px;text-align:center;font-style:italic}
+    .empty{color:var(--rco-taupe);padding:20px;text-align:center;font-style:italic}
 
     @media (max-width:1100px){
       .boards{grid-template-columns:1fr;}
@@ -261,10 +286,10 @@ html, body {
       .col-avg{width:16%;font-size:9px}
     }
 
-    .notice{grid-column:1/-1;padding:12px;border-radius:8px;background:rgba(210,180,140,0.1);color:#8b7355;text-align:center}
+    .notice{grid-column:1/-1;padding:12px;border-radius:8px;background:rgba(215,209,202,0.35);color:var(--tan-dark);text-align:center}
     
     .tv-view-btn{
-      background:linear-gradient(135deg,#d2b48c 0%,#c4a57b 100%);
+      background:linear-gradient(135deg,var(--tan-light) 0%, var(--rco-soft-camel) 100%);
       color:white;
       border:none;
       padding:10px 16px;
@@ -272,14 +297,14 @@ html, body {
       font-weight:600;
       cursor:pointer;
       transition:all 0.3s ease;
-      box-shadow:0 3px 10px rgba(139,115,85,0.2);
+      box-shadow:0 3px 10px rgba(95,75,60,0.18);
       font-size:0.75em;
       white-space:nowrap;
     }
     
     .tv-view-btn:hover{
       transform:translateY(-2px);
-      box-shadow:0 5px 15px rgba(139,115,85,0.3);
+      box-shadow:0 5px 15px rgba(95,75,60,0.26);
     }
 
     /* Fullscreen icon button — MATCHES ORDERS DASHBOARD */
@@ -291,32 +316,32 @@ html, body {
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: linear-gradient(135deg, #d2b48c 0%, #c4a57b 100%);
-  border: 2px solid rgba(139,115,85,0.35);
+  background: linear-gradient(135deg, var(--tan-light) 0%, var(--rco-soft-camel) 100%);
+  border: 2px solid rgba(95,75,60,0.35);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  box-shadow: 0 3px 8px rgba(139,115,85,0.25);
+  box-shadow: 0 3px 8px rgba(95,75,60,0.22);
   z-index: 10;
 }
 /* Fullscreen button hover — matches Orders dashboard */
 .fullscreen-btn:hover {
   background: #ffffff;
-  border-color: #c4a57b;
-  box-shadow: 0 4px 12px rgba(210,180,140,0.35);
+  border-color: var(--rco-soft-camel);
+  box-shadow: 0 4px 12px rgba(95,75,60,0.22);
 }
 
 /* Keep icon visible on white */
 .fullscreen-btn:hover .fullscreen-icon::before,
 .fullscreen-btn:hover .fullscreen-icon::after {
-  border-color: #8b7355;
+  border-color: var(--tan-dark);
 }
 
 .fullscreen-btn:active {
   transform: scale(0.96);
-  box-shadow: 0 2px 6px rgba(139,115,85,0.3);
+  box-shadow: 0 2px 6px rgba(95,75,60,0.26);
 }
 
 /* ICON */
@@ -360,6 +385,7 @@ html, body {
 
     
   </style>
+
 </head>
 <body>
   <div class="wrap">
