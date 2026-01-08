@@ -531,6 +531,26 @@ iframe::-webkit-scrollbar {
   <div class="nav-toggle-wrap" onclick="toggleHeader()">
     <div class="nav-toggle"></div>
   </div>
+   <!-- Add this inside your <nav class="main-nav expanded" id="nav"> -->
+<!-- Put it right before the closing </nav> tag -->
+
+<button id="signOutBtn" onclick="signOutUser()" style="
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10001;
+  background: white;
+  color: #5f4b3c;
+  border: 2px solid #d7d1ca;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.25s ease;
+">
+  Sign Out
+</button>
 </nav>
 
 <!-- IFRAMES -->
