@@ -194,10 +194,14 @@ body {
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
 
+  let isSigningIn = false;
   let hasCheckedAuth = false;
 
   // Check if already signed in
   onAuthStateChanged(auth, (user) => {
+    // Don't redirect if we're in the middle of signing in
+    if (isSigningIn) return;
+    
     // Prevent multiple redirects
     if (hasCheckedAuth) return;
     hasCheckedAuth = true;
