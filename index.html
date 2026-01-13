@@ -365,14 +365,14 @@ body.kiosk-active .main-nav {
   text-transform: uppercase;
 }
 
-.logo-media img,
+.logo-media img {
+  max-height: 85%;
+}
 .product-media img {
-  width: min(220px, 28vw);
-  height: auto;
-  max-width: 100%;
-  object-fit: contain;
+  max-height: 100%;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
+
 
 
 .product-media img.fade-out {
