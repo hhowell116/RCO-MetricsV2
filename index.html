@@ -303,9 +303,7 @@ body.kiosk-active .main-nav {
   align-items: center;
 }
 
-.logo-media img {
-  max-height: 85%;
-}
+
 
 /* =========================================
    TODAY'S ORDERS COUNTER (RIGHT OF LOGO) - DESKTOP
@@ -367,10 +365,15 @@ body.kiosk-active .main-nav {
   text-transform: uppercase;
 }
 
+.logo-media img,
 .product-media img {
-  max-height: 100%;
+  width: min(220px, 28vw);
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
+
 
 .product-media img.fade-out {
   opacity: 0;
