@@ -180,26 +180,22 @@ body.kiosk-active .main-nav {
 }
 
 /* =========================================
-   MEDIA LAYER - DESKTOP ONLY (RESPONSIVE)
+   MEDIA LAYER - DESKTOP ONLY
 ========================================= */
 .media-layer {
-  position: relative;
-  margin: 12px auto 0;
-  width: min(1200px, 100%);
-  padding: 0 16px;              /* keeps content away from edges */
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 1200px;
   pointer-events: none;
   display: none;
-
-  /* Flex layout so items stay inside the viewport */
-  display: none;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
 }
 
 @media (min-width: 1024px) {
   .media-layer {
-    display: flex;
+    display: block;
   }
 }
 
@@ -208,88 +204,70 @@ body.kiosk-active .main-nav {
 }
 
 /* =========================================
-   LEFT: LOGO
+   MOBILE HEADER LAYOUT
 ========================================= */
-.logo-media {
-  position: static;             /* remove absolute positioning */
-  display: flex;
+.mobile-header-row {
+  display: none;
+  justify-content: space-between;
   align-items: center;
-  min-width: 0;
+  padding: 12px 0;
+  gap: 12px;
 }
 
-.logo-media img {
-  height: clamp(44px, 5vw, 72px);
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
+@media (max-width: 1023px) {
+  .mobile-header-row {
+    display: flex;
+  }
+  
+  .main-nav.expanded {
+    padding: 12px 16px 36px;
+  }
 }
 
-/* =========================================
-   CENTER: TODAY'S ORDERS
-========================================= */
-.orders-counter {
-  position: static;             /* remove absolute positioning */
-  transform: none;
-  min-width: 0;
+.mobile-logo {
+  height: 50px;
+  flex-shrink: 0;
+}
+
+.mobile-orders-counter {
+  flex: 1;
   text-align: center;
-  flex: 1;                      /* let counter take center space */
-  padding: 8px 0;
+  min-width: 0;
 }
 
-.orders-counter-label {
-  font-size: clamp(0.65rem, 0.9vw, 0.8rem);
+.mobile-orders-label {
+  font-size: 0.65em;
   font-weight: 600;
   color: #5f4b3c;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
-.orders-counter-value {
-  font-size: clamp(1.6rem, 2.6vw, 2.8rem);
+.mobile-orders-value {
+  font-size: 1.8em;
   font-weight: 700;
   color: #5f4b3c;
   line-height: 1;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
-.orders-counter-updated {
-  font-size: clamp(0.55rem, 0.8vw, 0.7rem);
+.mobile-orders-updated {
+  font-size: 0.55em;
   color: #5f4b3c;
   font-weight: 500;
 }
 
-.orders-counter.loading .orders-counter-value {
-  opacity: 0.5;
+.mobile-product {
+  height: 50px;
+  flex-shrink: 0;
+  transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-/* =========================================
-   RIGHT: PRODUCT
-========================================= */
-.product-media {
-  position: static;             /* remove absolute positioning */
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  justify-content: flex-end;
-  min-width: 0;
+.mobile-product.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
 }
-
-.product-label {
-  font-size: clamp(0.7rem, 0.9vw, 0.85rem);
-  font-weight: 600;
-  color: #5f4b3c;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.product-media img {
-  height: clamp(44px, 5vw, 72px);
-  width: auto;
-  max-width: 100%;
-  object-fit: contain;
-  transition: opaci
-
 
 /* =========================================
    LOGO (LEFT SIDE) - DESKTOP
@@ -303,7 +281,9 @@ body.kiosk-active .main-nav {
   align-items: center;
 }
 
-
+.logo-media img {
+  max-height: 85%;
+}
 
 /* =========================================
    TODAY'S ORDERS COUNTER (RIGHT OF LOGO) - DESKTOP
@@ -365,15 +345,10 @@ body.kiosk-active .main-nav {
   text-transform: uppercase;
 }
 
-.logo-media img {
-  max-height: 85%;
-}
 .product-media img {
   max-height: 100%;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
-
-
 
 .product-media img.fade-out {
   opacity: 0;
