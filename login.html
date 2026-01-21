@@ -1,332 +1,522 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sign In - RCO Metrics</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RCO Metrics Dashboard</title>
+
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* =========================================
+   GLOBAL RESET
+========================================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
 body {
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: linear-gradient(135deg, #ffffff 0%, #d6d1c3 100%);
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
 }
 
-.login-container {
-  background: white;
-  border-radius: 20px;
-  padding: 60px 50px;
-  box-shadow: 0 20px 60px rgba(95, 75, 60, 0.2);
-  text-align: center;
-  max-width: 450px;
+/* =========================================
+   LAYOUT
+========================================= */
+:root {
+  --sidebar-w: 290px;
+  --sidebar-w-collapsed: 72px;
+}
+
+.app-shell {
   width: 100%;
-  border: 2px solid #d7d1ca;
-}
-
-.login-logo {
-  width: 180px;              /* reduced */
-  height: 100px;             /* reduced */
-  margin: 0 auto 30px;
-  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-  border-radius: 14px;
+  height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow: hidden;
 }
 
-.login-logo-img {
-  max-width: 85%;
-  max-height: 85%;
-  object-fit: contain;
-  image-rendering: auto;
-}
-
-
-  
-.login-title {
-  font-size: 2.2em;
-  font-weight: 700;
-  color: #5f4b3c;
-  margin-bottom: 10px;
-  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
-}
-
-.login-subtitle {
-  font-size: 1em;
-  color: #8d8173;
-  margin-bottom: 40px;
-  font-weight: 500;
-}
-
-.google-btn {
-  background: white;
-  border: 2px solid #d7d1ca;
-  padding: 14px 28px;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 16px;
+/* =========================================
+   SIDEBAR (replaces the expanding header)
+========================================= */
+.main-nav {
+  width: var(--sidebar-w);
+  height: 100vh;
+  flex: 0 0 var(--sidebar-w);
+  background: linear-gradient(135deg, #ffffff 0%, #fbfaf8 100%);
+  border-right: 3px solid #bd9979;
   display: flex;
-  align-items: center;
-  gap: 12px;
-  justify-content: center;
-  transition: all 0.3s;
-  width: 100%;
-  color: #5f4b3c;
-  font-weight: 600;
+  flex-direction: column;
+  padding: 18px 16px;
+  gap: 14px;
+  position: relative;
+  transition: width 0.25s ease, padding 0.25s ease;
 }
 
-.google-btn:hover {
-  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-  color: white;
-  border-color: #bd9979;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.18);
+.main-nav.collapsed {
+  width: var(--sidebar-w-collapsed);
+  flex-basis: var(--sidebar-w-collapsed);
+  padding: 14px 10px;
 }
 
-.google-btn:active {
-  transform: scale(0.98);
-}
-
-.google-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-}
-
-.google-icon {
-  width: 24px;
-  height: 24px;
-}
-
-.loading-text {
-  color: #8d8173;
-  margin-top: 20px;
-  font-size: 14px;
-}
-
-.hidden {
+body.kiosk-active .main-nav {
   display: none;
 }
 
-.error-message {
-  background: #ffebee;
-  color: #c62828;
-  padding: 12px;
-  border-radius: 8px;
-  margin-top: 20px;
-  font-size: 14px;
-  border: 1px solid #ef9a9a;
+/* Brand */
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
 }
 
-@media (max-width: 768px) {
-  .login-container {
-    padding: 40px 30px;
-  }
-  
-  .login-title {
-    font-size: 1.8em;
-  }
-  
-  .login-logo {
-    width: 160px;
-    height: 90px;
-  }
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+  flex: 0 0 auto;
 }
-
-
-@media (max-width: 480px) {
-  .login-container {
-    padding: 30px 20px;
-  }
-  
-  .login-logo {
-    width: 150px;
-    height: 85px;
-  }
-  
-  .login-title {
-    font-size: 1.5em;
-  }
-  
-  .login-subtitle {
-    font-size: 0.9em;
-  }
-}
-
-.google-btn-wrapper {
-  position: relative;
+.brand-logo img {
   width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
-.google-tooltip {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  background: #5f4b3c;
-  color: white;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 500;
+.brand-titles {
+  min-width: 0;
+}
+.brand-titles h1 {
+  color: #5f4b3c;
+  font-size: 1.2em;
+  font-weight: 700;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.brand-titles h2 {
+  color: #8d8173;
+  font-size: 0.85em;
+  font-weight: 600;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.main-nav.collapsed .brand-titles { display: none; }
+
+/* Orders counter */
+.orders-counter {
+  background: #ffffff;
+  border: 2px solid #d7d1ca;
+  border-radius: 12px;
+  padding: 12px 12px;
+  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.10);
+}
+
+.orders-counter-label {
+  font-size: 0.7em;
+  font-weight: 800;
+  color: #5f4b3c;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+}
+.orders-counter-value {
+  font-size: 2.2em;
+  font-weight: 900;
+  color: #5f4b3c;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+.orders-counter-updated {
+  font-size: 0.65em;
+  color: #5f4b3c;
+  font-weight: 700;
+  opacity: 0.8;
+}
+.orders-counter.loading .orders-counter-value { opacity: 0.5; }
+
+.main-nav.collapsed .orders-counter { display: none; }
+
+/* Product carousel */
+.product-media {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(215,209,202,0.8);
+}
+
+.product-label {
+  font-size: 0.75em;
+  font-weight: 800;
+  color: #5f4b3c;
+  text-transform: uppercase;
+}
+
+.product-media img {
+  height: 44px;
+  width: auto;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.product-media img.fade-out {
   opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-  z-index: 10;
+  transform: scale(0.95);
 }
 
-.google-tooltip::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border-width: 6px;
-  border-style: solid;
-  border-color: #5f4b3c transparent transparent transparent;
+.main-nav.collapsed .product-media { display: none; }
+
+/* Tabs (vertical) */
+.nav-tabs {
+  margin-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+  overflow: auto;
+  padding-right: 4px;
 }
 
-.google-btn-wrapper:hover .google-tooltip {
-  opacity: 1;
-  transform: translateX(-50%) translateY(-2px);
+.nav-tab {
+  background: white;
+  color: #5f4b3c;
+  border: 2px solid #d7d1ca;
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
+.nav-tab:hover {
+  background: #fbfaf8;
+  border-color: #bd9979;
+  transform: translateY(-1px);
+}
+
+.nav-tab.active {
+  background: linear-gradient(135deg, #d7d1ca, #bd9979);
+  color: white;
+  border-color: #bd9979;
+}
+
+.nav-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: rgba(189,153,121,0.22);
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+}
+
+.nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.main-nav.collapsed .nav-label { display: none; }
+
+/* Collapse toggle */
+.nav-toggle-wrap {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.nav-toggle-btn {
+  width: 100%;
+  background: #ffffff;
+  color: #5f4b3c;
+  border: 2px solid #d7d1ca;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.nav-toggle-btn:hover {
+  border-color: #bd9979;
+  box-shadow: 0 2px 8px rgba(95,75,60,0.12);
+}
+
+/* Sign out */
+.sign-out-btn {
+  background: white;
+  color: #5f4b3c;
+  border: 2px solid #d7d1ca;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.sign-out-btn:hover {
+  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
+  color: white;
+  border-color: #bd9979;
+  transform: translateY(-1px);
+}
+
+.main-nav.collapsed .sign-out-btn { display: none; }
+
+/* =========================================
+   CONTENT AREA (iframes)
+========================================= */
+.content-area {
+  flex: 1;
+  min-width: 0;
+  height: 100vh;
+  position: relative;
+  overflow: hidden;
+}
+
+/* TV/Kiosk button - optional
+   If you have logic elsewhere that sets kiosk-active, wire it into enterKioskMode() below.
+*/
+.kiosk-btn {
+  position: fixed;
+  top: 16px;
+  left: calc(var(--sidebar-w) + 16px);
+  z-index: 10000;
+  background: #ffffff;
+  color: #5f4b3c;
+  border: 2px solid #d7d1ca;
+  padding: 10px 18px;
+  font-weight: 900;
+  border-radius: 12px;
+  transition: all 0.25s ease;
+  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.18);
+}
+
+.main-nav.collapsed ~ .content-area .kiosk-btn {
+  left: calc(var(--sidebar-w-collapsed) + 16px);
+}
+
+.kiosk-btn:hover {
+  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
+  color: #ffffff;
+  border-color: #bd9979;
+  transform: translateY(-2px);
+}
+
+.kiosk-btn:active { transform: scale(0.96); }
+
+body.kiosk-active .kiosk-btn { display: none; }
+
+/* =========================================
+   IFRAMES
+========================================= */
+.iframe-wrapper {
+  display: none;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+.iframe-wrapper.active { display: block; }
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  scrollbar-width: none;
+}
+iframe::-webkit-scrollbar { width: 0; height: 0; }
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+@media (max-width: 768px) {
+  :root { --sidebar-w: 240px; }
+}
 </style>
 </head>
+
 <body>
 
-<div class="login-container">
-  <div class="login-logo">
-  <img src="logo.png" alt="Rowe Casa Organics" class="login-logo-img">
+<div class="app-shell">
+
+  <!-- SIDEBAR -->
+  <nav class="main-nav expanded" id="nav">
+    <div class="brand-block">
+      <div class="brand-logo">
+        <img src="logo.png" alt="Rowe Casa Organics Logo" />
+      </div>
+      <div class="brand-titles">
+        <h1>Rowe Casa Organics</h1>
+        <h2>Operational Dashboards</h2>
+      </div>
+    </div>
+
+    <div class="orders-counter" id="ordersCounter">
+      <div class="orders-counter-label">Today's Orders</div>
+      <div class="orders-counter-value" id="orderCount">--</div>
+      <div class="orders-counter-updated" id="orderUpdated">Loading...</div>
+    </div>
+
+    <div class="product-media">
+      <div class="product-label">Top Products</div>
+      <img id="productImage" src="tartcherry.png" alt="Top product" />
+    </div>
+
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="fulfillment">
+        <span class="nav-icon">📦</span>
+        <span class="nav-label">Fulfillment KPI</span>
+      </button>
+      <button class="nav-tab" data-tab="shipping">
+        <span class="nav-icon">🚚</span>
+        <span class="nav-label">Shipping Leaderboard</span>
+      </button>
+      <button class="nav-tab" data-tab="orders">
+        <span class="nav-icon">🧾</span>
+        <span class="nav-label">Orders Overview</span>
+      </button>
+    </div>
+
+    <div class="nav-toggle-wrap">
+      <button class="nav-toggle-btn" onclick="toggleHeader()">Toggle</button>
+    </div>
+
+    <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
+  </nav>
+
+  <!-- CONTENT -->
+  <main class="content-area">
+
+    <!-- Optional TV View button -->
+    <button class="kiosk-btn" onclick="enterKioskMode()">TV View</button>
+
+    <div id="fulfillment-frame" class="iframe-wrapper active">
+      <iframe src="fulfillment.html"></iframe>
+    </div>
+
+    <div id="shipping-frame" class="iframe-wrapper">
+      <iframe src="shipping.html"></iframe>
+    </div>
+
+    <div id="orders-frame" class="iframe-wrapper">
+      <iframe src="orders.html"></iframe>
+    </div>
+
+  </main>
 </div>
 
-  <h1 class="login-title">RCO Metrics</h1>
-  <p class="login-subtitle">Operational Dashboards</p>
-  
-  <div class="google-btn-wrapper">
-  <button class="google-btn" id="googleSignInBtn">
-    <svg class="google-icon" viewBox="0 0 24 24">
-      <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-      <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-      <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-      <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-    </svg>
-    Sign in with Google
-  </button>
+<script>
+const nav = document.getElementById("nav");
+const productImage = document.getElementById("productImage");
 
-  <div class="google-tooltip">
-    Please use your @rowecasaorganics.com email
-  </div>
-</div>
+// Google Sheets (Orders Counter)
+const SHEET_ID = '1H9eeS3zv3DOj7ETw6DgF8m_n1PirPjVKziiISw95khI';
+const SHEET_GID = '1592344464';
 
-  
-  <div id="loadingText" class="loading-text hidden">Signing in...</div>
-  <div id="errorMessage" class="error-message hidden"></div>
-</div>
+function toggleHeader() {
+  nav.classList.toggle("collapsed");
+  nav.classList.toggle("expanded");
+}
 
-<script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-  import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+// OPTIONAL: if you already have kiosk logic elsewhere, replace this
+function enterKioskMode() {
+  // Example: set class for your own styling/behavior
+  document.body.classList.add("kiosk-active");
+}
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyDEn7ooJJ1zATM5oEnx3ByDiOFTFxr_JiA",
-    authDomain: "rco-metrics-d0f3b.firebaseapp.com",
-    projectId: "rco-metrics-d0f3b",
-    storageBucket: "rco-metrics-d0f3b.firebasestorage.app",
-    messagingSenderId: "1021645263850",
-    appId: "1:1021645263850:web:dfd5c7cd0bd99762679893",
-    measurementId: "G-DR5MLDL5BG"
-  };
+// Product carousel
+const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
+let idx = 0;
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
+setInterval(() => {
+  if (productImage) {
+    productImage.classList.add("fade-out");
+    setTimeout(() => {
+      idx = (idx + 1) % products.length;
+      productImage.src = products[idx];
+      productImage.classList.remove("fade-out");
+    }, 200);
+  }
+}, 5000);
 
-  let isSigningIn = false;
-  let hasCheckedAuth = false;
+// Tab switching
+document.querySelectorAll('.nav-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const targetTab = tab.dataset.tab;
 
-  // Check if already signed in
-  onAuthStateChanged(auth, (user) => {
-    // Don't redirect if we're in the middle of signing in
-    if (isSigningIn) return;
-    
-    // Prevent multiple redirects
-    if (hasCheckedAuth) return;
-    hasCheckedAuth = true;
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
 
-    if (user) {
-      // User is signed in, redirect to main app
-      console.log('User already signed in, redirecting to dashboard...');
-      window.location.replace('index.html');
-    }
+    document.querySelectorAll('.iframe-wrapper').forEach(f => f.classList.remove('active'));
+    document.getElementById(`${targetTab}-frame`).classList.add('active');
+
+    // Tell iframe (fulfillment) to hide fullscreen button if in TV view etc (optional)
   });
+});
 
-  // Sign in with Google
-  async function signInWithGoogle() {
-  const provider = new GoogleAuthProvider();
+/* =========================================
+   FETCH TODAY'S ORDERS FROM GOOGLE SHEET
+========================================= */
+async function fetchGvizTable() {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
+  const res = await fetch(url);
+  const text = await res.text();
 
-  // 👇 HINT Google to prefer your Workspace accounts
-  provider.setCustomParameters({
-    hd: "rowecasaorganics.com"
-  });
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/);
+  if (!match) throw new Error("GViz parse failed");
 
-  const loadingText = document.getElementById('loadingText');
-  const errorMessage = document.getElementById('errorMessage');
-  const signInBtn = document.getElementById('googleSignInBtn');
+  const json = JSON.parse(match[1]);
+  if (json.status !== "ok") throw new Error(`GViz status not ok: ${json.status}`);
+
+  return json.table;
+}
+
+function cellValue(table, row, col) {
+  const cell = table?.rows?.[row]?.c?.[col];
+  return cell?.f ?? cell?.v ?? null;
+}
+
+async function updateOrderCount() {
+  const counter = document.getElementById('ordersCounter');
+  const countEl = document.getElementById('orderCount');
+  const updatedEl = document.getElementById('orderUpdated');
 
   try {
-    signInBtn.disabled = true;
-    loadingText.classList.remove('hidden');
-    errorMessage.classList.add('hidden');
+    if (counter) counter.classList.add('loading');
 
-    const result = await signInWithPopup(auth, provider);
+    const table = await fetchGvizTable();
+    const updated = cellValue(table, 0, 0);
+    const orders = cellValue(table, 0, 1);
 
-    const email = result.user?.email?.toLowerCase() || "";
-
-    // 🚫 HARD CHECK — enforce domain
-    if (!email.endsWith("@rowecasaorganics.com")) {
-      await auth.signOut();
-
-      errorMessage.textContent =
-        "Access denied. Please sign in with your @rowecasaorganics.com email.";
-      errorMessage.classList.remove('hidden');
-
-      signInBtn.disabled = false;
-      loadingText.classList.add('hidden');
-      return;
-    }
-
-    // ✅ Allowed
-    window.location.replace('index.html');
-
-  } catch (error) {
-    console.error('Sign in error:', error);
-
-    signInBtn.disabled = false;
-    loadingText.classList.add('hidden');
-
-    errorMessage.textContent =
-      error.code === 'auth/popup-closed-by-user'
-        ? 'Sign in was cancelled.'
-        : 'Failed to sign in. Please try again.';
-    errorMessage.classList.remove('hidden');
+    if (countEl) countEl.textContent = (orders ?? '--');
+    if (updatedEl) updatedEl.textContent = (updated ?? 'Unknown');
+  } catch (err) {
+    console.error('Order counter error:', err);
+    if (countEl) countEl.textContent = 'Error';
+    if (updatedEl) updatedEl.textContent = 'Failed to load';
+  } finally {
+    if (counter) counter.classList.remove('loading');
   }
 }
 
-
-  // Event listener
-  document.getElementById('googleSignInBtn').addEventListener('click', signInWithGoogle);
+updateOrderCount();
+setInterval(updateOrderCount, 600000);
 </script>
+
+<!-- Firebase Authentication Check -->
+<script type="module" src="auth-check.js"></script>
 
 </body>
 </html>
