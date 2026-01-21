@@ -315,25 +315,31 @@ canvas {
 /* ===== CALENDAR VIEW ===== */
 .calendar-view {
   display: none;
-  flex: 1;
-  overflow-y: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: white;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(95,75,60,0.08);
-  min-height: 0;
+  overflow: hidden;
 }
 
 .calendar-view.active {
-  display: block;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-template-rows: 1fr 1fr;
+  grid-template-rows: repeat(2, 1fr);
   gap: 14px;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
 }
 
 .month-calendar {
@@ -344,11 +350,13 @@ canvas {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .month-header {
   color: #5f4b3c;
-  font-size: 1em;
+  font-size: clamp(0.75rem, 1.5vw, 1rem);
   font-weight: 600;
   margin-bottom: 8px;
   text-align: center;
@@ -359,29 +367,33 @@ canvas {
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 3px;
+  gap: 2px;
   flex: 1;
+  min-height: 0;
 }
 
 .day-label {
   text-align: center;
-  font-size: 0.65em;
+  font-size: clamp(0.5rem, 1vw, 0.65rem);
   color: #8d8173;
   font-weight: 600;
-  padding: 3px 2px;
+  padding: 2px;
+  line-height: 1;
 }
 
 .calendar-day {
-  aspect-ratio: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-radius: 5px;
-  font-size: 0.65em;
+  border-radius: 4px;
+  font-size: clamp(0.5rem, 1vw, 0.65rem);
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: 0;
+  min-width: 0;
+  padding: 2px;
+  line-height: 1.2;
 }
 
 .calendar-day:hover {
