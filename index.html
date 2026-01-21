@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RCO Metrics Dashboard</title>
+
 <style>
 /* =========================================
    GLOBAL RESET
@@ -13,8 +14,6 @@
 html, body {
   width: 100%;
   height: 100%;
-  margin: 0;
-  padding: 0;
   overflow: hidden;
 }
 
@@ -24,154 +23,143 @@ body {
 }
 
 /* =========================================
-   HIDE TV VIEW BUTTON WHEN HEADER COLLAPSED
+   LAYOUT
 ========================================= */
-.main-nav.collapsed ~ .kiosk-btn {
-  display: none;
+:root {
+  --sidebar-w: 290px;
+  --sidebar-w-collapsed: 72px;
 }
 
-/* =========================================
-   KIOSK MODE BUTTON (ENTER ONLY)
-========================================= */
-.kiosk-btn {
-  position: fixed;
-  top: 16px;
-  left: 16px;
-  z-index: 10000;
-  background: #ffffff;
-  color: #5f4b3c;
-  border: 2px solid #d7d1ca;
-  padding: 10px 18px;
-  font-weight: 600;
-  border-radius: 10px;
-  transition: all 0.25s ease;
-  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.18);
-}
-.sign-out-btn {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 10001;
-  background: white;
-  color: #5f4b3c;
-  border: 2px solid #d7d1ca;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.25s ease;
-}
-
-.sign-out-btn:hover {
-  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-  color: white;
-  border-color: #bd9979;
-  transform: translateY(-2px);
-}
-
-.main-nav.collapsed .sign-out-btn {
-  display: none;
-}
-.kiosk-btn:hover {
-  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-  color: #ffffff;
-  border-color: #bd9979;
-  transform: translateY(-2px);
-}
-
-.kiosk-btn:active {
-  transform: scale(0.96);
-}
-
-body.kiosk-active .kiosk-btn {
-  display: none;
-}
-
-/* =========================================
-   HEADER
-========================================= */
-.main-nav {
-  position: sticky;
-  top: 0;
-  z-index: 1000;
-  background: linear-gradient(135deg, #ffffff 0%, #fbfaf8 100%);
-  border-bottom: 3px solid #bd9979;
-  transition: all 0.45s ease;
-}
-
-.main-nav.expanded {
-  padding: 18px 16px 44px;
-}
-
-.main-nav.collapsed {
-  height: 0;
-  padding: 0;
-  background: transparent;
-  border-bottom: none;
+.app-shell {
+  width: 100%;
+  height: 100vh;
+  display: flex;
   overflow: hidden;
 }
 
-body.kiosk-active .main-nav {
-  display: none;
-}
-
 /* =========================================
-   HEADER CONTENT
+   SIDEBAR NAV
 ========================================= */
-.header-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: center;
-  transition: transform 0.45s ease, opacity 0.35s ease;
+.main-nav {
+  width: var(--sidebar-w);
+  height: 100vh;
+  flex: 0 0 var(--sidebar-w);
+  background: linear-gradient(135deg, #ffffff 0%, #fbfaf8 100%);
+  border-right: 3px solid #bd9979;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px;
+  gap: 14px;
+  transition: width 0.25s ease, padding 0.25s ease;
 }
 
-.main-nav.collapsed .header-content {
-  transform: translateY(-60px);
-  opacity: 0;
-  pointer-events: none;
+.main-nav.collapsed {
+  width: var(--sidebar-w-collapsed);
+  flex-basis: var(--sidebar-w-collapsed);
+  padding: 14px 10px;
 }
 
-.title-wrap h1 {
+/* Brand */
+.brand-block {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.brand-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.brand-titles h1 {
   color: #5f4b3c;
-  font-size: 1.9em;
+  font-size: 1.2em;
   font-weight: 700;
   font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
 }
-
-.title-wrap h2 {
+.brand-titles h2 {
   color: #8d8173;
-  font-size: 1em;
+  font-size: 0.85em;
   font-weight: 600;
-  margin-top: 4px;
-  margin-bottom: 18px;
 }
 
-/* =========================================
-   NAV BUTTONS
-========================================= */
+.main-nav.collapsed .brand-titles { display: none; }
+
+/* Orders counter */
+.orders-counter {
+  background: white;
+  border: 2px solid #d7d1ca;
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.orders-counter-label {
+  font-size: 0.7em;
+  font-weight: 800;
+  color: #5f4b3c;
+  text-transform: uppercase;
+}
+.orders-counter-value {
+  font-size: 2.2em;
+  font-weight: 900;
+  color: #5f4b3c;
+}
+.orders-counter-updated {
+  font-size: 0.65em;
+  color: #5f4b3c;
+  opacity: 0.75;
+}
+
+.main-nav.collapsed .orders-counter { display: none; }
+
+/* Product carousel */
+.product-media {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.product-media img {
+  height: 42px;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.product-media img.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.main-nav.collapsed .product-media { display: none; }
+
+/* Tabs */
 .nav-tabs {
   display: flex;
-  justify-content: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
 }
 
 .nav-tab {
   background: white;
-  color: #5f4b3c;
   border: 2px solid #d7d1ca;
-  padding: 12px 26px;
-  border-radius: 10px;
-  font-weight: 600;
+  border-radius: 12px;
+  padding: 12px;
+  font-weight: 800;
   cursor: pointer;
-  transition: all 0.25s ease;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  transition: all 0.2s ease;
 }
 
 .nav-tab:hover {
-  background: #fbfaf8;
   border-color: #bd9979;
-  transform: translateY(-2px);
 }
 
 .nav-tab.active {
@@ -179,409 +167,125 @@ body.kiosk-active .main-nav {
   color: white;
 }
 
-/* =========================================
-   MEDIA LAYER - DESKTOP ONLY
-========================================= */
-.media-layer {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  transform: translateX(-50%);
-  width: 1200px;
-  pointer-events: none;
-  display: none;
+.nav-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-@media (min-width: 1024px) {
-  .media-layer {
-    display: block;
-  }
-}
+.main-nav.collapsed .nav-label { display: none; }
 
-.main-nav.collapsed .media-layer {
-  display: none;
-}
-
-/* =========================================
-   MOBILE HEADER LAYOUT
-========================================= */
-.mobile-header-row {
-  display: none;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 0;
-  gap: 12px;
-}
-
-@media (max-width: 1023px) {
-  .mobile-header-row {
-    display: flex;
-  }
-  
-  .main-nav.expanded {
-    padding: 12px 16px 36px;
-  }
-}
-
-.mobile-logo {
-  height: 50px;
-  flex-shrink: 0;
-}
-
-.mobile-orders-counter {
-  flex: 1;
-  text-align: center;
-  min-width: 0;
-}
-
-.mobile-orders-label {
-  font-size: 0.65em;
-  font-weight: 600;
-  color: #5f4b3c;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 2px;
-}
-
-.mobile-orders-value {
-  font-size: 1.8em;
-  font-weight: 700;
-  color: #5f4b3c;
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
-.mobile-orders-updated {
-  font-size: 0.55em;
-  color: #5f4b3c;
-  font-weight: 500;
-}
-
-.mobile-product {
-  height: 50px;
-  flex-shrink: 0;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-
-.mobile-product.fade-out {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-/* =========================================
-   LOGO (LEFT SIDE) - DESKTOP
-========================================= */
-.logo-media {
-  position: absolute;
-  left: -60px;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-}
-
-.logo-media img {
-  max-height: 85%;
-}
-
-/* =========================================
-   TODAY'S ORDERS COUNTER (RIGHT OF LOGO) - DESKTOP
-========================================= */
-.orders-counter {
-  position: absolute;
-  left: 120px;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  padding: 8px 0;
-  min-width: 140px;
-}
-
-.orders-counter-label {
-  font-size: 0.7em;
-  font-weight: 600;
-  color: #5f4b3c;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 4px;
-}
-
-.orders-counter-value {
-  font-size: 2.8em;
-  font-weight: 700;
-  color: #5f4b3c;
-  line-height: 1;
-  margin-bottom: 4px;
-}
-
-.orders-counter-updated {
-  font-size: 0.6em;
-  color: #5f4b3c;
-  font-weight: 500;
-}
-
-.orders-counter.loading .orders-counter-value {
-  opacity: 0.5;
-}
-
-/* =========================================
-   PRODUCT MEDIA (RIGHT SIDE) - DESKTOP
-========================================= */
-.product-media {
-  position: absolute;
-  right: -60px;
-  top: 0;
-  bottom: 0;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.product-label {
-  font-size: 0.85em;
-  font-weight: 600;
-  color: #5f4b3c;
-  text-transform: uppercase;
-}
-
-.product-media img {
-  max-height: 100%;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-
-.product-media img.fade-out {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-/* =========================================
-   HEADER TOGGLE ARROW
-========================================= */
-.nav-toggle-wrap {
-  position: absolute;
-  left: 50%;
-  bottom: 0;
-  transform: translateX(-50%) translateY(-70%);
-  z-index: 2000;
+/* Toggle */
+.nav-toggle-btn {
+  background: white;
+  border: 2px solid #d7d1ca;
+  border-radius: 12px;
+  padding: 10px;
+  font-weight: 900;
   cursor: pointer;
 }
 
-body.kiosk-active .nav-toggle-wrap {
-  position: fixed;
-  top: 8px;
-  left: 50%;
-  bottom: auto;
-  transform: translateX(-50%);
-  z-index: 10002;
-}
-
-.nav-toggle {
-  width: 0;
-  height: 0;
-  border-left: 16px solid transparent;
-  border-right: 16px solid transparent;
-  border-bottom: 18px solid #bd9979;
-  animation: bounce 2.4s infinite;
-}
-
-.nav-toggle::after {
-  content: "";
-  position: absolute;
-  left: -12px;
-  top: 3px;
-  border-left: 12px solid transparent;
-  border-right: 12px solid transparent;
-  border-bottom: 14px solid white;
-}
-
-.main-nav.collapsed .nav-toggle-wrap {
-  position: fixed;
-  top: 8px;
-  left: 50%;
-  bottom: auto;
-  transform: translateX(-50%) rotate(180deg);
-  z-index: 10002;
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(6px); }
+.sign-out-btn {
+  background: white;
+  border: 2px solid #d7d1ca;
+  border-radius: 12px;
+  padding: 10px;
+  font-weight: 900;
+  cursor: pointer;
 }
 
 /* =========================================
-   MOBILE RESPONSIVE ADJUSTMENTS
+   CONTENT AREA
 ========================================= */
-@media (max-width: 768px) {
-  .title-wrap h1 {
-    font-size: 1.4em;
-  }
-  
-  .title-wrap h2 {
-    font-size: 0.85em;
-  }
-  
-  .nav-tabs {
-    gap: 8px;
-  }
-  
-  .nav-tab {
-    padding: 10px 18px;
-    font-size: 0.9em;
-  }
-  
-  .mobile-logo,
-  .mobile-product {
-    height: 40px;
-  }
-  
-  .mobile-orders-value {
-    font-size: 1.5em;
-  }
-}
-
-@media (max-width: 480px) {
-  .title-wrap h1 {
-    font-size: 1.2em;
-  }
-  
-  .title-wrap h2 {
-    font-size: 0.75em;
-    margin-bottom: 12px;
-  }
-  
-  .nav-tabs {
-    gap: 6px;
-  }
-  
-  .nav-tab {
-    padding: 8px 14px;
-    font-size: 0.8em;
-  }
-  
-  .mobile-orders-value {
-    font-size: 1.3em;
-  }
-  
-  .mobile-orders-label {
-    font-size: 0.6em;
-  }
-  
-  .mobile-orders-updated {
-    font-size: 0.5em;
-  }
-}
-
-/* =========================================
-   IFRAMES
-========================================= */
-.iframe-wrapper {
-  display: none;
+.content-area {
+  flex: 1;
+  min-width: 0;
   height: 100vh;
   overflow: hidden;
+}
+
+.iframe-wrapper {
+  display: none;
+  height: 100%;
 }
 
 .iframe-wrapper.active {
   display: block;
 }
 
-body.kiosk-active .iframe-wrapper {
-  height: 100vh !important;
-}
-
 iframe {
   width: 100%;
   height: 100%;
   border: none;
-  scrollbar-width: none;
-}
-
-iframe::-webkit-scrollbar {
-  width: 0;
-  height: 0;
 }
 </style>
-
 </head>
 
 <body>
 
-<!-- HEADER -->
-<nav class="main-nav expanded" id="nav">
+<div class="app-shell">
 
-  <div class="header-content">
-    <div class="title-wrap">
-      <h1>Rowe Casa Organics</h1>
-      <h2>Operational Dashboards</h2>
-    </div>
+  <!-- SIDEBAR -->
+  <nav class="main-nav expanded" id="nav">
 
-    <!-- MOBILE HEADER ROW -->
-    <div class="mobile-header-row">
-      <img src="logo.png" alt="Logo" class="mobile-logo">
-      
-      <div class="mobile-orders-counter">
-        <div class="mobile-orders-label">Today's Orders</div>
-        <div class="mobile-orders-value" id="mobileOrderCount">--</div>
-        <div class="mobile-orders-updated" id="mobileOrderUpdated">Loading...</div>
+    <div class="brand-block">
+      <div class="brand-logo">
+        <img src="logo.png" alt="RCO Logo">
       </div>
-      
-      <img id="mobileProductImage" src="tartcherry.png" class="mobile-product">
+      <div class="brand-titles">
+        <h1>Rowe Casa Organics</h1>
+        <h2>Operational Dashboards</h2>
+      </div>
     </div>
 
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="fulfillment">Fulfillment KPI</button>
-      <button class="nav-tab" data-tab="shipping">Shipping Leaderboard</button>
-      <button class="nav-tab" data-tab="orders">Orders Overview</button>
-    </div>
-  </div>
-
-  <!-- DESKTOP MEDIA LAYER -->
-  <div class="media-layer">
     <div class="orders-counter" id="ordersCounter">
       <div class="orders-counter-label">Today's Orders</div>
       <div class="orders-counter-value" id="orderCount">--</div>
       <div class="orders-counter-updated" id="orderUpdated">Loading...</div>
     </div>
 
-    <div class="logo-media">
-      <img src="logo.png" alt="Rowe Casa Organics Logo">
-    </div>
-
     <div class="product-media">
-      <div class="product-label">Top Products</div>
       <img id="productImage" src="tartcherry.png">
     </div>
-  </div>
 
-  <div class="nav-toggle-wrap" onclick="toggleHeader()">
-    <div class="nav-toggle"></div>
-  </div>
-  <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
-</nav>
+    <div class="nav-tabs">
+      <button class="nav-tab active" data-tab="fulfillment">
+        <span>📦</span><span class="nav-label">Fulfillment KPI</span>
+      </button>
+      <button class="nav-tab" data-tab="shipping">
+        <span>🚚</span><span class="nav-label">Shipping</span>
+      </button>
+      <button class="nav-tab" data-tab="orders">
+        <span>🧾</span><span class="nav-label">Orders</span>
+      </button>
+    </div>
 
-<!-- IFRAMES -->
-<div id="fulfillment-frame" class="iframe-wrapper active">
-  <iframe src="fulfillment.html"></iframe>
-</div>
+    <button class="nav-toggle-btn" onclick="toggleSidebar()">Toggle</button>
+    <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
 
-<div id="shipping-frame" class="iframe-wrapper">
-  <iframe src="shipping.html"></iframe>
-</div>
+  </nav>
 
-<div id="orders-frame" class="iframe-wrapper">
-  <iframe src="orders.html"></iframe>
+  <!-- CONTENT -->
+  <main class="content-area">
+    <div id="fulfillment-frame" class="iframe-wrapper active">
+      <iframe src="fulfillment.html"></iframe>
+    </div>
+    <div id="shipping-frame" class="iframe-wrapper">
+      <iframe src="shipping.html"></iframe>
+    </div>
+    <div id="orders-frame" class="iframe-wrapper">
+      <iframe src="orders.html"></iframe>
+    </div>
+  </main>
+
 </div>
 
 <script>
 const nav = document.getElementById("nav");
 const productImage = document.getElementById("productImage");
-const mobileProductImage = document.getElementById("mobileProductImage");
 
-// Google Sheets (Orders Counter)
-const SHEET_ID = '1H9eeS3zv3DOj7ETw6DgF8m_n1PirPjVKziiISw95khI';
-const SHEET_GID = '1592344464';
-
-function toggleHeader() {
+/* Sidebar toggle */
+function toggleSidebar() {
   nav.classList.toggle("collapsed");
   nav.classList.toggle("expanded");
 }
@@ -589,103 +293,30 @@ function toggleHeader() {
 /* Product carousel */
 const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
 let idx = 0;
-
 setInterval(() => {
-  // Desktop product carousel
-  if (productImage) {
-    productImage.classList.add("fade-out");
-    setTimeout(() => {
-      idx = (idx + 1) % products.length;
-      productImage.src = products[idx];
-      productImage.classList.remove("fade-out");
-    }, 200);
-  }
-  
-  // Mobile product carousel
-  if (mobileProductImage) {
-    mobileProductImage.classList.add("fade-out");
-    setTimeout(() => {
-      mobileProductImage.src = products[idx];
-      mobileProductImage.classList.remove("fade-out");
-    }, 200);
-  }
+  productImage.classList.add("fade-out");
+  setTimeout(() => {
+    idx = (idx + 1) % products.length;
+    productImage.src = products[idx];
+    productImage.classList.remove("fade-out");
+  }, 200);
 }, 5000);
 
 /* Tab switching */
-document.querySelectorAll('.nav-tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    const targetTab = tab.dataset.tab;
+document.querySelectorAll(".nav-tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    const target = tab.dataset.tab;
 
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
+    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
 
-    document.querySelectorAll('.iframe-wrapper').forEach(f => f.classList.remove('active'));
-    document.getElementById(`${targetTab}-frame`).classList.add('active');
+    document.querySelectorAll(".iframe-wrapper").forEach(f => f.classList.remove("active"));
+    document.getElementById(`${target}-frame`).classList.add("active");
   });
 });
-
-/* =========================================
-   FETCH TODAY'S ORDERS FROM GOOGLE SHEET
-========================================= */
-
-async function fetchGvizTable() {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
-  const res = await fetch(url);
-  const text = await res.text();
-
-  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/);
-  if (!match) throw new Error("GViz parse failed");
-
-  const json = JSON.parse(match[1]);
-  if (json.status !== "ok") throw new Error(`GViz status not ok: ${json.status}`);
-
-  return json.table;
-}
-
-function cellValue(table, row, col) {
-  const cell = table?.rows?.[row]?.c?.[col];
-  return cell?.f ?? cell?.v ?? null;
-}
-
-async function updateOrderCount() {
-  const counter = document.getElementById('ordersCounter');
-  const countEl = document.getElementById('orderCount');
-  const updatedEl = document.getElementById('orderUpdated');
-  
-  const mobileCountEl = document.getElementById('mobileOrderCount');
-  const mobileUpdatedEl = document.getElementById('mobileOrderUpdated');
-
-  try {
-    if (counter) counter.classList.add('loading');
-
-    const table = await fetchGvizTable();
-
-    const updated = cellValue(table, 0, 0);
-    const orders = cellValue(table, 0, 1);
-
-    // Update desktop elements
-    if (countEl) countEl.textContent = (orders ?? '--');
-    if (updatedEl) updatedEl.textContent = (updated ?? 'Unknown');
-    
-    // Update mobile elements
-    if (mobileCountEl) mobileCountEl.textContent = (orders ?? '--');
-    if (mobileUpdatedEl) mobileUpdatedEl.textContent = (updated ?? 'Unknown');
-    
-  } catch (err) {
-    console.error('Order counter error:', err);
-    if (countEl) countEl.textContent = 'Error';
-    if (updatedEl) updatedEl.textContent = 'Failed to load';
-    if (mobileCountEl) mobileCountEl.textContent = 'Error';
-    if (mobileUpdatedEl) mobileUpdatedEl.textContent = 'Failed to load';
-  } finally {
-    if (counter) counter.classList.remove('loading');
-  }
-}
-
-updateOrderCount();
-setInterval(updateOrderCount, 600000);
 </script>
-<!-- Firebase Authentication Check -->
+
+<!-- AUTH CHECK (safe – no reload loop by itself) -->
 <script type="module" src="auth-check.js"></script>
 
 </body>
