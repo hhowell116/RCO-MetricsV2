@@ -95,16 +95,16 @@ body {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   padding-top: 16px;
 }
 
 /* ================= PRODUCT CAROUSEL ================= */
 .product-carousel {
-  background: white;
+  background: #ffffff;
   border: 2px solid #d7d1ca;
   border-radius: 12px;
-  padding: 12px;
+  padding: 14px;
   text-align: center;
 }
 
@@ -119,8 +119,9 @@ body {
 
 .carousel-image {
   width: 100%;
-  max-height: 160px;
+  max-height: 200px;
   object-fit: contain;
+  padding: 4px;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
@@ -132,7 +133,7 @@ body {
 /* ================= ORDERS WIDGET ================= */
 .orders-widget {
   background: #ffffff;
-  border: 2px solid #d7d1ca;           /* MATCHES other boxes */
+  border: 2px solid #d7d1ca;
   border-radius: 12px;
   padding: 12px;
   color: #5f4b3c;
@@ -143,20 +144,21 @@ body {
 .orders-label {
   font-size: 0.65em;
   letter-spacing: 0.5px;
-  opacity: 0.9;
-  font-weight: 600;
+  font-weight: 700;
+  color: #8d8173;
 }
 
 .orders-value {
   font-size: 2em;
   font-weight: 700;
   margin: 6px 0;
+  color: #5f4b3c;
 }
 
 .orders-updated {
   font-size: 0.65em;
-  opacity: 0.85;
   line-height: 1.3;
+  color: #8d8173;
 }
 
 .sidebar-separator {
@@ -165,9 +167,10 @@ body {
   width: 100%;
 }
 
+/* ================= SIGN OUT ================= */
 .sign-out-btn {
   border: 2px solid #d7d1ca;
-  background: white;
+  background: #ffffff;
   padding: 10px;
   border-radius: 10px;
   font-weight: 600;
@@ -180,7 +183,7 @@ body {
 .sign-out-btn:hover {
   background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
   border-color: #5f4b3c;
-  color: white;
+  color: #ffffff;
 }
 
 /* ================= CONTENT ================= */
@@ -230,16 +233,27 @@ iframe {
       <button class="nav-btn" data-tab="orders">Orders Overview</button>
     </div>
 
+    <!-- FOOTER STACK -->
     <div class="sidebar-footer">
-      <div class="product-carousel">
-        <div class="carousel-label">Top Products</div>
-        <img id="sidebarProductImage" src="tartcherry.png" class="carousel-image" alt="Product">
-      </div>
 
+      <!-- TODAY'S ORDERS -->
       <div class="orders-widget">
         <div class="orders-label">TODAY'S ORDERS</div>
         <div class="orders-value" id="orderCount">--</div>
-        <div class="orders-updated" id="orderUpdated">Last updated:<br>Loading...</div>
+        <div class="orders-updated" id="orderUpdated">
+          Last updated:<br>Loading...
+        </div>
+      </div>
+
+      <!-- TOP PRODUCTS -->
+      <div class="product-carousel">
+        <div class="carousel-label">Top Products</div>
+        <img
+          id="sidebarProductImage"
+          src="tartcherry.png"
+          class="carousel-image"
+          alt="Product"
+        >
       </div>
 
       <div class="sidebar-separator"></div>
@@ -282,14 +296,12 @@ const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
 let productIndex = 0;
 
 setInterval(() => {
-  if (sidebarProductImage) {
-    sidebarProductImage.classList.add("fade-out");
-    setTimeout(() => {
-      productIndex = (productIndex + 1) % products.length;
-      sidebarProductImage.src = products[productIndex];
-      sidebarProductImage.classList.remove("fade-out");
-    }, 350);
-  }
+  sidebarProductImage.classList.add("fade-out");
+  setTimeout(() => {
+    productIndex = (productIndex + 1) % products.length;
+    sidebarProductImage.src = products[productIndex];
+    sidebarProductImage.classList.remove("fade-out");
+  }, 350);
 }, 5000);
 </script>
 
@@ -316,52 +328,26 @@ async function updateOrderCount() {
     const table = await fetchGvizTable();
     const rawTimestamp = cellValue(table, 0, 0);
     const orderValue = cellValue(table, 0, 1);
-    
+
     document.getElementById('orderCount').textContent = orderValue ?? '--';
-    
-    // Format the timestamp to "mm/dd/yy time"
+
     if (rawTimestamp) {
-      // Google Sheets sometimes returns date as "Date(2026,0,21,14,9,0)" format
       let date;
-      
       if (typeof rawTimestamp === 'string' && rawTimestamp.startsWith('Date(')) {
-        // Parse the Date(...) format from Google Sheets
-        const match = rawTimestamp.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
-        if (match) {
-          const [, year, month, day, hours, minutes, seconds] = match;
-          date = new Date(parseInt(year), parseInt(month), parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds));
-        }
-      } else if (typeof rawTimestamp === 'string') {
-        // Try parsing as a date string
-        date = new Date(rawTimestamp);
-      } else if (rawTimestamp instanceof Date) {
-        date = rawTimestamp;
+        const m = rawTimestamp.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+        if (m) date = new Date(m[1], m[2], m[3], m[4], m[5], m[6]);
       } else {
-        // If it's a number, treat as timestamp
         date = new Date(rawTimestamp);
       }
-      
-      // Check if date is valid
-      if (date && !isNaN(date.getTime())) {
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const year = String(date.getFullYear()).slice(-2);
-        const hours = date.getHours();
-        const minutes = String(date.getMinutes()).padStart(2, '0');
-        const ampm = hours >= 12 ? 'PM' : 'AM';
-        const displayHours = hours % 12 || 12;
-        
-        const formattedTime = `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`;
-        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${formattedTime}`;
-      } else {
-        // If parsing fails, just display the raw value
-        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${rawTimestamp}`;
+
+      if (date && !isNaN(date)) {
+        const formatted =
+          `${date.getMonth()+1}/${date.getDate()}/${String(date.getFullYear()).slice(-2)} ` +
+          `${date.getHours()%12||12}:${String(date.getMinutes()).padStart(2,'0')} ${date.getHours()>=12?'PM':'AM'}`;
+        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${formatted}`;
       }
-    } else {
-      document.getElementById('orderUpdated').innerHTML = 'Last updated:<br>Unknown';
     }
   } catch (e) {
-    console.error('Order count error:', e);
     document.getElementById('orderCount').textContent = '—';
     document.getElementById('orderUpdated').innerHTML = 'Last updated:<br>Error';
   }
