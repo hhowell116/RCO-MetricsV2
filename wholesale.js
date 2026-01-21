@@ -1,4 +1,4 @@
-window.wholesaleData = [
+const wholesaleData = [
   {date:"1/1/2025",orders:18,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
   {date:"1/2/2025",orders:75,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
   {date:"1/3/2025",orders:68,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
