@@ -458,12 +458,20 @@ function updateTable(monthData) {
     const tbody = document.getElementById('dataTable');
     tbody.innerHTML = '';
     
-    const getRateClass = rate => {
-        if (rate >= 95) return 'rate-excellent';
-        if (rate >= 85) return 'rate-good';
-        if (rate >= 70) return 'rate-warning';
-        return 'rate-poor';
-    };
+   const getRateClass4 = rate => {
+    if (rate >= 85) return 'rate-excellent';   // 4D target ~85
+    if (rate >= 75) return 'rate-good';
+    if (rate >= 65) return 'rate-warning';
+    return 'rate-poor';
+};
+
+const getRateClass7 = rate => {
+    if (rate >= 95) return 'rate-excellent';   // 7D target ~95
+    if (rate >= 90) return 'rate-good';
+    if (rate >= 80) return 'rate-warning';
+    return 'rate-poor';
+};
+
     
     monthData.forEach(row => {
         const tr = document.createElement('tr');
@@ -474,8 +482,9 @@ function updateTable(monthData) {
             <td>${row.orders.toLocaleString()}</td>
             <td>${row.rem4.toLocaleString()}</td>
             <td>${row.rem7.toLocaleString()}</td>
-            <td class="${getRateClass(row.rate4)}">${row.rate4.toFixed(2)}%</td>
-            <td class="${getRateClass(row.rate7)}">${row.rate7.toFixed(2)}%</td>
+            <td class="${getRateClass4(row.rate4)}">${row.rate4.toFixed(2)}%</td>
+            <td class="${getRateClass7(row.rate7)}">${row.rate7.toFixed(2)}%</td>
+
         `;
         
         tbody.appendChild(tr);
