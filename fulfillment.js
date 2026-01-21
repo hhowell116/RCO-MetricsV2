@@ -1,342 +1,610 @@
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Fulfillment] Script loaded');
 
-  /* ===============================
-     DATA SOURCE STATE
-  =============================== */
-  let currentDataset = 'retail';
-  let data = window.fullData || [];
-
-  // Debug: Check if data exists
-  console.log('[Fulfillment] Data loaded:', data ? `${data.length} rows` : 'NO DATA');
-
-  if (!Array.isArray(data) || data.length === 0) {
-    console.error('[Fulfillment] fullData not found or empty');
-    showFatalError('fullData is missing or empty — check data.js is loading properly');
-    return;
-  }
-
-  /* ===============================
-     HELPERS
-  =============================== */
-  const parseDate = d => {
-    const [m, day, y] = d.split('/');
-    return new Date(+y, +m - 1, +day);
-  };
-
-  const getRateClass = rate => {
-    if (rate >= 95) return 'rate-excellent';
-    if (rate >= 85) return 'rate-good';
-    if (rate >= 70) return 'rate-warning';
-    return 'rate-poor';
-  };
-
-  /* ===============================
-     ELEMENTS
-  =============================== */
-  const yearSelect = document.getElementById('yearSelect');
-  const monthSelect = document.getElementById('monthSelect');
-  const dataTable = document.getElementById('dataTable');
-
-  const fill4 = document.getElementById('fillRate4Day');
-  const fill7 = document.getElementById('fillRate7Day');
-  const totalOrders = document.getElementById('totalOrders');
-  const avgOrders = document.getElementById('avgOrders');
-  const periodLabel = document.getElementById('periodLabel');
-
-  const monthlyView = document.getElementById('monthlyView');
-  const calendarView = document.getElementById('calendarView');
-
-  let fillRateChart, ordersChart;
-  let currentYear, currentMonth;
-  let currentView = 'monthly';
-
-  /* ===============================
-     INIT / CLEAN DATA
-     (IMPORTANT FIX: if the dataset contains duplicate dates,
-      keep the *best* row instead of the first one. Your data.js
-      has duplicates like 12/1 and 12/2 where the first copy has
-      orders=0 but the later copy has real numbers. The old
-      "keep first" de-dupe was throwing away the real rows,
-      making months look empty.)
-  =============================== */
-
-  function buildCleanData(dataset) {
-    const byDate = new Map();
-    for (const row of dataset) {
-      if (!row || !row.date) continue;
-
-      const existing = byDate.get(row.date);
-      if (!existing) {
-        byDate.set(row.date, row);
-        continue;
-      }
-
-      // Prefer the row with higher orders; if tie, prefer the later row
-      // (so the "most recently pasted" / corrected entry wins).
-      const existingOrders = Number(existing.orders) || 0;
-      const incomingOrders = Number(row.orders) || 0;
-      if (incomingOrders > existingOrders || (incomingOrders === existingOrders)) {
-        byDate.set(row.date, row);
-      }
+// Find the most recent month with data
+function getMostRecentDataMonth() {
+    if (!fullData || fullData.length === 0) {
+        return { month: new Date().getMonth(), year: new Date().getFullYear() };
     }
-    return Array.from(byDate.values());
-  }
+    
+    // Sort data by date to find the most recent
+    const sortedData = [...fullData].sort((a, b) => {
+        const dateA = parseDate(a.date);
+        const dateB = parseDate(b.date);
+        return dateB - dateA;
+    });
+    
+    // Get the most recent date
+    const mostRecent = parseDate(sortedData[0].date);
+    return {
+        month: mostRecent.getMonth(),
+        year: mostRecent.getFullYear()
+    };
+}
 
-  let cleanData = buildCleanData(data);
+// Initialize with most recent data month
+const recentData = getMostRecentDataMonth();
+let currentMonth = recentData.month;
+let currentYear = recentData.year;
+let currentView = 'monthly';
+let fillRateChart, ordersChart;
 
-  console.log('[Fulfillment] Cleaned data:', cleanData.length, 'rows');
+function parseDate(dateStr) {
+    const parts = dateStr.split('/');
+    return new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+}
 
-  const sorted = [...cleanData].sort((a, b) => parseDate(b.date) - parseDate(a.date));
-  
-  // Find the latest date with actual orders
-  const latestWithOrders = sorted.find(d => d.orders > 0);
-  
-  if (!latestWithOrders) {
-    console.error('[Fulfillment] No data with orders found');
-    showFatalError('No order data found in dataset');
-    return;
-  }
+function getMonthData(year, month) {
+    return fullData.filter(d => {
+        const date = parseDate(d.date);
+        return date.getFullYear() === year && date.getMonth() === month && d.orders > 0;
+    });
+}
 
-  const latest = parseDate(latestWithOrders.date);
-  currentYear = latest.getFullYear();
-  currentMonth = latest.getMonth();
+function getYearData(year) {
+    return fullData.filter(d => {
+        const date = parseDate(d.date);
+        return date.getFullYear() === year;
+    });
+}
 
-  console.log('[Fulfillment] Latest date with orders:', latestWithOrders.date);
+function updateDashboard() {
+    if (currentView === 'calendar') {
+        renderCalendarView();
+        const yearData = getYearData(currentYear);
+        const validData = yearData.filter(d => d.orders > 0);
+        
+        if (validData.length === 0) {
+            document.getElementById('fillRate4Day').textContent = 'N/A';
+            document.getElementById('fillRate7Day').textContent = 'N/A';
+            document.getElementById('totalOrders').textContent = '0';
+            document.getElementById('avgOrders').textContent = '0';
+            return;
+        }
+        
+        const avg4Day = validData.reduce((sum, d) => sum + d.rate4, 0) / validData.length;
+        const avg7Day = validData.reduce((sum, d) => sum + d.rate7, 0) / validData.length;
+        const totalOrders = validData.reduce((sum, d) => sum + d.orders, 0);
+        
+        document.getElementById('fillRate4Day').textContent = avg4Day.toFixed(0) + '%';
+        document.getElementById('fillRate7Day').textContent = avg7Day.toFixed(0) + '%';
+        document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
+        document.getElementById('avgOrders').textContent = Math.round(totalOrders / validData.length).toLocaleString();
+        document.getElementById('periodLabel').textContent = 'year';
+    } else {
+        const monthData = getMonthData(currentYear, currentMonth);
+        
+        if (monthData.length === 0) {
+            document.getElementById('fillRate4Day').textContent = 'N/A';
+            document.getElementById('fillRate7Day').textContent = 'N/A';
+            document.getElementById('totalOrders').textContent = '0';
+            document.getElementById('avgOrders').textContent = '0';
+            
+            if (fillRateChart) fillRateChart.destroy();
+            if (ordersChart) ordersChart.destroy();
+            
+            document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align: center;">No data available for this month</td></tr>';
+            
+            document.getElementById('periodLabel').textContent = 'month';
+            return;
+        }
+        
+        const avg4Day = monthData.reduce((sum, d) => sum + d.rate4, 0) / monthData.length;
+        const avg7Day = monthData.reduce((sum, d) => sum + d.rate7, 0) / monthData.length;
+        const totalOrders = monthData.reduce((sum, d) => sum + d.orders, 0);
+        
+        document.getElementById('fillRate4Day').textContent = avg4Day.toFixed(0) + '%';
+        document.getElementById('fillRate7Day').textContent = avg7Day.toFixed(0) + '%';
+        document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
+        document.getElementById('avgOrders').textContent = Math.round(totalOrders / monthData.length).toLocaleString();
+        document.getElementById('periodLabel').textContent = 'month';
+        
+        updateCharts(monthData);
+        updateTable(monthData);
+    }
+}
+function forceHideTooltip() {
+  const tooltip = document.getElementById('tooltip');
+  if (!tooltip) return;
+  tooltip.classList.remove('show');
+}
 
-  /* ===============================
-     POPULATE SELECTORS
-  =============================== */
-  function populateSelectors() {
-    // Get years that have data with orders
-    const yearsWithData = [...new Set(
-      cleanData
-        .filter(d => d.orders > 0)
-        .map(d => parseDate(d.date).getFullYear())
-    )].sort((a, b) => b - a);
+function renderCalendarView() {
+    forceHideTooltip();
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    for (let m = 0; m < 12; m++) {
+        const monthDiv = document.createElement('div');
+        monthDiv.className = 'month-calendar';
+        
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.textContent = months[m];
+        monthDiv.appendChild(header);
+        
+        const daysContainer = document.createElement('div');
+        daysContainer.className = 'calendar-days';
+        
+        ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
+            const label = document.createElement('div');
+            label.className = 'day-label';
+            label.textContent = day;
+            daysContainer.appendChild(label);
+        });
+        
+        const firstDay = new Date(currentYear, m, 1).getDay();
+        const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
+        
+        for (let i = 0; i < firstDay; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'calendar-day empty';
+            daysContainer.appendChild(empty);
+        }
+        
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dayData = fullData.find(item => {
+                const date = parseDate(item.date);
+                return date.getFullYear() === currentYear && 
+                       date.getMonth() === m && 
+                       date.getDate() === d;
+            });
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'calendar-day';
+            
+            if (dayData && dayData.orders > 0) {
+                const rate = dayData.rate7;
+                let rateClass = 'cal-rate-none';
+                
+                if (rate >= 95) rateClass = 'cal-rate-excellent';
+                else if (rate >= 85) rateClass = 'cal-rate-good';
+                else if (rate >= 70) rateClass = 'cal-rate-warning';
+                else if (rate > 0) rateClass = 'cal-rate-poor';
+                
+                dayDiv.classList.add(rateClass);
+                dayDiv.innerHTML = `<strong>${d}</strong><br>${rate.toFixed(0)}%`;
+                
+                dayDiv.addEventListener('mouseenter', (e) => showTooltip(e, dayData));
+                dayDiv.addEventListener('mouseleave', hideTooltip);
+                dayDiv.addEventListener('mousemove', moveTooltip);
+            } else {
+                dayDiv.classList.add('cal-rate-none');
+                dayDiv.innerHTML = `${d}`;
+            }
+            
+            daysContainer.appendChild(dayDiv);
+        }
+        
+        monthDiv.appendChild(daysContainer);
+        grid.appendChild(monthDiv);
+    }
+}
 
-    console.log('[Fulfillment] Years with data:', yearsWithData);
+function showTooltip(e, data) {
+    const tooltip = document.getElementById('tooltip');
+    const date = parseDate(data.date);
+    
+   tooltip.innerHTML = `
+<strong>${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</strong><br>
+Orders: ${data.orders.toLocaleString()}<br>
+4-Day Rate: ${data.rate4.toFixed(2)}%<br>
+7-Day Rate: ${data.rate7.toFixed(2)}%<br>
+Remaining (4d): ${data.rem4}<br>
+Remaining (7d): ${data.rem7}
+`.trim();
+    
+    tooltip.classList.add('show');
+    moveTooltip(e);
+}
 
+function hideTooltip() {
+    document.getElementById('tooltip').classList.remove('show');
+}
+
+function moveTooltip(e) {
+    const tooltip = document.getElementById('tooltip');
+    tooltip.style.left = (e.clientX + 15) + 'px';
+    tooltip.style.top = (e.clientY + 15) + 'px';
+}
+
+function updateCharts(monthData) {
+    const labels = monthData.map(d => parseDate(d.date).getDate());
+    
+    if (fillRateChart) fillRateChart.destroy();
+    
+    const ctx1 = document.getElementById('fillRateChart').getContext('2d');
+    
+    fillRateChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '7 Day Fill Rate (Target: 95%)',
+                    data: monthData.map(d => d.rate7),
+                    borderColor: '#8b7355',
+                    backgroundColor: 'rgba(139, 115, 85, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#8b7355',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    order: 1
+                },
+                {
+                    label: '4 Day Fill Rate (Target: 85%)',
+                    data: monthData.map(d => d.rate4),
+                    borderColor: '#d2b48c',
+                    backgroundColor: 'rgba(210, 180, 140, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#d2b48c',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    order: 2
+                },
+                {
+                    label: '95% Target Line',
+                    data: Array(labels.length).fill(95),
+                    borderColor: '#5a8c5a',
+                    borderWidth: 2,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    fill: false,
+                    order: 3
+                },
+                {
+                    label: '85% Target Line',
+                    data: Array(labels.length).fill(85),
+                    borderColor: '#d4a05c',
+                    borderWidth: 2,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    fill: false,
+                    order: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: { 
+                    display: true,
+                    labels: { 
+                        color: '#8b7355', 
+                        font: { size: 11 },
+                        usePointStyle: true,
+                        padding: 12,
+                        boxWidth: 15
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label && !label.includes('Target Line')) {
+                                label += ': ' + context.parsed.y.toFixed(1) + '%';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 105,
+                    ticks: { 
+                        callback: v => v + '%',
+                        color: '#a0906f',
+                        stepSize: 10
+                    },
+                    grid: {
+                        color: 'rgba(210, 180, 140, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: { 
+                        color: '#a0906f'
+                    },
+                    grid: {
+                        color: 'rgba(210, 180, 140, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+    
+    if (ordersChart) ordersChart.destroy();
+    
+    const ctx2 = document.getElementById('ordersChart').getContext('2d');
+    ordersChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Orders Remaining (4 Day)',
+                data: monthData.map(d => d.rem4),
+                borderColor: '#d2b48c',
+                backgroundColor: 'rgba(210, 180, 140, 0.1)',
+                tension: 0.3,
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#d2b48c',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }, {
+                label: 'Orders Remaining (7 Day)',
+                data: monthData.map(d => d.rem7),
+                borderColor: '#8b7355',
+                backgroundColor: 'rgba(139, 115, 85, 0.1)',
+                tension: 0.3,
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#8b7355',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: { 
+                    display: true,
+                    labels: { 
+                        color: '#8b7355',
+                        font: { size: 11 },
+                        usePointStyle: true,
+                        padding: 12,
+                        boxWidth: 15
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ' + context.parsed.y.toLocaleString();
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { 
+                        color: '#a0906f',
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(210, 180, 140, 0.1)'
+                    }
+                },
+                x: { 
+                    ticks: { color: '#a0906f' },
+                    grid: {
+                        color: 'rgba(210, 180, 140, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+const yearSelect = document.getElementById('yearSelect');
+const monthSelect = document.getElementById('monthSelect');
+
+function populateYearMonthSelectors() {
+    // YEARS
     yearSelect.innerHTML = '';
-    yearsWithData.forEach(y => {
-      const o = document.createElement('option');
-      o.value = y;
-      o.textContent = y;
-      yearSelect.appendChild(o);
+    const years = [2025, 2026]; // adjust if needed
+
+    years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
     });
 
+    // MONTHS
+    monthSelect.innerHTML = '';
     const months = [
-      'January','February','March','April','May','June',
-      'July','August','September','October','November','December'
+        'January','February','March','April','May','June',
+        'July','August','September','October','November','December'
     ];
 
-    monthSelect.innerHTML = '';
-    months.forEach((m, i) => {
-      const o = document.createElement('option');
-      o.value = i;
-      o.textContent = m;
-      monthSelect.appendChild(o);
+    months.forEach((month, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = month;
+        monthSelect.appendChild(option);
     });
 
-    yearSelect.value = currentYear;
-    monthSelect.value = currentMonth;
-  }
+    // Defaults
+    const now = new Date();
+    yearSelect.value = now.getFullYear();
+    monthSelect.value = now.getMonth();
+}
 
-  /* ===============================
-     FILTER DATA
-  =============================== */
-  function getMonthData() {
-    const filtered = cleanData.filter(d => {
-      const dt = parseDate(d.date);
-      return (
-        dt.getFullYear() === +yearSelect.value &&
-        dt.getMonth() === +monthSelect.value &&
-        d.orders > 0  // Only include days with orders
-      );
-    });
-
-    console.log(
-      `[Fulfillment] Filtered data for ${monthSelect.options[monthSelect.selectedIndex].text} ${yearSelect.value}:`,
-      filtered.length,
-      'rows'
-    );
+function updateTable(monthData) {
+    const tbody = document.getElementById('dataTable');
+    tbody.innerHTML = '';
     
-    return filtered;
-  }
-
-  /* ===============================
-     UPDATE TABLE
-  =============================== */
-  function updateTable(rows) {
-    dataTable.innerHTML = '';
-
-    if (rows.length === 0) {
-      dataTable.innerHTML =
-        '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8d8173;">No data available for this month</td></tr>';
-      return;
-    }
-
-    rows.forEach(r => {
-      const tr = document.createElement('tr');
-      const dt = parseDate(r.date);
-
-      tr.innerHTML = `
-        <td>${dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-        <td>${r.orders.toLocaleString()}</td>
-        <td class="${getRateClass(r.rate4)}">${r.rem4.toLocaleString()}</td>
-        <td class="${getRateClass(r.rate7)}">${r.rem7.toLocaleString()}</td>
-        <td class="${getRateClass(r.rate4)}">${r.rate4.toFixed(1)}%</td>
-        <td class="${getRateClass(r.rate7)}">${r.rate7.toFixed(1)}%</td>
-      `;
-      dataTable.appendChild(tr);
+    const getRateClass = rate => {
+        if (rate >= 95) return 'rate-excellent';
+        if (rate >= 85) return 'rate-good';
+        if (rate >= 70) return 'rate-warning';
+        return 'rate-poor';
+    };
+    
+    monthData.forEach(row => {
+        const tr = document.createElement('tr');
+        const date = parseDate(row.date);
+        
+        tr.innerHTML = `
+            <td>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+            <td>${row.orders.toLocaleString()}</td>
+            <td>${row.rem4.toLocaleString()}</td>
+            <td>${row.rem7.toLocaleString()}</td>
+            <td class="${getRateClass(row.rate4)}">${row.rate4.toFixed(2)}%</td>
+            <td class="${getRateClass(row.rate7)}">${row.rate7.toFixed(2)}%</td>
+        `;
+        
+        tbody.appendChild(tr);
     });
-  }
+}
 
-  /* ===============================
-     UPDATE KPIs
-  =============================== */
-  function updateKPIs(rows) {
-    if (!rows.length) {
-      fill4.textContent = 'N/A';
-      fill7.textContent = 'N/A';
-      totalOrders.textContent = '0';
-      avgOrders.textContent = '0';
-      return;
+// Event listeners
+document.querySelectorAll('[data-view]').forEach(btn => {
+    if (btn.tagName === 'BUTTON') {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('[data-view]').forEach(b => {
+                if (b.tagName === 'BUTTON') b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            
+            currentView = btn.dataset.view;
+            
+            const monthlyView = document.querySelector('.monthly-view');
+            const calendarView = document.querySelector('.calendar-view');
+            
+            if (currentView === 'monthly') {
+                monthlyView.style.display = 'block';
+                calendarView.style.display = 'none';
+                document.getElementById('monthSelect').disabled = false;
+            } else {
+                monthlyView.style.display = 'none';
+                calendarView.style.display = 'block';
+                document.getElementById('monthSelect').disabled = true;
+            }
+            
+            updateDashboard();
+        });
     }
+});
 
-    const avg4 = rows.reduce((s, d) => s + d.rate4, 0) / rows.length;
-    const avg7 = rows.reduce((s, d) => s + d.rate7, 0) / rows.length;
-    const total = rows.reduce((s, d) => s + d.orders, 0);
+document.getElementById('yearSelect').addEventListener('change', e => {
+    currentYear = parseInt(e.target.value);
+    updateDashboard();
+});
 
-    fill4.textContent = avg4.toFixed(0) + '%';
-    fill7.textContent = avg7.toFixed(0) + '%';
-    totalOrders.textContent = total.toLocaleString();
-    avgOrders.textContent = Math.round(total / rows.length).toLocaleString();
-  }
+document.getElementById('monthSelect').addEventListener('change', e => {
+    currentMonth = parseInt(e.target.value);
+    updateDashboard();
+});
 
-  /* ===============================
-     UPDATE CHARTS
-  =============================== */
-  function updateCharts(rows) {
-    if (!window.Chart) {
-      console.warn('[Fulfillment] Chart.js not loaded');
-      return;
-    }
+populateYearMonthSelectors();
 
-    if (rows.length === 0) {
-      console.log('[Fulfillment] No data to chart');
-      return;
-    }
+// Initialize with most recent data month
+document.getElementById('monthSelect').value = currentMonth.toString();
+document.getElementById('yearSelect').value = currentYear.toString();
 
-    const labels = rows.map(r => parseDate(r.date).getDate());
+// Set initial title to show Retail
+const headerTitle = document.querySelector('.header-center h1');
+if (headerTitle) {
+    headerTitle.innerHTML = '📦 RCO Fulfillment Dashboard <span style="color: #8b7355; font-weight: 600;"> - Retail</span>';
+}
 
-    if (fillRateChart) fillRateChart.destroy();
-    if (ordersChart) ordersChart.destroy();
+updateDashboard();
 
-    fillRateChart = new Chart(document.getElementById('fillRateChart'), {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: '7-Day', data: rows.map(r => r.rate7), borderColor: '#5f4b3c', tension: 0.3 },
-          { label: '4-Day', data: rows.map(r => r.rate4), borderColor: '#bd9979', tension: 0.3 }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
+// ============================================
+// DATASET TOGGLE FUNCTIONALITY
+// ============================================
+
+const datasetToggleBtn = document.getElementById('datasetToggleBtn');
+
+if (datasetToggleBtn) {
+    let regularDataBackup = null;
+    let currentlyShowingWholesale = false;
+    
+    datasetToggleBtn.addEventListener('click', () => {
+        if (!currentlyShowingWholesale) {
+            // Switching TO wholesale
+            if (typeof wholesaleData !== 'undefined' && wholesaleData.length > 0) {
+                // Backup regular data first time
+                if (!regularDataBackup) {
+                    regularDataBackup = [...fullData];
+                }
+                
+                // Replace fullData with wholesale
+                fullData.length = 0;
+                fullData.push(...wholesaleData);
+                
+                currentlyShowingWholesale = true;
+                datasetToggleBtn.textContent = 'Retail';
+                
+                // Add indicator to title
+                const headerTitle = document.querySelector('.header-center h1');
+                if (headerTitle) {
+                    headerTitle.innerHTML = '📦 RCO Fulfillment Dashboard <span style="color: #8b7355; font-weight: 600;"> - Wholesale</span>';
+                }
+            } else {
+                alert('Wholesale data not available. Make sure wholesale.js is loaded.');
+                return;
+            }
+        } else {
+            // Switching BACK to regular
+            if (regularDataBackup) {
+                fullData.length = 0;
+                fullData.push(...regularDataBackup);
+                
+                currentlyShowingWholesale = false;
+                datasetToggleBtn.textContent = 'Wholesale';
+                
+                // Add Retail indicator to title
+                const headerTitle = document.querySelector('.header-center h1');
+                if (headerTitle) {
+                    headerTitle.innerHTML = '📦 RCO Fulfillment Dashboard <span style="color: #8b7355; font-weight: 600;"> - Retail</span>';
+                }
+            }
+        }
+        
+        // Find most recent data in new dataset
+        const recentData = getMostRecentDataMonth();
+        currentMonth = recentData.month;
+        currentYear = recentData.year;
+        
+        // Update selectors
+        document.getElementById('monthSelect').value = currentMonth.toString();
+        document.getElementById('yearSelect').value = currentYear.toString();
+        
+        // Refresh dashboard
+        updateDashboard();
     });
-
-    ordersChart = new Chart(document.getElementById('ordersChart'), {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Remaining 4D', data: rows.map(r => r.rem4), borderColor: '#bd9979', tension: 0.3 },
-          { label: 'Remaining 7D', data: rows.map(r => r.rem7), borderColor: '#5f4b3c', tension: 0.3 }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
+}
+    window.addEventListener('message', (event) => {
+  if (event.data?.type === 'TV_VIEW_STATE') {
+    document.body.classList.toggle('tv-view-active', event.data.active);
   }
+});
 
-  /* ===============================
-     DASHBOARD UPDATE
-  =============================== */
-  function updateDashboard() {
-    const rows = getMonthData();
-    updateKPIs(rows);
-    updateTable(rows);
-    updateCharts(rows);
-  }
-
-  /* ===============================
-     VIEW TOGGLE
-  =============================== */
-  document.querySelectorAll('[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      currentView = btn.dataset.view;
-
-      if (currentView === 'monthly') {
-        monthlyView.style.display = 'grid';
-        calendarView.style.display = 'none';
-        monthSelect.disabled = false;
-      } else {
-        monthlyView.style.display = 'none';
-        calendarView.style.display = 'block';
-        monthSelect.disabled = true;
-      }
-
-      updateDashboard();
-    });
-  });
-
-  /* ===============================
-     DATASET TOGGLE
-  =============================== */
-  const toggleBtn = document.getElementById('datasetToggleBtn');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', e => {
-      if (currentDataset === 'retail' && window.wholesaleData) {
-        data = window.wholesaleData;
-        currentDataset = 'wholesale';
-        e.target.classList.add('active');
-        const label = document.getElementById('datasetLabel');
-        if (label) label.textContent = '- Wholesale';
-      } else {
-        data = window.fullData;
-        currentDataset = 'retail';
-        e.target.classList.remove('active');
-        const label = document.getElementById('datasetLabel');
-        if (label) label.textContent = '- Retail';
-      }
-
-      // Recalculate with new dataset (same de-dupe fix)
-      cleanData = buildCleanData(data);
-      
-      populateSelectors();
-      updateDashboard();
-    });
-  }
-
-  /* ===============================
-     EVENTS
-  =============================== */
-  yearSelect.addEventListener('change', updateDashboard);
-  monthSelect.addEventListener('change', updateDashboard);
-
-  /* ===============================
-     START
-  =============================== */
-  console.log('[Fulfillment] Initializing dashboard...');
-  populateSelectors();
-  updateDashboard();
-  console.log('[Fulfillment] Dashboard initialized');
-
-  function showFatalError(msg) {
-    if (dataTable) {
-      dataTable.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#b23b3b;padding:20px;">${msg}</td></tr>`;
-    }
-  }
+    
 });
