@@ -6,9 +6,9 @@
 <title>RCO Metrics Dashboard</title>
 
 <style>
-/* =========================================
-   GLOBAL RESET
-========================================= */
+/* =========================
+   RESET
+========================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
@@ -17,223 +17,302 @@ html, body {
   overflow: hidden;
 }
 
-body {
+body{
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: linear-gradient(135deg, #ffffff 0%, #d6d1c3 100%);
+  background: #0f0f12; /* DARK BACKGROUND */
+  color: #f2efe9;
 }
 
-/* =========================================
+/* =========================
    LAYOUT
-========================================= */
-:root {
-  --sidebar-w: 290px;
-  --sidebar-w-collapsed: 72px;
+========================= */
+:root{
+  --sidebar-w: 320px;
+  --sidebar-w-collapsed: 84px;
+
+  --tan: #bd9979;
+  --tan-soft: rgba(189,153,121,0.25);
+  --panel: #15151a;
+  --panel-2: #1b1b22;
+  --border: rgba(189,153,121,0.25);
 }
 
-.app-shell {
+.app-shell{
   width: 100%;
   height: 100vh;
   display: flex;
   overflow: hidden;
 }
 
-/* =========================================
-   SIDEBAR NAV
-========================================= */
-.main-nav {
+/* =========================
+   SIDEBAR
+========================= */
+.main-nav{
   width: var(--sidebar-w);
-  height: 100vh;
   flex: 0 0 var(--sidebar-w);
-  background: linear-gradient(135deg, #ffffff 0%, #fbfaf8 100%);
-  border-right: 3px solid #bd9979;
+  height: 100vh;
+  background: linear-gradient(180deg, var(--panel) 0%, #121218 100%);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   padding: 18px 16px;
   gap: 14px;
-  transition: width 0.25s ease, padding 0.25s ease;
+  transition: width 0.22s ease, padding 0.22s ease;
 }
 
-.main-nav.collapsed {
+.main-nav.collapsed{
   width: var(--sidebar-w-collapsed);
   flex-basis: var(--sidebar-w-collapsed);
-  padding: 14px 10px;
+  padding: 16px 10px;
 }
 
-/* Brand */
-.brand-block {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+/* Centered brand */
+.brand{
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 10px 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
 }
 
-.brand-logo {
-  width: 48px;
-  height: 48px;
-  border-radius: 12px;
+.brand-logo{
+  width: 76px;
+  height: 76px;
+  border-radius: 16px;
   overflow: hidden;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.04);
+  display: grid;
+  place-items: center;
 }
-.brand-logo img {
-  width: 100%;
-  height: 100%;
+
+.brand-logo img{
+  width: 86%;
+  height: 86%;
   object-fit: contain;
 }
 
-.brand-titles h1 {
-  color: #5f4b3c;
-  font-size: 1.2em;
-  font-weight: 700;
+.brand-title{
+  text-align: center;
+  line-height: 1.15;
+}
+.brand-title h1{
+  margin: 0;
+  font-size: 1.05em;
+  font-weight: 800;
+  color: #f2efe9;
+  letter-spacing: 0.2px;
   font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
 }
-.brand-titles h2 {
-  color: #8d8173;
-  font-size: 0.85em;
-  font-weight: 600;
+.brand-title h2{
+  margin: 6px 0 0;
+  font-size: 0.78em;
+  font-weight: 700;
+  color: rgba(242,239,233,0.75);
 }
 
-.main-nav.collapsed .brand-titles { display: none; }
+/* Collapse brand text */
+.main-nav.collapsed .brand-title{ display: none; }
+.main-nav.collapsed .brand-logo{ width: 58px; height: 58px; border-radius: 14px; }
 
-/* Orders counter */
-.orders-counter {
-  background: white;
-  border: 2px solid #d7d1ca;
-  border-radius: 12px;
-  padding: 12px;
+/* Orders counter (optional – keep if you want) */
+.orders-counter{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px 12px;
+  background: rgba(255,255,255,0.03);
 }
 
-.orders-counter-label {
-  font-size: 0.7em;
+.orders-counter-label{
+  font-size: 0.72em;
   font-weight: 800;
-  color: #5f4b3c;
+  letter-spacing: 0.6px;
   text-transform: uppercase;
+  color: rgba(242,239,233,0.7);
+  margin-bottom: 6px;
 }
-.orders-counter-value {
-  font-size: 2.2em;
+.orders-counter-value{
+  font-size: 2.3em;
   font-weight: 900;
-  color: #5f4b3c;
+  color: #f2efe9;
+  line-height: 1;
+  margin-bottom: 6px;
 }
-.orders-counter-updated {
-  font-size: 0.65em;
-  color: #5f4b3c;
-  opacity: 0.75;
+.orders-counter-updated{
+  font-size: 0.7em;
+  color: rgba(242,239,233,0.65);
+  font-weight: 700;
+}
+.main-nav.collapsed .orders-counter{ display: none; }
+
+/* =========================
+   BIG CAROUSEL (full width + tall)
+========================= */
+.carousel{
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+  padding: 10px;
 }
 
-.main-nav.collapsed .orders-counter { display: none; }
-
-/* Product carousel */
-.product-media {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.product-media img {
-  height: 42px;
+.carousel img{
+  width: 100%;
+  height: 220px;            /* BIGGER VERTICAL */
+  object-fit: contain;      /* keep product visible */
+  display: block;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
-.product-media img.fade-out {
+
+.carousel img.fade-out{
   opacity: 0;
-  transform: scale(0.95);
+  transform: scale(0.98);
 }
 
-.main-nav.collapsed .product-media { display: none; }
+.main-nav.collapsed .carousel{ display:none; }
 
-/* Tabs */
-.nav-tabs {
+/* =========================
+   NAV BUTTONS
+========================= */
+.nav-tabs{
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex: 1;
+  overflow: auto;
+  padding-right: 4px;
 }
 
-.nav-tab {
-  background: white;
-  border: 2px solid #d7d1ca;
-  border-radius: 12px;
+.nav-tab{
+  width: 100%;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  color: rgba(242,239,233,0.9);
+  padding: 12px 12px;
+  border-radius: 14px;
+  font-weight: 850;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+}
+
+.nav-tab:hover{
+  transform: translateY(-1px);
+  border-color: rgba(189,153,121,0.45);
+  background: rgba(189,153,121,0.10);
+}
+
+.nav-tab.active{
+  background: linear-gradient(135deg, rgba(189,153,121,0.35), rgba(189,153,121,0.12));
+  border-color: rgba(189,153,121,0.65);
+  color: #ffffff;
+}
+
+.main-nav.collapsed .nav-tab{
+  padding: 12px 10px;
+  text-align: center;
+}
+
+/* =========================
+   TOGGLE ARROW (no button text)
+========================= */
+.toggle-row{
+  display:flex;
+  justify-content:center;
+}
+
+.toggle-arrow{
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  display:grid;
+  place-items:center;
+  cursor:pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+}
+
+.toggle-arrow:hover{
+  border-color: rgba(189,153,121,0.55);
+  background: rgba(189,153,121,0.10);
+  transform: translateY(-1px);
+}
+
+.chev{
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid rgba(242,239,233,0.9);
+  transition: transform 0.2s ease;
+}
+
+/* When collapsed: arrow points right (default); expanded: point left */
+.main-nav.expanded .chev{
+  transform: rotate(180deg);
+}
+
+/* Sign out */
+.sign-out-btn{
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.03);
+  color: rgba(242,239,233,0.9);
   padding: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-.nav-tab:hover {
-  border-color: #bd9979;
-}
-
-.nav-tab.active {
-  background: linear-gradient(135deg, #d7d1ca, #bd9979);
-  color: white;
-}
-
-.nav-label {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.main-nav.collapsed .nav-label { display: none; }
-
-/* Toggle */
-.nav-toggle-btn {
-  background: white;
-  border: 2px solid #d7d1ca;
-  border-radius: 12px;
-  padding: 10px;
+  border-radius: 14px;
   font-weight: 900;
   cursor: pointer;
+  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
 
-.sign-out-btn {
-  background: white;
-  border: 2px solid #d7d1ca;
-  border-radius: 12px;
-  padding: 10px;
-  font-weight: 900;
-  cursor: pointer;
+.sign-out-btn:hover{
+  transform: translateY(-1px);
+  border-color: rgba(189,153,121,0.55);
+  background: rgba(189,153,121,0.10);
 }
 
-/* =========================================
+.main-nav.collapsed .sign-out-btn{ display:none; }
+
+/* =========================
    CONTENT AREA
-========================================= */
-.content-area {
+========================= */
+.content-area{
   flex: 1;
   min-width: 0;
   height: 100vh;
   overflow: hidden;
+  background: #0f0f12;
 }
 
-.iframe-wrapper {
-  display: none;
+.iframe-wrapper{
+  display:none;
   height: 100%;
 }
 
-.iframe-wrapper.active {
-  display: block;
-}
+.iframe-wrapper.active{ display:block; }
 
-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
+iframe{
+  width:100%;
+  height:100%;
+  border:none;
 }
 </style>
 </head>
 
 <body>
-
 <div class="app-shell">
 
   <!-- SIDEBAR -->
   <nav class="main-nav expanded" id="nav">
 
-    <div class="brand-block">
+    <div class="brand">
       <div class="brand-logo">
-        <img src="logo.png" alt="RCO Logo">
+        <img src="logo.png" alt="Rowe Casa Organics Logo" />
       </div>
-      <div class="brand-titles">
-        <h1>Rowe Casa Organics</h1>
+      <div class="brand-title">
+        <h1>RCO Metrics</h1>
         <h2>Operational Dashboards</h2>
       </div>
     </div>
@@ -244,25 +323,23 @@ iframe {
       <div class="orders-counter-updated" id="orderUpdated">Loading...</div>
     </div>
 
-    <div class="product-media">
-      <img id="productImage" src="tartcherry.png">
+    <div class="carousel">
+      <img id="productImage" src="tartcherry.png" alt="Top product" />
     </div>
 
     <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="fulfillment">
-        <span>📦</span><span class="nav-label">Fulfillment KPI</span>
-      </button>
-      <button class="nav-tab" data-tab="shipping">
-        <span>🚚</span><span class="nav-label">Shipping</span>
-      </button>
-      <button class="nav-tab" data-tab="orders">
-        <span>🧾</span><span class="nav-label">Orders</span>
-      </button>
+      <button class="nav-tab active" data-tab="fulfillment">Fulfillment KPI</button>
+      <button class="nav-tab" data-tab="shipping">Shipping</button>
+      <button class="nav-tab" data-tab="orders">Orders</button>
     </div>
 
-    <button class="nav-toggle-btn" onclick="toggleSidebar()">Toggle</button>
-    <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
+    <div class="toggle-row">
+      <div class="toggle-arrow" id="toggleArrow" aria-label="Toggle sidebar">
+        <div class="chev"></div>
+      </div>
+    </div>
 
+    <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
   </nav>
 
   <!-- CONTENT -->
@@ -270,9 +347,11 @@ iframe {
     <div id="fulfillment-frame" class="iframe-wrapper active">
       <iframe src="fulfillment.html"></iframe>
     </div>
+
     <div id="shipping-frame" class="iframe-wrapper">
       <iframe src="shipping.html"></iframe>
     </div>
+
     <div id="orders-frame" class="iframe-wrapper">
       <iframe src="orders.html"></iframe>
     </div>
@@ -282,18 +361,21 @@ iframe {
 
 <script>
 const nav = document.getElementById("nav");
+const toggleArrow = document.getElementById("toggleArrow");
 const productImage = document.getElementById("productImage");
 
-/* Sidebar toggle */
-function toggleSidebar() {
+/* Arrow toggle */
+toggleArrow.addEventListener("click", () => {
   nav.classList.toggle("collapsed");
   nav.classList.toggle("expanded");
-}
+});
 
-/* Product carousel */
+/* Carousel */
 const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
 let idx = 0;
+
 setInterval(() => {
+  if (!productImage) return;
   productImage.classList.add("fade-out");
   setTimeout(() => {
     idx = (idx + 1) % products.length;
@@ -302,7 +384,7 @@ setInterval(() => {
   }, 200);
 }, 5000);
 
-/* Tab switching */
+/* Tabs */
 document.querySelectorAll(".nav-tab").forEach(tab => {
   tab.addEventListener("click", () => {
     const target = tab.dataset.tab;
@@ -310,13 +392,13 @@ document.querySelectorAll(".nav-tab").forEach(tab => {
     document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
 
-    document.querySelectorAll(".iframe-wrapper").forEach(f => f.classList.remove("active"));
+    document.querySelectorAll(".iframe-wrapper").forEach(w => w.classList.remove("active"));
     document.getElementById(`${target}-frame`).classList.add("active");
   });
 });
 </script>
 
-<!-- AUTH CHECK (safe – no reload loop by itself) -->
+<!-- Keep auth check if you use it; if it loops, it must be fixed in auth-check.js -->
 <script type="module" src="auth-check.js"></script>
 
 </body>
