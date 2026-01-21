@@ -493,32 +493,31 @@ function updateTable(monthData) {
 }
 
 // FIXED: Event listeners for view switching
-document.querySelectorAll('[data-view]').forEach(btn => {
-    if (btn.tagName === 'BUTTON') {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('[data-view]').forEach(b => {
-                if (b.tagName === 'BUTTON') b.classList.remove('active');
-            });
-            btn.classList.add('active');
-            
-            currentView = btn.dataset.view;
-            
-            const monthlyView = document.querySelector('[data-view="monthly"]');
-            const calendarView = document.querySelector('[data-view="calendar"]');
-            
-            if (currentView === 'monthly') {
-                monthlyView.style.display = 'grid';  // CHANGED: Use 'grid' instead of 'block'
-                calendarView.style.display = 'none';
-                document.getElementById('monthSelect').disabled = false;
-            } else {
-                monthlyView.style.display = 'none';
-                calendarView.style.display = 'block';
-                document.getElementById('monthSelect').disabled = true;
-            }
-            
-            updateDashboard();
+document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Remove active from all view buttons
+        document.querySelectorAll('.view-btn').forEach(b => {
+            b.classList.remove('active');
         });
-    }
+        btn.classList.add('active');
+        
+        currentView = btn.dataset.view;
+        
+        const monthlyView = document.getElementById('monthlyView');
+        const calendarView = document.getElementById('calendarView');
+        
+        if (currentView === 'monthly') {
+            monthlyView.style.display = 'grid';  // Use 'grid' to maintain layout
+            calendarView.style.display = 'none';
+            document.getElementById('monthSelect').disabled = false;
+        } else {
+            monthlyView.style.display = 'none';
+            calendarView.style.display = 'block';
+            document.getElementById('monthSelect').disabled = true;
+        }
+        
+        updateDashboard();
+    });
 });
 
 document.getElementById('yearSelect').addEventListener('change', e => {
