@@ -1,582 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RCO Dashboard</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RCO Metrics Dashboard</title>
 
-  <style>
-    :root{
-      --bg: #f7f3ea;          /* light, consistent with dashboard */
-      --panel: #ffffff;
-      --border: rgba(210,180,140,0.35);
-      --text: #4a3b2a;
-      --muted: #7a654a;
-      --accent: #8b7355;
-      --accent-2: #d2b48c;
-      --shadow: 0 8px 24px rgba(74, 59, 42, 0.08);
-      --radius: 18px;
-    }
+<style>
+/* =========================
+   RESET
+========================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
-    *{ box-sizing:border-box; }
-    body{
-      margin:0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color: var(--text);
-      background: var(--bg);
-    }
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 
-    /* =========================================================
-       APP LAYOUT
-       ========================================================= */
-    .app{
-      min-height: 100vh;
-      display:flex;
-      gap: 18px;
-      padding: 18px;
-    }
+body {
+  font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background: #f6f2eb;
+  color: #5f4b3c;
+}
 
-    /* =========================================================
-       SIDEBAR
-       ========================================================= */
-    .sidebar-wrap{
-      position: relative;
-      width: 320px;
-      flex: 0 0 320px;
-      transition: width 220ms ease;
-    }
-    .sidebar-wrap.collapsed{
-      width: 88px;
-      flex-basis: 88px;
-    }
+/* =========================
+   VARIABLES
+========================= */
+:root {
+  --sidebar-w: 320px;
+  --sidebar-collapsed: 86px;
+  --tan: #bd9979;
+  --tan-soft: rgba(189,153,121,0.18);
+  --panel: #ffffff;
+  --border: rgba(189,153,121,0.35);
+}
 
-    .sidebar{
-      height: calc(100vh - 36px);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding: 14px;
-      display:flex;
-      flex-direction:column;
-      gap: 14px;
-      overflow:hidden;
-    }
+/* =========================
+   LAYOUT
+========================= */
+.app-shell {
+  display: flex;
+  width: 100%;
+  height: 100vh;
+}
 
-    /* Toggle button on the EDGE of sidebar (not bottom) */
-    .sidebar-toggle{
-      position:absolute;
-      top: 50%;
-      right: -14px;
-      transform: translateY(-50%);
-      width: 28px;
-      height: 56px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      box-shadow: var(--shadow);
-      cursor:pointer;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color: var(--accent);
-      user-select:none;
-    }
-    .sidebar-toggle:hover{ filter: brightness(0.98); }
-    .sidebar-toggle:active{ transform: translateY(-50%) scale(0.98); }
+/* =========================
+   SIDEBAR
+========================= */
+.main-nav {
+  width: var(--sidebar-w);
+  background: #ffffff;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 18px 16px;
+  gap: 16px;
+  transition: width 0.25s ease;
+  position: relative;
+}
 
-    .chev{
-      font-size: 18px;
-      line-height: 1;
-      display:block;
-      transform: rotate(0deg);
-      transition: transform 220ms ease;
-    }
-    .sidebar-wrap.collapsed .chev{
-      transform: rotate(180deg);
-    }
+.main-nav.collapsed {
+  width: var(--sidebar-collapsed);
+}
 
-    /* Logo: full width across sidebar, no border */
-    .brand{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-    }
-    .brand img{
-      width: 100%;
-      height: auto;
-      display:block;
-      border-radius: 14px;
-      /* no border */
-    }
-    .brand-title{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap:10px;
-      padding: 0 2px;
-    }
-    .brand-title h1{
-      margin:0;
-      font-size: 18px;
-      letter-spacing: 0.2px;
-      font-weight: 800;
-      color: var(--accent);
-    }
-    .brand-title .sub{
-      font-size: 12px;
-      color: var(--muted);
-      white-space:nowrap;
-    }
+/* LOGO */
+.brand-logo {
+  width: 100%;
+  padding: 8px 0;
+}
 
-    /* When collapsed: keep logo, hide text blocks */
-    .sidebar-wrap.collapsed .brand-title,
-    .sidebar-wrap.collapsed .carousel-block,
-    .sidebar-wrap.collapsed .metrics-block,
-    .sidebar-wrap.collapsed .sidebar-footer{
-      display:none;
-    }
-    .sidebar-wrap.collapsed .brand{
-      gap:0;
-    }
+.brand-logo img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
+}
 
-    /* Buttons on TOP (you requested) */
-    .dash-buttons{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top: 4px;
-    }
-    .dash-btn{
-      appearance:none;
-      border: 1px solid var(--border);
-      background: #fff;
-      color: var(--text);
-      padding: 10px 12px;
-      border-radius: 999px;
-      cursor:pointer;
-      font-weight: 700;
-      font-size: 13px;
-      letter-spacing: 0.2px;
-      transition: transform 0.06s ease, filter 0.12s ease, border-color 0.12s ease;
-      display:inline-flex;
-      align-items:center;
-      gap:8px;
-    }
-    .dash-btn:hover{ filter: brightness(0.985); border-color: rgba(139,115,85,0.45); }
-    .dash-btn:active{ transform: scale(0.99); }
+/* BRAND TITLE */
+.brand-title {
+  text-align: center;
+}
+.main-nav.collapsed .brand-title {
+  display: none;
+}
 
-    .dash-btn.active{
-      background: rgba(210,180,140,0.25);
-      border-color: rgba(139,115,85,0.55);
-      color: var(--accent);
-    }
+.brand-title h1 {
+  font-family: "Noto Serif", Georgia, serif;
+  font-size: 1.1em;
+  font-weight: 700;
+}
 
-    /* All-time top products label + simple carousel strip */
-    .carousel-block{
-      margin-top: 6px;
-      padding: 10px 12px;
-      border-radius: 14px;
-      background: rgba(210,180,140,0.14);
-      border: 1px solid rgba(210,180,140,0.35);
-    }
-    .carousel-title{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap:10px;
-      margin-bottom: 8px;
-    }
-    .carousel-title .h{
-      font-weight: 900;
-      color: var(--accent);
-      font-size: 13px;
-      letter-spacing: 0.25px;
-      text-transform: uppercase;
-    }
-    .carousel-title .hint{
-      font-size: 12px;
-      color: var(--muted);
-      white-space:nowrap;
-    }
+.brand-title h2 {
+  font-size: 0.8em;
+  font-weight: 600;
+  color: #8d8173;
+  margin-top: 4px;
+}
 
-    .carousel{
-      display:flex;
-      gap:10px;
-      overflow:auto;
-      padding-bottom: 4px;
-      scroll-snap-type: x mandatory;
-    }
-    .carousel::-webkit-scrollbar{ height: 8px; }
-    .carousel::-webkit-scrollbar-thumb{ background: rgba(139,115,85,0.25); border-radius: 999px; }
+/* =========================
+   CAROUSEL
+========================= */
+.carousel {
+  margin-top: 10px;
+}
 
-    .product-card{
-      flex: 0 0 210px;
-      scroll-snap-align: start;
-      background: #fff;
-      border: 1px solid rgba(210,180,140,0.35);
-      border-radius: 14px;
-      padding: 10px;
-      display:flex;
-      gap:10px;
-      align-items:center;
-      box-shadow: 0 6px 16px rgba(74,59,42,0.06);
-    }
-    .product-card img{
-      width: 54px;
-      height: 54px;
-      object-fit: cover;
-      border-radius: 12px;
-      background: rgba(210,180,140,0.25);
-      border: none;
-      flex: 0 0 auto;
-    }
-    .product-meta{
-      min-width:0;
-      flex:1;
-    }
-    .product-name{
-      margin:0;
-      font-size: 13px;
-      font-weight: 850;
-      color: var(--text);
-      line-height: 1.15;
-    }
-    .product-sub{
-      margin: 4px 0 0 0;
-      font-size: 12px;
-      color: var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
+.carousel-label {
+  font-size: 0.75em;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #8d8173;
+  margin-bottom: 6px;
+}
 
-    /* RCO metrics: NO BORDER (you requested) */
-    .metrics-block{
-      padding: 10px 2px 0 2px;
-      /* no border, no card */
-    }
-    .metrics-head{
-      display:flex;
-      align-items:baseline;
-      justify-content:space-between;
-      gap:10px;
-      padding: 0 2px;
-      margin-bottom: 8px;
-    }
-    .metrics-head .h{
-      font-weight: 900;
-      color: var(--accent);
-      font-size: 13px;
-      letter-spacing: 0.25px;
-      text-transform: uppercase;
-    }
-    .metrics-head .muted{
-      color: var(--muted);
-      font-size: 12px;
-      white-space:nowrap;
-    }
-    .metrics-grid{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      padding: 0 2px;
-    }
-    .metric{
-      background: rgba(255,255,255,0.75);
-      border: 1px solid rgba(210,180,140,0.25);
-      border-radius: 14px;
-      padding: 10px 10px;
-    }
-    .metric .k{
-      font-size: 11px;
-      letter-spacing: 0.2px;
-      color: var(--muted);
-      font-weight: 800;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-    .metric .v{
-      font-size: 18px;
-      font-weight: 950;
-      color: var(--text);
-      line-height: 1.05;
-    }
+.carousel img {
+  width: 100%;
+  height: 220px;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+}
 
-    .sidebar-footer{
-      margin-top:auto;
-      padding-top: 10px;
-      border-top: 1px dashed rgba(210,180,140,0.45);
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:10px;
-      color: var(--muted);
-      font-size: 12px;
-    }
+.carousel img.fade-out {
+  opacity: 0;
+}
 
-    /* =========================================================
-       MAIN CONTENT
-       ========================================================= */
-    .main{
-      flex: 1;
-      min-width: 0;
-      height: calc(100vh - 36px);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
-      display:flex;
-      flex-direction:column;
-    }
+.main-nav.collapsed .carousel,
+.main-nav.collapsed .carousel-label {
+  display: none;
+}
 
-    .main-topbar{
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(210,180,140,0.35);
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
-      background: rgba(255,255,255,0.9);
-    }
+/* =========================
+   NAV BUTTONS (TOP)
+========================= */
+.nav-tabs {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
 
-    /* Emojis removed here */
-    .main-title{
-      margin:0;
-      font-size: 18px;
-      font-weight: 950;
-      color: var(--accent);
-      letter-spacing: 0.2px;
-    }
-    .main-subtitle{
-      font-size: 12px;
-      color: var(--muted);
-      margin-top: 3px;
-      font-weight: 650;
-    }
+.nav-tab {
+  border: 1px solid var(--border);
+  background: #ffffff;
+  color: #5f4b3c;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
 
-    .main-actions{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-    .pill{
-      border: 1px solid rgba(210,180,140,0.45);
-      background: rgba(210,180,140,0.15);
-      color: var(--accent);
-      padding: 8px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.2px;
-      white-space:nowrap;
-    }
+.nav-tab.active {
+  background: linear-gradient(135deg, #d7c2a6, #bd9979);
+  color: #ffffff;
+}
 
-    .iframe-wrap{
-      flex: 1;
-      min-height: 0;
-      background: var(--bg);
-    }
-    iframe{
-      width: 100%;
-      height: 100%;
-      border: 0;
-      display:block;
-      background: var(--bg);
-    }
+/* =========================
+   TOGGLE ARROW (EDGE)
+========================= */
+.toggle-arrow {
+  position: absolute;
+  top: 50%;
+  right: -14px;
+  width: 28px;
+  height: 56px;
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 0 10px 10px 0;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
 
-    /* small screens */
-    @media (max-width: 980px){
-      .app{ flex-direction:column; }
-      .sidebar-wrap{ width: 100%; flex-basis:auto; }
-      .sidebar{ height:auto; }
-      .main{ height: auto; min-height: 60vh; }
-      .sidebar-toggle{ display:none; }
-    }
-  </style>
+.chev {
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid #5f4b3c;
+  transition: transform 0.2s ease;
+}
+
+.main-nav.expanded .chev {
+  transform: rotate(180deg);
+}
+
+/* =========================
+   CONTENT AREA
+========================= */
+.content-area {
+  flex: 1;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.iframe-wrapper {
+  display: none;
+  height: 100%;
+}
+
+.iframe-wrapper.active {
+  display: block;
+}
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+</style>
 </head>
 
 <body>
-  <div class="app">
-    <!-- =======================================================
-         SIDEBAR
-         ======================================================= -->
-    <aside class="sidebar-wrap" id="sidebarWrap">
-      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
-        <span class="chev">›</span>
-      </button>
 
-      <div class="sidebar">
-        <!-- Logo + Title (no emoji) -->
-        <div class="brand">
-          <!-- Replace with your real logo path -->
-          <img src="logo.png" alt="RCO Logo" />
+<div class="app-shell">
 
-          <div class="brand-title">
-            <h1>RCO Dashboard</h1>
-            <div class="sub">Operations</div>
-          </div>
-        </div>
+  <!-- SIDEBAR -->
+  <nav class="main-nav expanded" id="nav">
 
-        <!-- Dashboard Buttons ON TOP -->
-        <div class="dash-buttons" id="dashButtons">
-          <button class="dash-btn active" data-target="fulfillment.html" data-label="Fulfillment">Fulfillment</button>
-          <button class="dash-btn" data-target="inventory.html" data-label="Inventory">Inventory</button>
-          <button class="dash-btn" data-target="shipping.html" data-label="Shipping">Shipping</button>
-          <button class="dash-btn" data-target="support.html" data-label="Support">Support</button>
-          <!-- Add/remove buttons as needed -->
-        </div>
+    <div class="brand-logo">
+      <img src="logo.png" alt="Rowe Casa Organics Logo">
+    </div>
 
-        <!-- Carousel label updated: All-time top products -->
-        <div class="carousel-block">
-          <div class="carousel-title">
-            <div class="h">All-time Top Products</div>
-            <div class="hint">scroll</div>
-          </div>
+    <div class="brand-title">
+      <h1>RCO Metrics</h1>
+      <h2>Operational Dashboards</h2>
+    </div>
 
-          <!-- You can wire these cards to real data later -->
-          <div class="carousel" aria-label="All-time top products carousel">
-            <div class="product-card">
-              <img src="product-1.jpg" alt="Top Product 1" />
-              <div class="product-meta">
-                <p class="product-name">Top Product #1</p>
-                <p class="product-sub">Best seller (all-time)</p>
-              </div>
-            </div>
+    <div class="carousel-label">All-Time Top Products</div>
+    <div class="carousel">
+      <img id="productImage" src="tartcherry.png">
+    </div>
 
-            <div class="product-card">
-              <img src="product-2.jpg" alt="Top Product 2" />
-              <div class="product-meta">
-                <p class="product-name">Top Product #2</p>
-                <p class="product-sub">Best seller (all-time)</p>
-              </div>
-            </div>
+    <div class="toggle-arrow" id="toggleArrow">
+      <div class="chev"></div>
+    </div>
 
-            <div class="product-card">
-              <img src="product-3.jpg" alt="Top Product 3" />
-              <div class="product-meta">
-                <p class="product-name">Top Product #3</p>
-                <p class="product-sub">Best seller (all-time)</p>
-              </div>
-            </div>
+  </nav>
 
-            <div class="product-card">
-              <img src="product-4.jpg" alt="Top Product 4" />
-              <div class="product-meta">
-                <p class="product-name">Top Product #4</p>
-                <p class="product-sub">Best seller (all-time)</p>
-              </div>
-            </div>
-          </div>
-        </div>
+  <!-- CONTENT -->
+  <main class="content-area">
 
-        <!-- RCO Metrics (NO border around this section) -->
-        <div class="metrics-block">
-          <div class="metrics-head">
-            <div class="h">RCO Metrics</div>
-            <div class="muted" id="metricsRange">Updated today</div>
-          </div>
+    <!-- TOP NAV -->
+    <div class="nav-tabs" style="padding:16px;">
+      <button class="nav-tab active" data-tab="fulfillment">Fulfillment</button>
+      <button class="nav-tab" data-tab="shipping">Shipping</button>
+      <button class="nav-tab" data-tab="orders">Orders</button>
+    </div>
 
-          <div class="metrics-grid">
-            <div class="metric">
-              <div class="k">Orders</div>
-              <div class="v" id="mOrders">—</div>
-            </div>
-            <div class="metric">
-              <div class="k">7 Day Fill Rate</div>
-              <div class="v" id="mFill7">—</div>
-            </div>
-            <div class="metric">
-              <div class="k">4 Day Fill Rate</div>
-              <div class="v" id="mFill4">—</div>
-            </div>
-            <div class="metric">
-              <div class="k">Avg / Day</div>
-              <div class="v" id="mAvg">—</div>
-            </div>
-          </div>
-        </div>
+    <div id="fulfillment-frame" class="iframe-wrapper active">
+      <iframe src="fulfillment.html"></iframe>
+    </div>
 
-        <div class="sidebar-footer">
-          <span id="sidebarStatus">Sidebar open</span>
-          <span style="color: var(--accent); font-weight: 800;">RCO</span>
-        </div>
-      </div>
-    </aside>
+    <div id="shipping-frame" class="iframe-wrapper">
+      <iframe src="shipping.html"></iframe>
+    </div>
 
-    <!-- =======================================================
-         MAIN
-         ======================================================= -->
-    <main class="main">
-      <div class="main-topbar">
-        <div>
-          <!-- Emojis removed -->
-          <h2 class="main-title" id="mainTitle">RCO Dashboard</h2>
-          <div class="main-subtitle" id="mainSubtitle">Fulfillment</div>
-        </div>
+    <div id="orders-frame" class="iframe-wrapper">
+      <iframe src="orders.html"></iframe>
+    </div>
 
-        <div class="main-actions">
-          <span class="pill" id="activeDashPill">Fulfillment</span>
-        </div>
-      </div>
+  </main>
 
-      <div class="iframe-wrap">
-        <iframe id="dashFrame" src="fulfillment.html" title="Dashboard Content"></iframe>
-      </div>
-    </main>
-  </div>
+</div>
 
-  <!-- If auth-check.js was causing refresh loops, keep it commented until fixed -->
-  <!-- <script type="module" src="auth-check.js"></script> -->
+<script>
+/* SIDEBAR TOGGLE */
+const nav = document.getElementById("nav");
+document.getElementById("toggleArrow").onclick = () => {
+  nav.classList.toggle("collapsed");
+  nav.classList.toggle("expanded");
+};
 
-  <script>
-    // ==========================================================
-    // Sidebar toggle (arrow sits on edge of sidebar)
-    // ==========================================================
-    const sidebarWrap = document.getElementById('sidebarWrap');
-    const sidebarToggle = document.getElementById('sidebarToggle');
-    const sidebarStatus = document.getElementById('sidebarStatus');
+/* CAROUSEL */
+const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
+let idx = 0;
+const img = document.getElementById("productImage");
 
-    sidebarToggle.addEventListener('click', () => {
-      sidebarWrap.classList.toggle('collapsed');
-      const isCollapsed = sidebarWrap.classList.contains('collapsed');
-      sidebarStatus.textContent = isCollapsed ? 'Sidebar closed' : 'Sidebar open';
-    });
+setInterval(() => {
+  img.classList.add("fade-out");
+  setTimeout(() => {
+    idx = (idx + 1) % products.length;
+    img.src = products[idx];
+    img.classList.remove("fade-out");
+  }, 200);
+}, 5000);
 
-    // ==========================================================
-    // Dashboard navigation buttons (on top)
-    // ==========================================================
-    const dashFrame = document.getElementById('dashFrame');
-    const mainSubtitle = document.getElementById('mainSubtitle');
-    const activeDashPill = document.getElementById('activeDashPill');
+/* TAB SWITCHING */
+document.querySelectorAll(".nav-tab").forEach(tab => {
+  tab.onclick = () => {
+    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
 
-    document.getElementById('dashButtons').addEventListener('click', (e) => {
-      const btn = e.target.closest('button[data-target]');
-      if (!btn) return;
+    document.querySelectorAll(".iframe-wrapper").forEach(w => w.classList.remove("active"));
+    document.getElementById(`${tab.dataset.tab}-frame`).classList.add("active");
+  };
+});
+</script>
 
-      document.querySelectorAll('.dash-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      const target = btn.getAttribute('data-target');
-      const label = btn.getAttribute('data-label') || 'Dashboard';
-
-      dashFrame.src = target;
-      mainSubtitle.textContent = label;
-      activeDashPill.textContent = label;
-    });
-
-    // ==========================================================
-    // OPTIONAL: simple metrics placeholders
-    // (Wire these up to your real data later if you want)
-    // ==========================================================
-    // Example static placeholders so it doesn't look empty:
-    document.getElementById('mOrders').textContent = '—';
-    document.getElementById('mFill7').textContent = '—';
-    document.getElementById('mFill4').textContent = '—';
-    document.getElementById('mAvg').textContent = '—';
-  </script>
 </body>
 </html>
