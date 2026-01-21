@@ -102,7 +102,7 @@ body {
   border-color: #5f4b3c;
 }
 
-/* FULLSCREEN BUTTON */
+/* FULLSCREEN BUTTON (Orders-style, darker brown) */
 .fullscreen-btn {
   width: 36px;
   height: 36px;
@@ -117,23 +117,27 @@ body {
   box-shadow: 0 3px 8px rgba(95,75,60,0.22);
 }
 
+/* ICON WRAPPER (so SVG never collapses) */
 .fullscreen-btn svg{
   width: 18px;
   height: 18px;
   display: block;
 }
 
+/* EXIT FULLSCREEN = flip the icon */
 .fullscreen-btn.exit svg {
   transform: rotate(180deg);
   transition: transform 0.25s ease;
 }
 
+/* Hover */
 .fullscreen-btn:hover {
   background: #ffffff;
   border-color: #bd9979;
   box-shadow: 0 4px 12px rgba(95,75,60,0.22);
 }
 
+/* Keep icon visible on white */
 .fullscreen-btn:hover svg path {
   stroke: #5f4b3c !important;
 }
@@ -142,6 +146,7 @@ body {
   transform: scale(0.96);
   box-shadow: 0 2px 6px rgba(95,75,60,0.26);
 }
+
 
 /* ===== KPI ROW ===== */
 .kpi-row {
@@ -231,7 +236,7 @@ body {
   grid-column: 2;
 }
 
-/* === TABLE === */
+/* === RAW TABLE === */
 .table-wrapper {
   flex: 1;
   overflow-y: auto;
@@ -253,7 +258,7 @@ body {
 }
 
 .data-table th {
-  padding: 10px 8px;
+  padding: 8px;
   text-align: left;
   font-weight: 600;
 }
@@ -269,6 +274,7 @@ body {
   background: #fbfaf8;
 }
 
+/* Raw data colors (keep as your js classes expect) */
 .rate-excellent { color: #2e7d32; font-weight: 700; }
 .rate-good      { color: #4f8f4f; font-weight: 700; }
 .rate-warning   { color: #b36b00; font-weight: 700; }
@@ -436,24 +442,11 @@ canvas {
   .dashboard-container { height: auto; }
   .dashboard-header { 
     grid-template-columns: 1fr; 
-    justify-items: center;
-    gap: 12px;
+    justify-items: center; 
   }
-  .header-title {
-    order: -1;
-  }
-  .header-left {
-    order: 1;
-  }
-  .header-controls { 
-    justify-content: center;
-    order: 2;
-  }
+  .header-controls { justify-content: center; }
   .kpi-row { grid-template-columns: 1fr; }
-  .content-grid { 
-    display: flex; 
-    flex-direction: column; 
-  }
+  .content-grid { display: flex; flex-direction: column; }
   .chart-card { min-height: 300px; }
 }
 </style>
@@ -476,10 +469,11 @@ canvas {
     </div>
 
     <div class="header-controls">
-      <button class="view-btn active" data-view="monthly">Monthly</button>
-      <button class="view-btn" data-view="calendar">Calendar</button>
+      <button class="view-btn active" data-view="monthly" id="monthlyBtn">Monthly</button>
+      <button class="view-btn" data-view="calendar" id="calendarBtn">Calendar</button>
       <button id="datasetToggleBtn">Wholesale</button>
 
+      <!-- FULLSCREEN (SVG ICON) -->
       <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <path d="M9 4H4v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -515,8 +509,8 @@ canvas {
     </div>
   </div>
 
-  <!-- MONTHLY VIEW -->
-  <div class="content-grid monthly-view" data-view="monthly">
+  <!-- GRID (Monthly) -->
+  <div class="content-grid monthly-view" id="monthlyView">
     <div class="chart-card table-section">
       <div class="chart-title">Daily Data</div>
       <div class="table-wrapper">
@@ -552,8 +546,8 @@ canvas {
     </div>
   </div>
 
-  <!-- CALENDAR VIEW -->
-  <div class="calendar-view" data-view="calendar">
+  <!-- CALENDAR VIEW (kept for JS swapping) -->
+  <div class="calendar-view" id="calendarView">
     <div id="calendarGrid" class="calendar-grid"></div>
   </div>
 
@@ -566,7 +560,7 @@ canvas {
 <script src="fulfillment.js"></script>
 
 <script>
-/* FULLSCREEN LOGIC */
+/* FULLSCREEN LOGIC (fixed + exit state) */
 const fsBtn = document.getElementById('fullscreenBtn');
 
 if (fsBtn) {
