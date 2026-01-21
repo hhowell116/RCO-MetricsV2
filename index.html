@@ -25,8 +25,8 @@ body {
 
 /* ================= SIDEBAR ================= */
 .sidebar {
-  width: 200px;
-  min-width: 200px;
+  width: 170px;
+  min-width: 170px;
   height: 100vh;
   background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
   border-right: 1px solid #e2dbd1;
@@ -42,7 +42,7 @@ body {
 
 .sidebar-logo {
   width: 100%;
-  max-width: 140px;
+  max-width: 120px;
   margin: 0 auto 10px;
   display: block;
 }
@@ -50,11 +50,11 @@ body {
 .sidebar-title {
   font-weight: 700;
   color: #5f4b3c;
-  font-size: 1em;
+  font-size: 0.95em;
 }
 
 .sidebar-subtitle {
-  font-size: 0.75em;
+  font-size: 0.7em;
   color: #8d8173;
 }
 
@@ -67,11 +67,12 @@ body {
 }
 
 .nav-btn {
-  border: 1px solid #d7d1ca;
+  border: 2px solid #d7d1ca;
   background: #ffffff;
   border-radius: 10px;
-  padding: 12px;
+  padding: 10px 8px;
   font-weight: 600;
+  font-size: 0.85em;
   color: #5f4b3c;
   cursor: pointer;
   text-align: center;
@@ -79,12 +80,13 @@ body {
 }
 
 .nav-btn:hover {
-  background: rgba(215,209,202,0.25);
+  border-color: #bd9979;
+  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
 }
 
 .nav-btn.active {
-  background: linear-gradient(135deg, #c6a27f 0%, #9e7656 100%);
-  border-color: #9e7656;
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+  border-color: #5f4b3c;
   color: #ffffff;
 }
 
@@ -94,20 +96,23 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding-top: 16px;
 }
 
 .orders-widget {
-  background: linear-gradient(135deg, #c6a27f 0%, #9e7656 100%);
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
   border-radius: 12px;
   padding: 12px;
   color: white;
   text-align: center;
+  box-shadow: 0 3px 8px rgba(95,75,60,0.22);
 }
 
 .orders-label {
   font-size: 0.65em;
   letter-spacing: 0.5px;
   opacity: 0.9;
+  font-weight: 600;
 }
 
 .orders-value {
@@ -128,16 +133,20 @@ body {
 }
 
 .sign-out-btn {
-  border: 1px solid #d7d1ca;
+  border: 2px solid #d7d1ca;
   background: white;
   padding: 10px;
   border-radius: 10px;
   font-weight: 600;
+  font-size: 0.85em;
   cursor: pointer;
+  color: #5f4b3c;
+  transition: all 0.2s ease;
 }
 
 .sign-out-btn:hover {
-  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+  border-color: #5f4b3c;
   color: white;
 }
 
@@ -190,7 +199,7 @@ iframe {
 
     <div class="sidebar-footer">
       <div class="orders-widget">
-        <div class="orders-label">TODAY’S ORDERS</div>
+        <div class="orders-label">TODAY'S ORDERS</div>
         <div class="orders-value" id="orderCount">--</div>
         <div class="orders-updated" id="orderUpdated">Loading...</div>
       </div>
