@@ -1,405 +1,582 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>RCO Metrics Dashboard</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RCO Dashboard</title>
 
-<style>
-/* =========================
-   RESET
-========================= */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+  <style>
+    :root{
+      --bg: #f7f3ea;          /* light, consistent with dashboard */
+      --panel: #ffffff;
+      --border: rgba(210,180,140,0.35);
+      --text: #4a3b2a;
+      --muted: #7a654a;
+      --accent: #8b7355;
+      --accent-2: #d2b48c;
+      --shadow: 0 8px 24px rgba(74, 59, 42, 0.08);
+      --radius: 18px;
+    }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
 
-body{
-  font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #0f0f12; /* DARK BACKGROUND */
-  color: #f2efe9;
-}
+    /* =========================================================
+       APP LAYOUT
+       ========================================================= */
+    .app{
+      min-height: 100vh;
+      display:flex;
+      gap: 18px;
+      padding: 18px;
+    }
 
-/* =========================
-   LAYOUT
-========================= */
-:root{
-  --sidebar-w: 320px;
-  --sidebar-w-collapsed: 84px;
+    /* =========================================================
+       SIDEBAR
+       ========================================================= */
+    .sidebar-wrap{
+      position: relative;
+      width: 320px;
+      flex: 0 0 320px;
+      transition: width 220ms ease;
+    }
+    .sidebar-wrap.collapsed{
+      width: 88px;
+      flex-basis: 88px;
+    }
 
-  --tan: #bd9979;
-  --tan-soft: rgba(189,153,121,0.25);
-  --panel: #15151a;
-  --panel-2: #1b1b22;
-  --border: rgba(189,153,121,0.25);
-}
+    .sidebar{
+      height: calc(100vh - 36px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      overflow:hidden;
+    }
 
-.app-shell{
-  width: 100%;
-  height: 100vh;
-  display: flex;
-  overflow: hidden;
-}
+    /* Toggle button on the EDGE of sidebar (not bottom) */
+    .sidebar-toggle{
+      position:absolute;
+      top: 50%;
+      right: -14px;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 56px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      cursor:pointer;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color: var(--accent);
+      user-select:none;
+    }
+    .sidebar-toggle:hover{ filter: brightness(0.98); }
+    .sidebar-toggle:active{ transform: translateY(-50%) scale(0.98); }
 
-/* =========================
-   SIDEBAR
-========================= */
-.main-nav{
-  width: var(--sidebar-w);
-  flex: 0 0 var(--sidebar-w);
-  height: 100vh;
-  background: linear-gradient(180deg, var(--panel) 0%, #121218 100%);
-  border-right: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  padding: 18px 16px;
-  gap: 14px;
-  transition: width 0.22s ease, padding 0.22s ease;
-}
+    .chev{
+      font-size: 18px;
+      line-height: 1;
+      display:block;
+      transform: rotate(0deg);
+      transition: transform 220ms ease;
+    }
+    .sidebar-wrap.collapsed .chev{
+      transform: rotate(180deg);
+    }
 
-.main-nav.collapsed{
-  width: var(--sidebar-w-collapsed);
-  flex-basis: var(--sidebar-w-collapsed);
-  padding: 16px 10px;
-}
+    /* Logo: full width across sidebar, no border */
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .brand img{
+      width: 100%;
+      height: auto;
+      display:block;
+      border-radius: 14px;
+      /* no border */
+    }
+    .brand-title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      padding: 0 2px;
+    }
+    .brand-title h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+      font-weight: 800;
+      color: var(--accent);
+    }
+    .brand-title .sub{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
 
-/* Centered brand */
-.brand{
-  display: grid;
-  justify-items: center;
-  gap: 10px;
-  padding: 10px 6px 8px;
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
-}
+    /* When collapsed: keep logo, hide text blocks */
+    .sidebar-wrap.collapsed .brand-title,
+    .sidebar-wrap.collapsed .carousel-block,
+    .sidebar-wrap.collapsed .metrics-block,
+    .sidebar-wrap.collapsed .sidebar-footer{
+      display:none;
+    }
+    .sidebar-wrap.collapsed .brand{
+      gap:0;
+    }
 
-.brand-logo{
-  width: 76px;
-  height: 76px;
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.04);
-  display: grid;
-  place-items: center;
-}
+    /* Buttons on TOP (you requested) */
+    .dash-buttons{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top: 4px;
+    }
+    .dash-btn{
+      appearance:none;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 999px;
+      cursor:pointer;
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      transition: transform 0.06s ease, filter 0.12s ease, border-color 0.12s ease;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .dash-btn:hover{ filter: brightness(0.985); border-color: rgba(139,115,85,0.45); }
+    .dash-btn:active{ transform: scale(0.99); }
 
-.brand-logo img{
-  width: 86%;
-  height: 86%;
-  object-fit: contain;
-}
+    .dash-btn.active{
+      background: rgba(210,180,140,0.25);
+      border-color: rgba(139,115,85,0.55);
+      color: var(--accent);
+    }
 
-.brand-title{
-  text-align: center;
-  line-height: 1.15;
-}
-.brand-title h1{
-  margin: 0;
-  font-size: 1.05em;
-  font-weight: 800;
-  color: #f2efe9;
-  letter-spacing: 0.2px;
-  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
-}
-.brand-title h2{
-  margin: 6px 0 0;
-  font-size: 0.78em;
-  font-weight: 700;
-  color: rgba(242,239,233,0.75);
-}
+    /* All-time top products label + simple carousel strip */
+    .carousel-block{
+      margin-top: 6px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(210,180,140,0.14);
+      border: 1px solid rgba(210,180,140,0.35);
+    }
+    .carousel-title{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom: 8px;
+    }
+    .carousel-title .h{
+      font-weight: 900;
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: 0.25px;
+      text-transform: uppercase;
+    }
+    .carousel-title .hint{
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+    }
 
-/* Collapse brand text */
-.main-nav.collapsed .brand-title{ display: none; }
-.main-nav.collapsed .brand-logo{ width: 58px; height: 58px; border-radius: 14px; }
+    .carousel{
+      display:flex;
+      gap:10px;
+      overflow:auto;
+      padding-bottom: 4px;
+      scroll-snap-type: x mandatory;
+    }
+    .carousel::-webkit-scrollbar{ height: 8px; }
+    .carousel::-webkit-scrollbar-thumb{ background: rgba(139,115,85,0.25); border-radius: 999px; }
 
-/* Orders counter (optional – keep if you want) */
-.orders-counter{
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  padding: 12px 12px;
-  background: rgba(255,255,255,0.03);
-}
+    .product-card{
+      flex: 0 0 210px;
+      scroll-snap-align: start;
+      background: #fff;
+      border: 1px solid rgba(210,180,140,0.35);
+      border-radius: 14px;
+      padding: 10px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      box-shadow: 0 6px 16px rgba(74,59,42,0.06);
+    }
+    .product-card img{
+      width: 54px;
+      height: 54px;
+      object-fit: cover;
+      border-radius: 12px;
+      background: rgba(210,180,140,0.25);
+      border: none;
+      flex: 0 0 auto;
+    }
+    .product-meta{
+      min-width:0;
+      flex:1;
+    }
+    .product-name{
+      margin:0;
+      font-size: 13px;
+      font-weight: 850;
+      color: var(--text);
+      line-height: 1.15;
+    }
+    .product-sub{
+      margin: 4px 0 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
 
-.orders-counter-label{
-  font-size: 0.72em;
-  font-weight: 800;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
-  color: rgba(242,239,233,0.7);
-  margin-bottom: 6px;
-}
-.orders-counter-value{
-  font-size: 2.3em;
-  font-weight: 900;
-  color: #f2efe9;
-  line-height: 1;
-  margin-bottom: 6px;
-}
-.orders-counter-updated{
-  font-size: 0.7em;
-  color: rgba(242,239,233,0.65);
-  font-weight: 700;
-}
-.main-nav.collapsed .orders-counter{ display: none; }
+    /* RCO metrics: NO BORDER (you requested) */
+    .metrics-block{
+      padding: 10px 2px 0 2px;
+      /* no border, no card */
+    }
+    .metrics-head{
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:10px;
+      padding: 0 2px;
+      margin-bottom: 8px;
+    }
+    .metrics-head .h{
+      font-weight: 900;
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: 0.25px;
+      text-transform: uppercase;
+    }
+    .metrics-head .muted{
+      color: var(--muted);
+      font-size: 12px;
+      white-space:nowrap;
+    }
+    .metrics-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      padding: 0 2px;
+    }
+    .metric{
+      background: rgba(255,255,255,0.75);
+      border: 1px solid rgba(210,180,140,0.25);
+      border-radius: 14px;
+      padding: 10px 10px;
+    }
+    .metric .k{
+      font-size: 11px;
+      letter-spacing: 0.2px;
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .metric .v{
+      font-size: 18px;
+      font-weight: 950;
+      color: var(--text);
+      line-height: 1.05;
+    }
 
-/* =========================
-   BIG CAROUSEL (full width + tall)
-========================= */
-.carousel{
-  border: 1px solid var(--border);
-  border-radius: 14px;
-  background: rgba(255,255,255,0.03);
-  overflow: hidden;
-  padding: 10px;
-}
+    .sidebar-footer{
+      margin-top:auto;
+      padding-top: 10px;
+      border-top: 1px dashed rgba(210,180,140,0.45);
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
 
-.carousel img{
-  width: 100%;
-  height: 220px;            /* BIGGER VERTICAL */
-  object-fit: contain;      /* keep product visible */
-  display: block;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
+    /* =========================================================
+       MAIN CONTENT
+       ========================================================= */
+    .main{
+      flex: 1;
+      min-width: 0;
+      height: calc(100vh - 36px);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      flex-direction:column;
+    }
 
-.carousel img.fade-out{
-  opacity: 0;
-  transform: scale(0.98);
-}
+    .main-topbar{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(210,180,140,0.35);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background: rgba(255,255,255,0.9);
+    }
 
-.main-nav.collapsed .carousel{ display:none; }
+    /* Emojis removed here */
+    .main-title{
+      margin:0;
+      font-size: 18px;
+      font-weight: 950;
+      color: var(--accent);
+      letter-spacing: 0.2px;
+    }
+    .main-subtitle{
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 3px;
+      font-weight: 650;
+    }
 
-/* =========================
-   NAV BUTTONS
-========================= */
-.nav-tabs{
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  flex: 1;
-  overflow: auto;
-  padding-right: 4px;
-}
+    .main-actions{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      border: 1px solid rgba(210,180,140,0.45);
+      background: rgba(210,180,140,0.15);
+      color: var(--accent);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2px;
+      white-space:nowrap;
+    }
 
-.nav-tab{
-  width: 100%;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
-  color: rgba(242,239,233,0.9);
-  padding: 12px 12px;
-  border-radius: 14px;
-  font-weight: 850;
-  cursor: pointer;
-  text-align: left;
-  transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
-}
+    .iframe-wrap{
+      flex: 1;
+      min-height: 0;
+      background: var(--bg);
+    }
+    iframe{
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display:block;
+      background: var(--bg);
+    }
 
-.nav-tab:hover{
-  transform: translateY(-1px);
-  border-color: rgba(189,153,121,0.45);
-  background: rgba(189,153,121,0.10);
-}
-
-.nav-tab.active{
-  background: linear-gradient(135deg, rgba(189,153,121,0.35), rgba(189,153,121,0.12));
-  border-color: rgba(189,153,121,0.65);
-  color: #ffffff;
-}
-
-.main-nav.collapsed .nav-tab{
-  padding: 12px 10px;
-  text-align: center;
-}
-
-/* =========================
-   TOGGLE ARROW (no button text)
-========================= */
-.toggle-row{
-  display:flex;
-  justify-content:center;
-}
-
-.toggle-arrow{
-  width: 44px;
-  height: 44px;
-  border-radius: 14px;
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
-  display:grid;
-  place-items:center;
-  cursor:pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-
-.toggle-arrow:hover{
-  border-color: rgba(189,153,121,0.55);
-  background: rgba(189,153,121,0.10);
-  transform: translateY(-1px);
-}
-
-.chev{
-  width: 0;
-  height: 0;
-  border-top: 8px solid transparent;
-  border-bottom: 8px solid transparent;
-  border-left: 10px solid rgba(242,239,233,0.9);
-  transition: transform 0.2s ease;
-}
-
-/* When collapsed: arrow points right (default); expanded: point left */
-.main-nav.expanded .chev{
-  transform: rotate(180deg);
-}
-
-/* Sign out */
-.sign-out-btn{
-  border: 1px solid var(--border);
-  background: rgba(255,255,255,0.03);
-  color: rgba(242,239,233,0.9);
-  padding: 12px;
-  border-radius: 14px;
-  font-weight: 900;
-  cursor: pointer;
-  transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-}
-
-.sign-out-btn:hover{
-  transform: translateY(-1px);
-  border-color: rgba(189,153,121,0.55);
-  background: rgba(189,153,121,0.10);
-}
-
-.main-nav.collapsed .sign-out-btn{ display:none; }
-
-/* =========================
-   CONTENT AREA
-========================= */
-.content-area{
-  flex: 1;
-  min-width: 0;
-  height: 100vh;
-  overflow: hidden;
-  background: #0f0f12;
-}
-
-.iframe-wrapper{
-  display:none;
-  height: 100%;
-}
-
-.iframe-wrapper.active{ display:block; }
-
-iframe{
-  width:100%;
-  height:100%;
-  border:none;
-}
-</style>
+    /* small screens */
+    @media (max-width: 980px){
+      .app{ flex-direction:column; }
+      .sidebar-wrap{ width: 100%; flex-basis:auto; }
+      .sidebar{ height:auto; }
+      .main{ height: auto; min-height: 60vh; }
+      .sidebar-toggle{ display:none; }
+    }
+  </style>
 </head>
 
 <body>
-<div class="app-shell">
+  <div class="app">
+    <!-- =======================================================
+         SIDEBAR
+         ======================================================= -->
+    <aside class="sidebar-wrap" id="sidebarWrap">
+      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Toggle sidebar">
+        <span class="chev">›</span>
+      </button>
 
-  <!-- SIDEBAR -->
-  <nav class="main-nav expanded" id="nav">
+      <div class="sidebar">
+        <!-- Logo + Title (no emoji) -->
+        <div class="brand">
+          <!-- Replace with your real logo path -->
+          <img src="logo.png" alt="RCO Logo" />
 
-    <div class="brand">
-      <div class="brand-logo">
-        <img src="logo.png" alt="Rowe Casa Organics Logo" />
+          <div class="brand-title">
+            <h1>RCO Dashboard</h1>
+            <div class="sub">Operations</div>
+          </div>
+        </div>
+
+        <!-- Dashboard Buttons ON TOP -->
+        <div class="dash-buttons" id="dashButtons">
+          <button class="dash-btn active" data-target="fulfillment.html" data-label="Fulfillment">Fulfillment</button>
+          <button class="dash-btn" data-target="inventory.html" data-label="Inventory">Inventory</button>
+          <button class="dash-btn" data-target="shipping.html" data-label="Shipping">Shipping</button>
+          <button class="dash-btn" data-target="support.html" data-label="Support">Support</button>
+          <!-- Add/remove buttons as needed -->
+        </div>
+
+        <!-- Carousel label updated: All-time top products -->
+        <div class="carousel-block">
+          <div class="carousel-title">
+            <div class="h">All-time Top Products</div>
+            <div class="hint">scroll</div>
+          </div>
+
+          <!-- You can wire these cards to real data later -->
+          <div class="carousel" aria-label="All-time top products carousel">
+            <div class="product-card">
+              <img src="product-1.jpg" alt="Top Product 1" />
+              <div class="product-meta">
+                <p class="product-name">Top Product #1</p>
+                <p class="product-sub">Best seller (all-time)</p>
+              </div>
+            </div>
+
+            <div class="product-card">
+              <img src="product-2.jpg" alt="Top Product 2" />
+              <div class="product-meta">
+                <p class="product-name">Top Product #2</p>
+                <p class="product-sub">Best seller (all-time)</p>
+              </div>
+            </div>
+
+            <div class="product-card">
+              <img src="product-3.jpg" alt="Top Product 3" />
+              <div class="product-meta">
+                <p class="product-name">Top Product #3</p>
+                <p class="product-sub">Best seller (all-time)</p>
+              </div>
+            </div>
+
+            <div class="product-card">
+              <img src="product-4.jpg" alt="Top Product 4" />
+              <div class="product-meta">
+                <p class="product-name">Top Product #4</p>
+                <p class="product-sub">Best seller (all-time)</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RCO Metrics (NO border around this section) -->
+        <div class="metrics-block">
+          <div class="metrics-head">
+            <div class="h">RCO Metrics</div>
+            <div class="muted" id="metricsRange">Updated today</div>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric">
+              <div class="k">Orders</div>
+              <div class="v" id="mOrders">—</div>
+            </div>
+            <div class="metric">
+              <div class="k">7 Day Fill Rate</div>
+              <div class="v" id="mFill7">—</div>
+            </div>
+            <div class="metric">
+              <div class="k">4 Day Fill Rate</div>
+              <div class="v" id="mFill4">—</div>
+            </div>
+            <div class="metric">
+              <div class="k">Avg / Day</div>
+              <div class="v" id="mAvg">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sidebar-footer">
+          <span id="sidebarStatus">Sidebar open</span>
+          <span style="color: var(--accent); font-weight: 800;">RCO</span>
+        </div>
       </div>
-      <div class="brand-title">
-        <h1>RCO Metrics</h1>
-        <h2>Operational Dashboards</h2>
+    </aside>
+
+    <!-- =======================================================
+         MAIN
+         ======================================================= -->
+    <main class="main">
+      <div class="main-topbar">
+        <div>
+          <!-- Emojis removed -->
+          <h2 class="main-title" id="mainTitle">RCO Dashboard</h2>
+          <div class="main-subtitle" id="mainSubtitle">Fulfillment</div>
+        </div>
+
+        <div class="main-actions">
+          <span class="pill" id="activeDashPill">Fulfillment</span>
+        </div>
       </div>
-    </div>
 
-    <div class="orders-counter" id="ordersCounter">
-      <div class="orders-counter-label">Today's Orders</div>
-      <div class="orders-counter-value" id="orderCount">--</div>
-      <div class="orders-counter-updated" id="orderUpdated">Loading...</div>
-    </div>
-
-    <div class="carousel">
-      <img id="productImage" src="tartcherry.png" alt="Top product" />
-    </div>
-
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="fulfillment">Fulfillment KPI</button>
-      <button class="nav-tab" data-tab="shipping">Shipping</button>
-      <button class="nav-tab" data-tab="orders">Orders</button>
-    </div>
-
-    <div class="toggle-row">
-      <div class="toggle-arrow" id="toggleArrow" aria-label="Toggle sidebar">
-        <div class="chev"></div>
+      <div class="iframe-wrap">
+        <iframe id="dashFrame" src="fulfillment.html" title="Dashboard Content"></iframe>
       </div>
-    </div>
+    </main>
+  </div>
 
-    <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
-  </nav>
+  <!-- If auth-check.js was causing refresh loops, keep it commented until fixed -->
+  <!-- <script type="module" src="auth-check.js"></script> -->
 
-  <!-- CONTENT -->
-  <main class="content-area">
-    <div id="fulfillment-frame" class="iframe-wrapper active">
-      <iframe src="fulfillment.html"></iframe>
-    </div>
+  <script>
+    // ==========================================================
+    // Sidebar toggle (arrow sits on edge of sidebar)
+    // ==========================================================
+    const sidebarWrap = document.getElementById('sidebarWrap');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const sidebarStatus = document.getElementById('sidebarStatus');
 
-    <div id="shipping-frame" class="iframe-wrapper">
-      <iframe src="shipping.html"></iframe>
-    </div>
+    sidebarToggle.addEventListener('click', () => {
+      sidebarWrap.classList.toggle('collapsed');
+      const isCollapsed = sidebarWrap.classList.contains('collapsed');
+      sidebarStatus.textContent = isCollapsed ? 'Sidebar closed' : 'Sidebar open';
+    });
 
-    <div id="orders-frame" class="iframe-wrapper">
-      <iframe src="orders.html"></iframe>
-    </div>
-  </main>
+    // ==========================================================
+    // Dashboard navigation buttons (on top)
+    // ==========================================================
+    const dashFrame = document.getElementById('dashFrame');
+    const mainSubtitle = document.getElementById('mainSubtitle');
+    const activeDashPill = document.getElementById('activeDashPill');
 
-</div>
+    document.getElementById('dashButtons').addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-target]');
+      if (!btn) return;
 
-<script>
-const nav = document.getElementById("nav");
-const toggleArrow = document.getElementById("toggleArrow");
-const productImage = document.getElementById("productImage");
+      document.querySelectorAll('.dash-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
 
-/* Arrow toggle */
-toggleArrow.addEventListener("click", () => {
-  nav.classList.toggle("collapsed");
-  nav.classList.toggle("expanded");
-});
+      const target = btn.getAttribute('data-target');
+      const label = btn.getAttribute('data-label') || 'Dashboard';
 
-/* Carousel */
-const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
-let idx = 0;
+      dashFrame.src = target;
+      mainSubtitle.textContent = label;
+      activeDashPill.textContent = label;
+    });
 
-setInterval(() => {
-  if (!productImage) return;
-  productImage.classList.add("fade-out");
-  setTimeout(() => {
-    idx = (idx + 1) % products.length;
-    productImage.src = products[idx];
-    productImage.classList.remove("fade-out");
-  }, 200);
-}, 5000);
-
-/* Tabs */
-document.querySelectorAll(".nav-tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    const target = tab.dataset.tab;
-
-    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
-
-    document.querySelectorAll(".iframe-wrapper").forEach(w => w.classList.remove("active"));
-    document.getElementById(`${target}-frame`).classList.add("active");
-  });
-});
-</script>
-
-<!-- Keep auth check if you use it; if it loops, it must be fixed in auth-check.js -->
-<script type="module" src="auth-check.js"></script>
-
+    // ==========================================================
+    // OPTIONAL: simple metrics placeholders
+    // (Wire these up to your real data later if you want)
+    // ==========================================================
+    // Example static placeholders so it doesn't look empty:
+    document.getElementById('mOrders').textContent = '—';
+    document.getElementById('mFill7').textContent = '—';
+    document.getElementById('mFill4').textContent = '—';
+    document.getElementById('mAvg').textContent = '—';
+  </script>
 </body>
 </html>
