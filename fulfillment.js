@@ -454,15 +454,25 @@ function populateYearMonthSelectors() {
     monthSelect.value = now.getMonth();
 }
 
+// UPDATED: Color-code Rate 4D and Rate 7D based on their specific targets
 function updateTable(monthData) {
     const tbody = document.getElementById('dataTable');
     tbody.innerHTML = '';
     
-    const getRateClass = rate => {
-        if (rate >= 95) return 'rate-excellent';
-        if (rate >= 85) return 'rate-good';
-        if (rate >= 70) return 'rate-warning';
-        return 'rate-poor';
+    // Rate 4D targets: 85% (good), below is warning/poor
+    const getRate4Class = rate => {
+        if (rate >= 85) return 'rate-excellent';  // At or above 85% target
+        if (rate >= 75) return 'rate-good';       // Close to target
+        if (rate >= 65) return 'rate-warning';    // Concerning
+        return 'rate-poor';                       // Below acceptable
+    };
+    
+    // Rate 7D targets: 95% (good), below is warning/poor
+    const getRate7Class = rate => {
+        if (rate >= 95) return 'rate-excellent';  // At or above 95% target
+        if (rate >= 85) return 'rate-good';       // Close to target
+        if (rate >= 75) return 'rate-warning';    // Concerning
+        return 'rate-poor';                       // Below acceptable
     };
     
     monthData.forEach(row => {
@@ -474,15 +484,15 @@ function updateTable(monthData) {
             <td>${row.orders.toLocaleString()}</td>
             <td>${row.rem4.toLocaleString()}</td>
             <td>${row.rem7.toLocaleString()}</td>
-            <td class="${getRateClass(row.rate4)}">${row.rate4.toFixed(2)}%</td>
-            <td class="${getRateClass(row.rate7)}">${row.rate7.toFixed(2)}%</td>
+            <td class="${getRate4Class(row.rate4)}">${row.rate4.toFixed(2)}%</td>
+            <td class="${getRate7Class(row.rate7)}">${row.rate7.toFixed(2)}%</td>
         `;
         
         tbody.appendChild(tr);
     });
 }
 
-// Event listeners
+// FIXED: Event listeners for view switching
 document.querySelectorAll('[data-view]').forEach(btn => {
     if (btn.tagName === 'BUTTON') {
         btn.addEventListener('click', () => {
@@ -493,11 +503,11 @@ document.querySelectorAll('[data-view]').forEach(btn => {
             
             currentView = btn.dataset.view;
             
-            const monthlyView = document.querySelector('.monthly-view');
-            const calendarView = document.querySelector('.calendar-view');
+            const monthlyView = document.querySelector('[data-view="monthly"]');
+            const calendarView = document.querySelector('[data-view="calendar"]');
             
             if (currentView === 'monthly') {
-                monthlyView.style.display = 'block';
+                monthlyView.style.display = 'grid';  // CHANGED: Use 'grid' instead of 'block'
                 calendarView.style.display = 'none';
                 document.getElementById('monthSelect').disabled = false;
             } else {
@@ -528,9 +538,9 @@ document.getElementById('monthSelect').value = currentMonth.toString();
 document.getElementById('yearSelect').value = currentYear.toString();
 
 // Set initial title to show Retail
-const headerTitle = document.querySelector('.header-center h1');
-if (headerTitle) {
-    headerTitle.innerHTML = '📦 RCO Fulfillment Dashboard <span style="color: #8b7355; font-weight: 600;"> - Retail</span>';
+const datasetLabel = document.getElementById('datasetLabel');
+if (datasetLabel) {
+    datasetLabel.textContent = '- Retail';
 }
 
 updateDashboard();
@@ -561,10 +571,10 @@ if (datasetToggleBtn) {
                 currentlyShowingWholesale = true;
                 datasetToggleBtn.textContent = 'Retail';
                 
-                // Add indicator to title
-                const headerTitle = document.querySelector('.header-center h1');
-                if (headerTitle) {
-                    headerTitle.innerHTML = '📦 RCO Fulfillment Dashboard <span style="color: #8b7355; font-weight: 600;"> - Wholesale</span>';
+                // Update dataset label
+                const datasetLabel = document.getElementById('datasetLabel');
+                if (datasetLabel) {
+                    datasetLabel.textContent = '- Wholesale';
                 }
             } else {
                 alert('Wholesale data not available. Make sure wholesale.js is loaded.');
@@ -579,10 +589,10 @@ if (datasetToggleBtn) {
                 currentlyShowingWholesale = false;
                 datasetToggleBtn.textContent = 'Wholesale';
                 
-                // Add Retail indicator to title
-                const headerTitle = document.querySelector('.header-center h1');
-                if (headerTitle) {
-                    headerTitle.innerHTML = '📦 RCO Fulfillment Dashboard <span style="color: #8b7355; font-weight: 600;"> - Retail</span>';
+                // Update dataset label
+                const datasetLabel = document.getElementById('datasetLabel');
+                if (datasetLabel) {
+                    datasetLabel.textContent = '- Retail';
                 }
             }
         }
@@ -600,11 +610,11 @@ if (datasetToggleBtn) {
         updateDashboard();
     });
 }
-    window.addEventListener('message', (event) => {
+
+window.addEventListener('message', (event) => {
   if (event.data?.type === 'TV_VIEW_STATE') {
     document.body.classList.toggle('tv-view-active', event.data.active);
   }
 });
-
     
 });
