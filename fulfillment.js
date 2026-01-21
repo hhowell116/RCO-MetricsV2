@@ -1,5 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Dashboard loaded! fullData:', fullData ? `${fullData.length} rows` : 'NO DATA');
+
+  // Support both styles:
+  // - window.fullData / window.wholesaleData
+  // - fullData / wholesaleData
+  const fullData = (typeof window.fullData !== 'undefined')
+    ? window.fullData
+    : (typeof globalThis.fullData !== 'undefined' ? globalThis.fullData : []);
+
+  const wholesaleData = (typeof window.wholesaleData !== 'undefined')
+    ? window.wholesaleData
+    : (typeof globalThis.wholesaleData !== 'undefined' ? globalThis.wholesaleData : []);
 
   // Find the most recent month with data
   function getMostRecentDataMonth() {
@@ -7,14 +17,19 @@ document.addEventListener('DOMContentLoaded', () => {
       return { month: new Date().getMonth(), year: new Date().getFullYear() };
     }
 
+    // Sort data by date to find the most recent
     const sortedData = [...fullData].sort((a, b) => {
       const dateA = parseDate(a.date);
       const dateB = parseDate(b.date);
       return dateB - dateA;
     });
 
+    // Get the most recent date
     const mostRecent = parseDate(sortedData[0].date);
-    return { month: mostRecent.getMonth(), year: mostRecent.getFullYear() };
+    return {
+      month: mostRecent.getMonth(),
+      year: mostRecent.getFullYear()
+    };
   }
 
   // Initialize with most recent data month
@@ -42,29 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
       return date.getFullYear() === year;
     });
   }
-
-  // Existing shared class logic (used elsewhere)
-  const getRateClass = rate => {
-    if (rate >= 95) return 'rate-excellent';
-    if (rate >= 85) return 'rate-good';
-    if (rate >= 70) return 'rate-warning';
-    return 'rate-poor';
-  };
-
-  // Separate classes so 4-day and 7-day rates can have different colors in the raw data table
-  const getRateClass4 = rate => {
-    if (rate >= 95) return 'rate4-excellent';
-    if (rate >= 85) return 'rate4-good';
-    if (rate >= 70) return 'rate4-warning';
-    return 'rate4-poor';
-  };
-
-  const getRateClass7 = rate => {
-    if (rate >= 95) return 'rate7-excellent';
-    if (rate >= 85) return 'rate7-good';
-    if (rate >= 70) return 'rate7-warning';
-    return 'rate7-poor';
-  };
 
   function updateDashboard() {
     if (currentView === 'calendar') {
@@ -131,11 +123,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderCalendarView() {
     forceHideTooltip();
+
     const grid = document.getElementById('calendarGrid');
+    if (!grid) return;
     grid.innerHTML = '';
 
     const months = ['January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'];
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
 
     for (let m = 0; m < 12; m++) {
       const monthDiv = document.createElement('div');
@@ -206,6 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function showTooltip(e, data) {
     const tooltip = document.getElementById('tooltip');
+    if (!tooltip) return;
+
     const date = parseDate(data.date);
 
     tooltip.innerHTML = `
@@ -222,11 +219,13 @@ Remaining (7d): ${data.rem7}
   }
 
   function hideTooltip() {
-    document.getElementById('tooltip').classList.remove('show');
+    const t = document.getElementById('tooltip');
+    if (t) t.classList.remove('show');
   }
 
   function moveTooltip(e) {
     const tooltip = document.getElementById('tooltip');
+    if (!tooltip) return;
     tooltip.style.left = (e.clientX + 15) + 'px';
     tooltip.style.top = (e.clientY + 15) + 'px';
   }
@@ -235,6 +234,7 @@ Remaining (7d): ${data.rem7}
     const labels = monthData.map(d => parseDate(d.date).getDate());
 
     if (fillRateChart) fillRateChart.destroy();
+
     const ctx1 = document.getElementById('fillRateChart').getContext('2d');
 
     fillRateChart = new Chart(ctx1, {
@@ -310,13 +310,28 @@ Remaining (7d): ${data.rem7}
               padding: 12,
               boxWidth: 15
             }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                let label = context.dataset.label || '';
+                if (label && !label.includes('Target Line')) {
+                  label += ': ' + context.parsed.y.toFixed(1) + '%';
+                }
+                return label;
+              }
+            }
           }
         },
         scales: {
           y: {
             min: 0,
             max: 105,
-            ticks: { callback: v => v + '%', color: '#a0906f', stepSize: 10 },
+            ticks: {
+              callback: v => v + '%',
+              color: '#a0906f',
+              stepSize: 10
+            },
             grid: { color: 'rgba(210, 180, 140, 0.1)' }
           },
           x: {
@@ -328,42 +343,39 @@ Remaining (7d): ${data.rem7}
     });
 
     if (ordersChart) ordersChart.destroy();
-    const ctx2 = document.getElementById('ordersChart').getContext('2d');
 
+    const ctx2 = document.getElementById('ordersChart').getContext('2d');
     ordersChart = new Chart(ctx2, {
       type: 'line',
       data: {
         labels: labels,
-        datasets: [
-          {
-            label: 'Orders Remaining (4 Day)',
-            data: monthData.map(d => d.rem4),
-            borderColor: '#d2b48c',
-            backgroundColor: 'rgba(210, 180, 140, 0.1)',
-            tension: 0.3,
-            fill: true,
-            borderWidth: 3,
-            pointRadius: 4,
-            pointHoverRadius: 8,
-            pointBackgroundColor: '#d2b48c',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2
-          },
-          {
-            label: 'Orders Remaining (7 Day)',
-            data: monthData.map(d => d.rem7),
-            borderColor: '#8b7355',
-            backgroundColor: 'rgba(139, 115, 85, 0.1)',
-            tension: 0.3,
-            fill: true,
-            borderWidth: 3,
-            pointRadius: 4,
-            pointHoverRadius: 8,
-            pointBackgroundColor: '#8b7355',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2
-          }
-        ]
+        datasets: [{
+          label: 'Orders Remaining (4 Day)',
+          data: monthData.map(d => d.rem4),
+          borderColor: '#d2b48c',
+          backgroundColor: 'rgba(210, 180, 140, 0.1)',
+          tension: 0.3,
+          fill: true,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointHoverRadius: 8,
+          pointBackgroundColor: '#d2b48c',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }, {
+          label: 'Orders Remaining (7 Day)',
+          data: monthData.map(d => d.rem7),
+          borderColor: '#8b7355',
+          backgroundColor: 'rgba(139, 115, 85, 0.1)',
+          tension: 0.3,
+          fill: true,
+          borderWidth: 3,
+          pointRadius: 4,
+          pointHoverRadius: 8,
+          pointBackgroundColor: '#8b7355',
+          pointBorderColor: '#fff',
+          pointBorderWidth: 2
+        }]
       },
       options: {
         responsive: true,
@@ -378,6 +390,15 @@ Remaining (7d): ${data.rem7}
               usePointStyle: true,
               padding: 12,
               boxWidth: 15
+            }
+          },
+          tooltip: {
+            callbacks: {
+              label: function (context) {
+                let label = context.dataset.label || '';
+                if (label) label += ': ' + context.parsed.y.toLocaleString();
+                return label;
+              }
             }
           }
         },
@@ -399,22 +420,65 @@ Remaining (7d): ${data.rem7}
     });
   }
 
-  function updateTable(rows) {
+  const yearSelect = document.getElementById('yearSelect');
+  const monthSelect = document.getElementById('monthSelect');
+
+  function populateYearMonthSelectors() {
+    // YEARS
+    yearSelect.innerHTML = '';
+    const years = [2025, 2026]; // adjust if needed
+
+    years.forEach(year => {
+      const option = document.createElement('option');
+      option.value = year;
+      option.textContent = year;
+      yearSelect.appendChild(option);
+    });
+
+    // MONTHS
+    monthSelect.innerHTML = '';
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+
+    months.forEach((month, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.textContent = month;
+      monthSelect.appendChild(option);
+    });
+
+    // Defaults
+    const now = new Date();
+    yearSelect.value = now.getFullYear();
+    monthSelect.value = now.getMonth();
+  }
+
+  function updateTable(monthData) {
     const tbody = document.getElementById('dataTable');
     tbody.innerHTML = '';
 
-    rows.forEach(row => {
+    const getRateClass = rate => {
+      if (rate >= 95) return 'rate-excellent';
+      if (rate >= 85) return 'rate-good';
+      if (rate >= 70) return 'rate-warning';
+      return 'rate-poor';
+    };
+
+    monthData.forEach(row => {
       const tr = document.createElement('tr');
       const date = parseDate(row.date);
 
       tr.innerHTML = `
         <td>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
         <td>${row.orders.toLocaleString()}</td>
-        <td class="${getRateClass(row.rem4)}">${row.rem4.toLocaleString()}</td>
-        <td class="${getRateClass(row.rem7)}">${row.rem7.toLocaleString()}</td>
-        <td class="${getRateClass4(row.rate4)}">${row.rate4.toFixed(2)}%</td>
-        <td class="${getRateClass7(row.rate7)}">${row.rate7.toFixed(2)}%</td>
+        <td>${row.rem4.toLocaleString()}</td>
+        <td>${row.rem7.toLocaleString()}</td>
+        <td class="${getRateClass(row.rate4)}">${row.rate4.toFixed(2)}%</td>
+        <td class="${getRateClass(row.rate7)}">${row.rate7.toFixed(2)}%</td>
       `;
+
       tbody.appendChild(tr);
     });
   }
@@ -458,9 +522,79 @@ Remaining (7d): ${data.rem7}
     updateDashboard();
   });
 
-  // Initialize selectors to current month/year
+  populateYearMonthSelectors();
+
+  // Initialize with most recent data month
   document.getElementById('monthSelect').value = currentMonth.toString();
   document.getElementById('yearSelect').value = currentYear.toString();
 
   updateDashboard();
+
+  // ============================================
+  // DATASET TOGGLE FUNCTIONALITY
+  // ============================================
+
+  const datasetToggleBtn = document.getElementById('datasetToggleBtn');
+
+  if (datasetToggleBtn) {
+    let regularDataBackup = null;
+    let currentlyShowingWholesale = false;
+
+    datasetToggleBtn.addEventListener('click', () => {
+      if (!currentlyShowingWholesale) {
+        // Switching TO wholesale
+        if (wholesaleData && wholesaleData.length > 0) {
+          // Backup regular data first time
+          if (!regularDataBackup) {
+            regularDataBackup = [...fullData];
+          }
+
+          // Replace fullData with wholesale
+          fullData.length = 0;
+          fullData.push(...wholesaleData);
+
+          currentlyShowingWholesale = true;
+          datasetToggleBtn.textContent = 'Retail';
+
+          const datasetLabel = document.getElementById('datasetLabel');
+          if (datasetLabel) datasetLabel.textContent = '- Wholesale';
+
+        } else {
+          alert('Wholesale data not available. Make sure wholesale.js is loaded.');
+          return;
+        }
+      } else {
+        // Switching BACK to regular
+        if (regularDataBackup) {
+          fullData.length = 0;
+          fullData.push(...regularDataBackup);
+
+          currentlyShowingWholesale = false;
+          datasetToggleBtn.textContent = 'Wholesale';
+
+          const datasetLabel = document.getElementById('datasetLabel');
+          if (datasetLabel) datasetLabel.textContent = '- Retail';
+        }
+      }
+
+      // Find most recent data in new dataset
+      const recentData = getMostRecentDataMonth();
+      currentMonth = recentData.month;
+      currentYear = recentData.year;
+
+      // Update selectors
+      document.getElementById('monthSelect').value = currentMonth.toString();
+      document.getElementById('yearSelect').value = currentYear.toString();
+
+      // Refresh dashboard
+      updateDashboard();
+    });
+  }
+
+  window.addEventListener('message', (event) => {
+    if (event.data?.type === 'TV_VIEW_STATE') {
+      document.body.classList.toggle('tv-view-active', event.data.active);
+    }
+  });
+
 });
