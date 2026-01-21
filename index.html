@@ -6,193 +6,267 @@
 <title>RCO Metrics Dashboard</title>
 
 <style>
-/* =========================
-   RESET
-========================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-html, body { width: 100%; height: 100%; overflow: hidden; }
 
-body{
-  font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f6f2eb;
-  color: #5f4b3c;
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
 }
 
-/* =========================
+body {
+  font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  /* lighter tan background */
+  background: linear-gradient(135deg, #fbf7f0 0%, #e8decd 100%);
+}
+
+/* ==============================
    LAYOUT
-========================= */
-.app-shell{
+============================== */
+.app {
   display: flex;
   width: 100%;
   height: 100vh;
 }
 
-/* =========================
-   SIDEBAR (THIN + STATIC)
-========================= */
-.sidebar{
-  width: 180px;                 /* THINNER */
+/* ==============================
+   SIDEBAR (STATIC, THIN)
+============================== */
+.sidebar {
+  width: 190px;           /* thinner (adjust if you want even smaller) */
+  min-width: 190px;
   height: 100vh;
-  background: #efe6da;
-  border-right: 1px solid rgba(189,153,121,0.35);
-  padding: 16px 12px;
+  background: linear-gradient(180deg, #f8f2e8 0%, #efe4d2 100%);
+  box-shadow: 2px 0 10px rgba(95, 75, 60, 0.12);
   display: flex;
   flex-direction: column;
 }
 
-/* LOGO */
-.brand-logo{
-  display: flex;
-  justify-content: center;
-  margin-bottom: 16px;
+.sidebar-header {
+  padding: 14px 12px 12px;
+  /* no border */
 }
 
-.brand-logo img{
-  width: 140px;                /* smaller, crisp */
+.sidebar-logo {
+  width: 100%;
   max-width: 100%;
+  max-height: 56px;      /* prevents pixelated stretching */
   height: auto;
+  display: block;
+  margin: 0 auto 10px;
+  /* remove border/padding/background */
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
   object-fit: contain;
 }
 
-/* NAV BUTTONS */
-.nav-tabs{
+.sidebar-title {
+  color: #5f4b3c;
+  font-size: 1.05em;
+  font-weight: 800;
+  text-align: center;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+  margin-bottom: 2px;
+}
+
+.sidebar-subtitle {
+  color: #7c6a5e;
+  font-size: 0.78em;
+  text-align: center;
+  font-weight: 600;
+}
+
+/* NAV */
+.sidebar-nav {
+  padding: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item {
+  margin: 0 10px;
+  padding: 12px 10px;
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+
+  /* center the names */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+
+  color: #5f4b3c;
+  font-weight: 700;
+  font-size: 0.92em;
+
+  background: rgba(255,255,255,0.45);
+  border: 1px solid rgba(95, 75, 60, 0.10);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.65);
+  box-shadow: 0 6px 14px rgba(95, 75, 60, 0.14);
+  transform: translateY(-1px);
+}
+
+.nav-item.active {
+  background: rgba(255,255,255,0.85);
+  border-color: rgba(95, 75, 60, 0.22);
+  box-shadow: 0 8px 18px rgba(95, 75, 60, 0.16);
+}
+
+/* FOOTER (Daily Orders + Sign Out at the bottom) */
+.sidebar-footer {
+  margin-top: auto;
+  padding: 12px 10px 14px;
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.nav-tab{
-  border: 1px solid rgba(189,153,121,0.45);
-  background: #ffffff;
-  color: #5f4b3c;
-  padding: 10px 12px;
+/* Daily Orders widget */
+.orders-widget {
+  background: linear-gradient(135deg, #d9c9b3 0%, #c9b08f 100%);
+  padding: 12px 10px;
   border-radius: 12px;
-  font-weight: 800;
-  cursor: pointer;
-  transition: all 0.18s ease;
-  text-align: left;
-  font-size: 0.85em;
+  text-align: center;
+  color: white;
+  /* remove borders */
+  border: none;
 }
 
-.nav-tab:hover{
-  background: rgba(189,153,121,0.12);
-}
-
-.nav-tab.active{
-  background: linear-gradient(135deg, #d7c2a6, #bd9979);
-  color: #ffffff;
-  border-color: rgba(189,153,121,0.65);
-}
-
-/* PUSH BOTTOM CONTENT DOWN */
-.sidebar-spacer{
-  flex: 1;
-}
-
-/* =========================
-   DAILY ORDERS (BOTTOM)
-========================= */
-.orders-counter{
-  border-top: 1px solid rgba(189,153,121,0.35);
-  padding-top: 12px;
-  margin-bottom: 12px;
-}
-
-.orders-label{
-  font-size: 0.65em;
-  font-weight: 800;
+.orders-label {
+  font-size: 0.66em;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: rgba(95,75,60,0.75);
+  letter-spacing: 0.9px;
+  margin-bottom: 6px;
+  opacity: 0.95;
+}
+
+.orders-value {
+  font-size: 1.9em;
+  font-weight: 800;
+  line-height: 1;
   margin-bottom: 4px;
 }
 
-.orders-value{
-  font-size: 1.6em;
-  font-weight: 900;
-  line-height: 1;
+.orders-updated {
+  font-size: 0.62em;
+  opacity: 0.9;
 }
 
-.orders-updated{
-  font-size: 0.6em;
-  color: rgba(95,75,60,0.7);
-  font-weight: 600;
-}
-
-/* SIGN OUT */
-.sign-out-btn{
-  border: 1px solid rgba(189,153,121,0.45);
-  background: #ffffff;
+/* Sign out */
+.sign-out-btn {
+  width: 100%;
+  background: rgba(255,255,255,0.75);
   color: #5f4b3c;
-  padding: 10px;
-  border-radius: 12px;
+  border: 1px solid rgba(95, 75, 60, 0.18);
+  padding: 10px 10px;
+  border-radius: 10px;
   font-weight: 800;
   cursor: pointer;
-  font-size: 0.8em;
-  transition: all 0.18s ease;
+  font-size: 0.92em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.sign-out-btn:hover{
-  background: rgba(189,153,121,0.15);
+.sign-out-btn:hover {
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 8px 18px rgba(95, 75, 60, 0.16);
+  transform: translateY(-1px);
 }
 
-/* =========================
-   CONTENT
-========================= */
-.content-area{
+/* ==============================
+   MAIN CONTENT (no top overlay)
+============================== */
+.main-content {
   flex: 1;
   height: 100vh;
   overflow: hidden;
 }
 
-.iframe-wrapper{
+.iframe-wrapper {
   display: none;
+  width: 100%;
   height: 100%;
 }
 
-.iframe-wrapper.active{
-  display: block;
-}
+.iframe-wrapper.active { display: block; }
 
-iframe{
+iframe {
   width: 100%;
   height: 100%;
   border: none;
+}
+
+/* ==============================
+   MOBILE (no overlay / no hamburger)
+============================== */
+@media (max-width: 768px) {
+  html, body { overflow: auto; }
+  .app { flex-direction: column; height: auto; min-height: 100vh; }
+
+  .sidebar {
+    width: 100%;
+    min-width: 0;
+    height: auto;
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .nav-item {
+    margin: 0;
+    width: 30%;
+    min-width: 140px;
+  }
+
+  .main-content {
+    height: 75vh; /* keeps iframe visible on mobile */
+  }
 }
 </style>
 </head>
 
 <body>
-<div class="app-shell">
-
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-
-    <div class="brand-logo">
-      <img src="logo.png" alt="Rowe Casa Organics Logo">
+<div class="app">
+  <!-- STATIC SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="logo.png" alt="RCO Logo" class="sidebar-logo" />
+      <div class="sidebar-title">RCO Metrics</div>
+      <div class="sidebar-subtitle">Operational Dashboards</div>
     </div>
 
-    <div class="nav-tabs">
-      <button class="nav-tab active" data-tab="fulfillment">Fulfillment</button>
-      <button class="nav-tab" data-tab="shipping">Shipping</button>
-      <button class="nav-tab" data-tab="orders">Orders</button>
+    <!-- DASHBOARD BUTTONS ON TOP (no emojis) -->
+    <div class="sidebar-nav">
+      <a class="nav-item active" data-tab="fulfillment">Fulfillment KPI</a>
+      <a class="nav-item" data-tab="shipping">Shipping Leaderboard</a>
+      <a class="nav-item" data-tab="orders">Orders Overview</a>
     </div>
 
-    <div class="sidebar-spacer"></div>
+    <!-- BOTTOM: DAILY ORDERS + SIGN OUT -->
+    <div class="sidebar-footer">
+      <div class="orders-widget">
+        <div class="orders-label">Today's Orders</div>
+        <div class="orders-value" id="orderCount">--</div>
+        <div class="orders-updated" id="orderUpdated">Loading...</div>
+      </div>
 
-    <!-- DAILY ORDERS -->
-    <div class="orders-counter">
-      <div class="orders-label">Today's Orders</div>
-      <div class="orders-value" id="orderCount">--</div>
-      <div class="orders-updated" id="orderUpdated">Loading…</div>
+      <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
     </div>
+  </nav>
 
-    <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
-
-  </aside>
-
-  <!-- CONTENT -->
-  <main class="content-area">
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
     <div id="fulfillment-frame" class="iframe-wrapper active">
       <iframe src="fulfillment.html"></iframe>
     </div>
@@ -204,25 +278,117 @@ iframe{
     <div id="orders-frame" class="iframe-wrapper">
       <iframe src="orders.html"></iframe>
     </div>
-  </main>
-
+  </div>
 </div>
 
 <script>
-/* TAB SWITCHING */
-document.querySelectorAll(".nav-tab").forEach(tab => {
-  tab.addEventListener("click", () => {
-    document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
-    tab.classList.add("active");
+/* =========================================
+   NAVIGATION (switch iframe)
+========================================= */
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const targetTab = item.dataset.tab;
 
-    document.querySelectorAll(".iframe-wrapper").forEach(w => w.classList.remove("active"));
-    document.getElementById(`${tab.dataset.tab}-frame`).classList.add("active");
+    document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+
+    document.querySelectorAll('.iframe-wrapper').forEach(f => f.classList.remove('active'));
+    const target = document.getElementById(`${targetTab}-frame`);
+    if (target) target.classList.add('active');
   });
 });
+
+/* =========================================
+   ORDERS COUNTER (Google Sheets GViz)
+   (pulled directly from your old working index)
+========================================= */
+const SHEET_ID = '1H9eeS3zv3DOj7ETw6DgF8m_n1PirPjVKziiISw95khI';
+const SHEET_GID = '1592344464';
+
+async function fetchGvizTable() {
+  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
+  const res = await fetch(url, { cache: "no-store" });
+  const text = await res.text();
+
+  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/);
+  if (!match) throw new Error("GViz parse failed");
+
+  const json = JSON.parse(match[1]);
+  if (json.status !== "ok") throw new Error(`GViz status not ok: ${json.status}`);
+
+  return json.table;
+}
+
+function cellValue(table, row, col) {
+  const cell = table?.rows?.[row]?.c?.[col];
+  return cell?.f ?? cell?.v ?? null;
+}
+
+async function updateOrderCount() {
+  const countEl = document.getElementById('orderCount');
+  const updatedEl = document.getElementById('orderUpdated');
+
+  try {
+    const table = await fetchGvizTable();
+    const updated = cellValue(table, 0, 0);
+    const orders = cellValue(table, 0, 1);
+
+    if (countEl) countEl.textContent = (orders ?? '--');
+    if (updatedEl) updatedEl.textContent = (updated ?? 'Unknown');
+  } catch (err) {
+    console.error('Order counter error:', err);
+    if (countEl) countEl.textContent = 'Error';
+    if (updatedEl) updatedEl.textContent = 'Failed to load';
+  }
+}
+
+updateOrderCount();
+setInterval(updateOrderCount, 600000);
 </script>
 
-<!-- AUTH CHECK (kept) -->
-<script type="module" src="auth-check.js"></script>
+<!-- Firebase auth check + sign out (kept from your old file, but cleaned to one definition) -->
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut as firebaseSignOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDEn7ooJJ1zATM5oEnx3ByDiOFTFxr_JiA",
+  authDomain: "rco-metrics-d0f3b.firebaseapp.com",
+  projectId: "rco-metrics-d0f3b",
+  storageBucket: "rco-metrics-d0f3b.firebasestorage.app",
+  messagingSenderId: "1021645263850",
+  appId: "1:1021645263850:web:dfd5c7cd0bd99762679893",
+  measurementId: "G-DR5MLDL5BG"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+
+let hasCheckedAuth = false;
+
+onAuthStateChanged(auth, (user) => {
+  if (hasCheckedAuth) return;
+  hasCheckedAuth = true;
+
+  if (!user) {
+    console.log('No user signed in, redirecting to login...');
+    window.location.replace('login.html');
+  } else {
+    console.log('Signed in as:', user.email);
+  }
+});
+
+window.signOutUser = async function() {
+  try {
+    hasCheckedAuth = false;
+    await firebaseSignOut(auth);
+    window.location.replace('login.html');
+  } catch (error) {
+    console.error('Sign out error:', error);
+    alert('Failed to sign out. Please try again.');
+  }
+};
+</script>
 
 </body>
 </html>
