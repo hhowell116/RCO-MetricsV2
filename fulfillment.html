@@ -16,11 +16,19 @@ body.tv-view-active .fullscreen-btn {
   display: none !important;
 }
 
-body {
+* {
   margin: 0;
   padding: 0;
-  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+body {
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  min-height: 100vh;
+  height: 100vh;
+
+  /* IMPORTANT: prevents page scroll; scrolling happens inside table/calendar */
+  overflow: hidden;
 }
 
 /* Hide scrollbars for kiosk / TV view */
@@ -40,19 +48,20 @@ body::-webkit-scrollbar {
   margin: 0 auto;
   padding: 20px 45px 45px;
 
-  /* NEW: allow fixed “one page” layout where monthly area scrolls internally */
+  /* Key sizing behavior (replicates your “correct” example) */
   height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
+  gap: 16px;
+  min-height: 0;
 }
 
 /* ====== HEADER ====== */
 .kpi-header {
   position: relative;
   padding: 22px 20px;
-  margin-bottom: 16px;
   text-align: center;
+  flex-shrink: 0;
 }
 
 .kpi-header h1 {
@@ -63,19 +72,11 @@ body::-webkit-scrollbar {
   color: var(--tan-dark);
 }
 
-.fulfillment-header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: 16px;
-  padding: 18px 22px;
-  position: relative;
-}
-
 .header-bar {
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
+  gap: 16px;
 }
 
 /* CENTER */
@@ -168,42 +169,6 @@ body::-webkit-scrollbar {
   transform: rotate(180deg);
 }
 
-/* ====== KPI CARDS ====== */
-.kpi-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.stat-card {
-  padding: 14px 16px;
-}
-.stat-label {
-  font-size: 0.75em;
-}
-.stat-value {
-  font-size: 1.6em;
-  margin-top: 4px;
-}
-.stat-subtitle {
-  font-size: 0.7em;
-}
-
-/* ====== CHARTS ====== */
-.chart-container {
-  background: white;
-  padding: 24px;
-  border-radius: 15px;
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--border-light);
-}
-
-.chart-wrapper {
-  position: relative;
-  height: 350px; /* base fallback; overridden in split layout */
-}
-
 /* FORCE Year/Month selects to display text */
 #yearSelect, #monthSelect {
   color: var(--tan-dark) !important;
@@ -244,32 +209,156 @@ button:active,
   box-shadow: 0 4px 15px rgba(95, 75, 60, 0.22);
 }
 
-.kpi-header,
-.fulfillment-header,
-.header-bar {
-  transform: none !important;
+/* ====== KPI CARDS ====== */
+.kpi-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  flex-shrink: 0;
 }
 
-.kpi-header.card,
-.kpi-header.card:hover {
-  background: white !important;
-  box-shadow: 0 10px 40px rgba(95, 75, 60, 0.14) !important;
-  transition: none !important;
+.stat-card {
+  padding: 14px 16px;
 }
-.kpi-header {
-  background: white !important;
+.stat-label {
+  font-size: 0.75em;
 }
-.kpi-header .header-bar {
-  background: transparent !important;
+.stat-value {
+  font-size: 1.6em;
+  margin-top: 4px;
 }
-.kpi-header:hover,
-.kpi-header:hover .header-bar {
-  background: white !important;
+.stat-subtitle {
+  font-size: 0.7em;
 }
 
-/* ===== Calendar View ===== */
+/* =========================================
+   MONTHLY "ONE PAGE" SPLIT LAYOUT
+   (Replicates sizing behavior from your “correct” example)
+========================================= */
+
+/* monthly view consumes remaining height */
+.monthly-view {
+  flex: 1;
+  min-height: 0; /* critical for grid children + scroll */
+}
+
+/* 2 columns, right side = 2 rows */
+.monthly-split {
+  height: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1.25fr 0.9fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+}
+
+/* LEFT: table spans 2 rows */
+.table-section {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* RIGHT: charts */
+.fill-rate-section {
+  grid-column: 2;
+  grid-row: 1;
+}
+.orders-section {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+/* Card wrapper for table + charts */
+.chart-card {
+  background: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* critical */
+}
+
+/* Titles/subtitles */
+.chart-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: var(--tan-dark);
+  margin-bottom: 4px;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+}
+.chart-subtitle {
+  font-size: 0.75em;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+}
+
+/* Chart canvas area fills remaining height so it won't cut off */
+.chart-wrapper {
+  flex: 1;
+  position: relative;
+  min-height: 0; /* critical */
+}
+
+/* Helps Chart.js fill available space */
+.chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ====== TABLE (NO "RAW DATA" TITLE; BROWN HEADER ROW) ====== */
+.table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* your table styles */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8em;
+}
+
+.data-table thead {
+  position: sticky;
+  top: 0;
+  background: var(--tan-dark); /* brown header */
+  color: #fff;
+  z-index: 10;
+}
+
+.data-table th {
+  padding: 10px 8px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.data-table td {
+  padding: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  color: var(--tan-dark);
+}
+
+.data-table tbody tr:hover {
+  background: #fbfaf8;
+}
+
+/* ====== CALENDAR VIEW ===== */
 .calendar-view {
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: none;
 }
 
 .calendar-grid {
@@ -366,7 +455,7 @@ button:active,
   color: #999;
 }
 
-/* ===== Tooltip ===== */
+/* ====== TOOLTIP ===== */
 .tooltip {
   position: fixed;
   background: linear-gradient(135deg, var(--tan-dark) 0%, var(--tan-darker) 100%);
@@ -387,95 +476,11 @@ button:active,
 }
 
 /* =========================================
-   NEW: MONTHLY "ONE PAGE" SPLIT LAYOUT
-   - Left: table (scroll)
-   - Right: 2 charts stacked
-   - Entire monthly area is a fixed viewport box
+   RESPONSIVE
 ========================================= */
-.monthly-view {
-  flex: 1;
-  min-height: 0; /* critical for nested scrolling */
-}
-
-.monthly-split {
-  height: 100%;
-  display: grid;
-  grid-template-columns: minmax(420px, 1.25fr) minmax(360px, 0.9fr);
-  gap: 16px;
-  align-items: stretch;
-  min-height: 0; /* critical */
-}
-
-/* LEFT: table panel */
-.table-panel {
-  display: flex;
-  flex-direction: column;
-  min-height: 0; /* critical */
-  overflow: hidden; /* keep header fixed; body scrolls */
-  border-radius: 15px;
-  background: white;
-  border: 1px solid var(--border-light);
-  box-shadow: var(--shadow-md);
-}
-
-.table-panel-header {
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--border-light);
-}
-
-.table-panel-body {
-  flex: 1;
-  min-height: 0;
-  overflow: auto; /* scroll to day 30/31 */
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Sticky header inside scrolling region */
-.table-panel thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: white;
-}
-
-/* RIGHT: charts stacked */
-.charts-panel {
-  display: grid;
-  grid-template-rows: 1fr 1fr;
-  gap: 16px;
-  min-height: 0; /* critical */
-}
-
-/* Make chart cards fill available height */
-.chart-card {
-  margin-bottom: 0; /* override your old margin-bottom behavior */
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.chart-card .chart-wrapper {
-  flex: 1;
-  min-height: 0;
-  height: auto;
-}
-
-/* Help Chart.js be responsive to container size */
-.chart-wrapper canvas {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* =========================================
-   MOBILE RESPONSIVE STYLES
-========================================= */
-
-/* Tablet (< 1024px) */
 @media (max-width: 1023px) {
   .container {
     padding: 15px 20px 30px;
-    height: auto;
-    min-height: 100vh;
   }
 
   .header-bar {
@@ -498,52 +503,39 @@ button:active,
     gap: 12px;
   }
 
-  .calendar-grid {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 15px;
-  }
-
-  /* Collapse monthly view into one column */
+  /* Collapse monthly layout to single column */
   .monthly-split {
-    height: auto;
     grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    height: auto;
   }
 
-  .charts-panel {
-    grid-template-rows: auto;
+  .table-section {
+    grid-column: 1;
+    grid-row: auto;
+    min-height: 320px;
   }
 
+  .fill-rate-section,
+  .orders-section {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  /* keep charts visible */
   .chart-wrapper {
-    height: 300px;
-  }
-
-  .table-panel-body {
-    max-height: 55vh;
+    min-height: 260px;
   }
 }
 
-/* Mobile (< 768px) */
 @media (max-width: 768px) {
   .container {
     padding: 12px 15px 20px;
-  }
-
-  .kpi-header {
-    padding: 15px 12px;
-    margin-bottom: 12px;
-  }
-
-  .header-bar {
-    gap: 10px;
+    gap: 12px;
   }
 
   .header-center h1 {
     font-size: 1.3em;
-  }
-
-  .header-left,
-  .header-right {
-    gap: 8px;
   }
 
   #yearSelect, #monthSelect {
@@ -552,125 +544,23 @@ button:active,
     min-width: 120px;
   }
 
-  .btn-secondary {
-    padding: 8px 14px;
-    font-size: 13px;
-  }
-
-  .fullscreen-btn {
-    width: 32px;
-    height: 32px;
-  }
-
-  .fullscreen-icon {
-    width: 16px;
-    height: 16px;
-  }
-
-  .fullscreen-icon::before,
-  .fullscreen-icon::after {
-    width: 6px;
-    height: 6px;
-  }
-
   .kpi-stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
 
-  .stat-card {
-    padding: 12px 14px;
-  }
-
-  .stat-label {
-    font-size: 0.7em;
-  }
-
   .stat-value {
     font-size: 1.4em;
   }
-
-  .stat-subtitle {
-    font-size: 0.65em;
-  }
-
-  .chart-container {
-    padding: 16px;
-  }
-
-  .chart-wrapper {
-    height: 250px;
-  }
-
-  .calendar-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .month-calendar {
-    padding: 15px;
-  }
-
-  .month-header {
-    font-size: 1.1em;
-    margin-bottom: 12px;
-  }
-
-  .calendar-days {
-    gap: 3px;
-  }
-
-  .day-label {
-    font-size: 0.7em;
-    padding: 4px 2px;
-  }
-
-  .calendar-day {
-    font-size: 0.65em;
-  }
-
-  /* Table readability on mobile */
-  table {
-    min-width: 600px;
-  }
-  th, td {
-    padding: 10px 8px;
-    font-size: 0.85em;
-  }
 }
 
-/* Small Mobile (< 480px) */
 @media (max-width: 480px) {
   .container {
     padding: 10px 12px 15px;
   }
 
-  .kpi-header {
-    padding: 12px 10px;
-  }
-
   .header-center h1 {
     font-size: 1.1em;
-  }
-
-  #yearSelect, #monthSelect {
-    font-size: 12px !important;
-    padding: 7px 24px 7px 8px !important;
-    min-width: 100px;
-  }
-
-  .btn-secondary {
-    padding: 7px 12px;
-    font-size: 12px;
-  }
-
-  .view-toggle {
-    gap: 6px;
-  }
-
-  .fullscreen-btn {
-    width: 30px;
-    height: 30px;
   }
 
   .kpi-stats-grid {
@@ -678,69 +568,10 @@ button:active,
     gap: 8px;
   }
 
-  .stat-card {
-    padding: 10px 12px;
-  }
-
-  .stat-value {
-    font-size: 1.3em;
-  }
-
-  .chart-container {
-    padding: 12px;
-  }
-
-  .chart-wrapper {
-    height: 220px;
-  }
-
-  .calendar-grid {
-    gap: 10px;
-  }
-
-  .month-calendar {
-    padding: 12px;
-  }
-
-  .month-header {
-    font-size: 1em;
-    margin-bottom: 10px;
-  }
-
-  .calendar-days {
-    gap: 2px;
-  }
-
-  .day-label {
-    font-size: 0.65em;
-    padding: 3px 1px;
-  }
-
-  .calendar-day {
-    font-size: 0.6em;
-    border-radius: 4px;
-  }
-
-  th, td {
-    padding: 8px 6px;
-    font-size: 0.8em;
-  }
-
-  .tooltip {
-    font-size: 0.75em;
-    padding: 10px 12px;
-    max-width: 200px;
-  }
-}
-
-/* Landscape mobile optimization */
-@media (max-width: 768px) and (orientation: landscape) {
-  .chart-wrapper {
-    height: 200px;
-  }
-
-  .kpi-stats-grid {
-    grid-template-columns: repeat(4, 1fr);
+  #yearSelect, #monthSelect {
+    font-size: 12px !important;
+    padding: 7px 24px 7px 8px !important;
+    min-width: 100px;
   }
 }
 </style>
@@ -807,18 +638,14 @@ button:active,
       </div>
     </div>
 
-    <!-- MONTHLY VIEW (NEW SPLIT LAYOUT) -->
+    <!-- MONTHLY VIEW -->
     <div class="monthly-view" data-view="monthly" style="display: block;">
       <div class="monthly-split">
 
-        <!-- LEFT: RAW DATA TABLE (scrolls to day 30/31) -->
-        <section class="table-panel">
-          <div class="table-panel-header">
-            <h2 class="panel-title">Raw Data</h2>
-          </div>
-
-          <div class="table-panel-body">
-            <table>
+        <!-- LEFT: TABLE (NO TITLE; BROWN HEADER ROW IN THEAD) -->
+        <section class="chart-card table-section">
+          <div class="table-wrapper">
+            <table class="data-table">
               <thead>
                 <tr>
                   <th>Date</th>
@@ -834,21 +661,20 @@ button:active,
           </div>
         </section>
 
-        <!-- RIGHT: CHARTS STACKED -->
-        <section class="charts-panel">
-          <div class="chart-container chart-card">
-            <h2 class="chart-title">Daily Fill Rate Performance</h2>
-            <p class="chart-subtitle">Target lines: 95% (7-day) • 85% (4-day)</p>
-            <div class="chart-wrapper">
-              <canvas id="fillRateChart"></canvas>
-            </div>
+        <!-- RIGHT TOP: FILL RATE CHART -->
+        <section class="chart-card fill-rate-section">
+          <h2 class="chart-title">Daily Fill Rate Performance</h2>
+          <p class="chart-subtitle">Target lines: 95% (7-day) • 85% (4-day)</p>
+          <div class="chart-wrapper">
+            <canvas id="fillRateChart"></canvas>
           </div>
+        </section>
 
-          <div class="chart-container chart-card">
-            <h2 class="chart-title">Orders Remaining</h2>
-            <div class="chart-wrapper">
-              <canvas id="ordersChart"></canvas>
-            </div>
+        <!-- RIGHT BOTTOM: ORDERS CHART -->
+        <section class="chart-card orders-section">
+          <h2 class="chart-title">Orders Remaining</h2>
+          <div class="chart-wrapper">
+            <canvas id="ordersChart"></canvas>
           </div>
         </section>
 
@@ -856,11 +682,12 @@ button:active,
     </div>
 
     <!-- CALENDAR VIEW -->
-    <div class="calendar-view" data-view="calendar" style="display:none;">
+    <div class="calendar-view" data-view="calendar">
       <div id="calendarGrid" class="calendar-grid"></div>
     </div>
 
     <div id="tooltip" class="tooltip"></div>
+
   </div>
 
   <script src="data.js"></script>
