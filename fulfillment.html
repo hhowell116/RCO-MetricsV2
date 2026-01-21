@@ -339,12 +339,14 @@ canvas {
 .month-calendar {
   background: #fbfaf8;
   border-radius: 10px;
-  padding: 12px;
+  padding: 8px;
   border: 1px solid #d7d1ca;
   display: flex;
   flex-direction: column;
   min-height: 0;
+  max-height: 100%;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 .calendar-days {
