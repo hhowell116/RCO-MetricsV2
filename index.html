@@ -320,9 +320,17 @@ async function updateOrderCount() {
     
     // Format the timestamp to "mm/dd/yy time"
     if (rawTimestamp) {
-      // Try to parse the timestamp - it might be a string or Date object
+      // Google Sheets sometimes returns date as "Date(2026,0,21,14,9,0)" format
       let date;
-      if (typeof rawTimestamp === 'string') {
+      
+      if (typeof rawTimestamp === 'string' && rawTimestamp.startsWith('Date(')) {
+        // Parse the Date(...) format from Google Sheets
+        const match = rawTimestamp.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
+        if (match) {
+          const [, year, month, day, hours, minutes, seconds] = match;
+          date = new Date(parseInt(year), parseInt(month), parseInt(day), parseInt(hours), parseInt(minutes), parseInt(seconds));
+        }
+      } else if (typeof rawTimestamp === 'string') {
         // Try parsing as a date string
         date = new Date(rawTimestamp);
       } else if (rawTimestamp instanceof Date) {
@@ -333,7 +341,7 @@ async function updateOrderCount() {
       }
       
       // Check if date is valid
-      if (!isNaN(date.getTime())) {
+      if (date && !isNaN(date.getTime())) {
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
         const year = String(date.getFullYear()).slice(-2);
@@ -343,7 +351,6 @@ async function updateOrderCount() {
         const displayHours = hours % 12 || 12;
         
         const formattedTime = `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`;
-        document.getElementById('orderUpdated').textContent = `Last updated:\n${formattedTime}`;
         document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${formattedTime}`;
       } else {
         // If parsing fails, just display the raw value
