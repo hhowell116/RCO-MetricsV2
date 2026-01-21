@@ -206,8 +206,34 @@ function hideTooltip() {
 
 function moveTooltip(e) {
     const tooltip = document.getElementById('tooltip');
-    tooltip.style.left = (e.clientX + 15) + 'px';
-    tooltip.style.top = (e.clientY + 15) + 'px';
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const padding = 15;
+    
+    let left = e.clientX + padding;
+    let top = e.clientY + padding;
+    
+    // Check if tooltip goes off the right edge
+    if (left + tooltipRect.width > window.innerWidth) {
+        left = e.clientX - tooltipRect.width - padding;
+    }
+    
+    // Check if tooltip goes off the bottom edge
+    if (top + tooltipRect.height > window.innerHeight) {
+        top = e.clientY - tooltipRect.height - padding;
+    }
+    
+    // Check if tooltip goes off the left edge
+    if (left < 0) {
+        left = padding;
+    }
+    
+    // Check if tooltip goes off the top edge
+    if (top < 0) {
+        top = padding;
+    }
+    
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
 }
 
 function updateCharts(monthData) {
