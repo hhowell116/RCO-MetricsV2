@@ -18,6 +18,7 @@
 body {
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f5f5f5;
+  /* Keep this hidden if you want the dashboard to be “app-like” */
   overflow: hidden;
   height: 100vh;
 }
@@ -30,6 +31,7 @@ body {
   flex-direction: column;
   padding: 20px;
   gap: 16px;
+  min-height: 0; /* IMPORTANT for flex children scrolling */
 }
 
 /* ====== HEADER ====== */
@@ -123,6 +125,24 @@ body {
 .kpi-subtitle {
   font-size: 0.7em;
   color: #aaa0a1;
+}
+
+/* ====== VIEW SYSTEM (IMPORTANT FIX) ====== */
+/* Hide views by default */
+.view-panel {
+  display: none;
+  flex: 1;
+  min-height: 0; /* enables internal scrolling */
+}
+
+/* Show only the active view */
+.view-panel.active {
+  display: block;
+}
+
+/* Monthly view needs grid layout when active */
+.monthly-view.view-panel.active {
+  display: grid;
 }
 
 /* ====== MAIN CONTENT GRID ====== */
@@ -231,17 +251,15 @@ body {
 
 /* ====== CALENDAR VIEW ====== */
 .calendar-view {
-  display: none;
-  grid-column: 1 / -1;
-  overflow-y: auto;
   background: white;
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
-}
 
-.calendar-view.active {
-  display: block;
+  /* KEY FIXES */
+  height: 100%;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .calendar-grid {
@@ -310,22 +328,18 @@ body {
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
 }
-
 .cal-rate-good {
   background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
   color: #558b2f;
 }
-
 .cal-rate-warning {
   background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
   color: #e65100;
 }
-
 .cal-rate-poor {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   color: #c62828;
 }
-
 .cal-rate-none {
   background: #f5f5f5;
   color: #999;
@@ -357,23 +371,23 @@ body {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
   }
-  
+
   .table-section {
     grid-row: span 1;
     grid-column: 1;
     min-height: 300px;
   }
-  
+
   .fill-rate-section {
     grid-row: auto;
     grid-column: 1;
   }
-  
+
   .orders-section {
     grid-row: auto;
     grid-column: 1;
   }
-  
+
   .kpi-row {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -384,32 +398,32 @@ body {
     padding: 12px;
     gap: 12px;
   }
-  
+
   .dashboard-header {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
   }
-  
+
   .header-controls {
     justify-content: center;
   }
-  
+
   .kpi-row {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-  
+
   .kpi-value {
     font-size: 1.6em;
   }
-  
+
   .content-grid {
     display: flex;
     flex-direction: column;
     overflow-y: auto;
   }
-  
+
   .chart-card {
     min-height: 300px;
   }
@@ -419,11 +433,11 @@ body {
   .header-title {
     font-size: 1.2em;
   }
-  
+
   .kpi-value {
     font-size: 1.4em;
   }
-  
+
   .chart-title {
     font-size: 1em;
   }
@@ -437,13 +451,19 @@ body {
 
   <!-- HEADER -->
   <div class="dashboard-header">
-    <div class="header-title">📦 RCO Fulfillment Dashboard <span id="datasetLabel" style="color: #8d8173; font-size: 0.7em;">- Retail</span></div>
+    <div class="header-title">
+      RCO Fulfillment Dashboard
+      <span id="datasetLabel" style="color:#8d8173;font-size:0.7em;">- Retail</span>
+    </div>
+
     <div class="header-controls">
       <select id="yearSelect"></select>
       <select id="monthSelect"></select>
-      <button class="view-btn active" data-view="monthly">Monthly</button>
-      <button class="view-btn" data-view="calendar">Calendar</button>
-      <button id="datasetToggleBtn">Wholesale</button>
+
+      <button class="view-btn active" data-view="monthly" type="button">Monthly</button>
+      <button class="view-btn" data-view="calendar" type="button">Calendar</button>
+
+      <button id="datasetToggleBtn" type="button">Wholesale</button>
     </div>
   </div>
 
@@ -475,7 +495,7 @@ body {
   </div>
 
   <!-- MONTHLY VIEW -->
-  <div class="content-grid monthly-view" data-view="monthly">
+  <div class="content-grid monthly-view view-panel active" data-view="monthly">
     <div class="chart-card table-section">
       <div class="chart-title">Daily Data</div>
       <div class="table-wrapper">
@@ -512,7 +532,7 @@ body {
   </div>
 
   <!-- CALENDAR VIEW -->
-  <div class="calendar-view" data-view="calendar">
+  <div class="calendar-view view-panel" data-view="calendar">
     <div id="calendarGrid" class="calendar-grid"></div>
   </div>
 
