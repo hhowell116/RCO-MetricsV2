@@ -562,10 +562,10 @@ if (datasetToggleBtn) {
                 datasetToggleBtn.textContent = 'Retail';
                 
                 // Add indicator to title
-                const headerTitle = document.querySelector('.header-center h1');
-                if (headerTitle) {
-                    headerTitle.innerHTML = '📦 RCO Fulfillment Dashboard <span style="color: #8b7355; font-weight: 600;"> - Wholesale</span>';
-                }
+                // Update the small label next to the title
+const datasetLabel = document.getElementById('datasetLabel');
+if (datasetLabel) datasetLabel.textContent = '- Wholesale';
+
             } else {
                 alert('Wholesale data not available. Make sure wholesale.js is loaded.');
                 return;
@@ -580,10 +580,10 @@ if (datasetToggleBtn) {
                 datasetToggleBtn.textContent = 'Wholesale';
                 
                 // Add Retail indicator to title
-                const headerTitle = document.querySelector('.header-center h1');
-                if (headerTitle) {
-                    headerTitle.innerHTML = '📦 RCO Fulfillment Dashboard <span style="color: #8b7355; font-weight: 600;"> - Retail</span>';
-                }
+                // Update the small label next to the title
+const datasetLabel = document.getElementById('datasetLabel');
+if (datasetLabel) datasetLabel.textContent = '- Retail';
+
             }
         }
         
