@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Fulfillment] Loaded');
+  console.log('[Fulfillment] Script loaded');
 
   /* ===============================
      DATA SOURCE STATE
@@ -7,9 +7,12 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentDataset = 'retail';
   let data = window.fullData || [];
 
-  if (!Array.isArray(data)) {
-    console.error('[Fulfillment] fullData not found');
-    showFatalError('fullData is missing — check data.js');
+  // Debug: Check if data exists
+  console.log('[Fulfillment] Data loaded:', data ? `${data.length} rows` : 'NO DATA');
+
+  if (!Array.isArray(data) || data.length === 0) {
+    console.error('[Fulfillment] fullData not found or empty');
+    showFatalError('fullData is missing or empty — check data.js is loading properly');
     return;
   }
 
@@ -51,20 +54,47 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ===============================
      INIT YEAR / MONTH
   =============================== */
-  const sorted = [...data].sort((a, b) => parseDate(b.date) - parseDate(a.date));
-  const latest = parseDate(sorted[0].date);
+  // Remove duplicate entries and invalid data
+  const cleanData = data.filter((row, index, self) => {
+    // Remove duplicates based on date
+    const firstIndex = self.findIndex(r => r.date === row.date);
+    return index === firstIndex;
+  });
 
+  console.log('[Fulfillment] Cleaned data:', cleanData.length, 'rows');
+
+  const sorted = [...cleanData].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+  
+  // Find the latest date with actual orders
+  const latestWithOrders = sorted.find(d => d.orders > 0);
+  
+  if (!latestWithOrders) {
+    console.error('[Fulfillment] No data with orders found');
+    showFatalError('No order data found in dataset');
+    return;
+  }
+
+  const latest = parseDate(latestWithOrders.date);
   currentYear = latest.getFullYear();
   currentMonth = latest.getMonth();
+
+  console.log('[Fulfillment] Latest date with orders:', latestWithOrders.date);
 
   /* ===============================
      POPULATE SELECTORS
   =============================== */
   function populateSelectors() {
-    const years = [...new Set(data.map(d => parseDate(d.date).getFullYear()))].sort((a, b) => b - a);
+    // Get years that have data with orders
+    const yearsWithData = [...new Set(
+      cleanData
+        .filter(d => d.orders > 0)
+        .map(d => parseDate(d.date).getFullYear())
+    )].sort((a, b) => b - a);
+
+    console.log('[Fulfillment] Years with data:', yearsWithData);
 
     yearSelect.innerHTML = '';
-    years.forEach(y => {
+    yearsWithData.forEach(y => {
       const o = document.createElement('option');
       o.value = y;
       o.textContent = y;
@@ -92,14 +122,18 @@ document.addEventListener('DOMContentLoaded', () => {
      FILTER DATA
   =============================== */
   function getMonthData() {
-    return data.filter(d => {
+    const filtered = cleanData.filter(d => {
       const dt = parseDate(d.date);
       return (
         dt.getFullYear() === +yearSelect.value &&
         dt.getMonth() === +monthSelect.value &&
-        d.orders > 0
+        d.orders > 0  // Only include days with orders
       );
     });
+
+    console.log(`[Fulfillment] Filtered data for ${monthSelect.options[monthSelect.selectedIndex].text} ${yearSelect.value}:`, filtered.length, 'rows');
+    
+    return filtered;
   }
 
   /* ===============================
@@ -107,6 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
   =============================== */
   function updateTable(rows) {
     dataTable.innerHTML = '';
+
+    if (rows.length === 0) {
+      dataTable.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8d8173;">No data available for this month</td></tr>';
+      return;
+    }
 
     rows.forEach(r => {
       const tr = document.createElement('tr');
@@ -150,7 +189,15 @@ document.addEventListener('DOMContentLoaded', () => {
      UPDATE CHARTS
   =============================== */
   function updateCharts(rows) {
-    if (!window.Chart) return;
+    if (!window.Chart) {
+      console.warn('[Fulfillment] Chart.js not loaded');
+      return;
+    }
+
+    if (rows.length === 0) {
+      console.log('[Fulfillment] No data to chart');
+      return;
+    }
 
     const labels = rows.map(r => parseDate(r.date).getDate());
 
@@ -219,21 +266,36 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ===============================
      DATASET TOGGLE
   =============================== */
-  document.getElementById('datasetToggleBtn').addEventListener('click', e => {
-    if (currentDataset === 'retail' && window.wholesaleData) {
-      data = wholesaleData;
-      currentDataset = 'wholesale';
-      e.target.classList.add('active');
-      document.getElementById('datasetLabel').textContent = '- Wholesale';
-    } else {
-      data = fullData;
-      currentDataset = 'retail';
-      e.target.classList.remove('active');
-      document.getElementById('datasetLabel').textContent = '- Retail';
-    }
-    populateSelectors();
-    updateDashboard();
-  });
+  const toggleBtn = document.getElementById('datasetToggleBtn');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', e => {
+      if (currentDataset === 'retail' && window.wholesaleData) {
+        data = window.wholesaleData;
+        currentDataset = 'wholesale';
+        e.target.classList.add('active');
+        const label = document.getElementById('datasetLabel');
+        if (label) label.textContent = '- Wholesale';
+      } else {
+        data = window.fullData;
+        currentDataset = 'retail';
+        e.target.classList.remove('active');
+        const label = document.getElementById('datasetLabel');
+        if (label) label.textContent = '- Retail';
+      }
+      
+      // Recalculate with new dataset
+      const newClean = data.filter((row, index, self) => {
+        const firstIndex = self.findIndex(r => r.date === row.date);
+        return index === firstIndex && row.orders > 0;
+      });
+      
+      cleanData.length = 0;
+      cleanData.push(...newClean);
+      
+      populateSelectors();
+      updateDashboard();
+    });
+  }
 
   /* ===============================
      EVENTS
@@ -244,10 +306,14 @@ document.addEventListener('DOMContentLoaded', () => {
   /* ===============================
      START
   =============================== */
+  console.log('[Fulfillment] Initializing dashboard...');
   populateSelectors();
   updateDashboard();
+  console.log('[Fulfillment] Dashboard initialized');
 
   function showFatalError(msg) {
-    dataTable.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#b23b3b;">${msg}</td></tr>`;
+    if (dataTable) {
+      dataTable.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#b23b3b;padding:20px;">${msg}</td></tr>`;
+    }
   }
 });
