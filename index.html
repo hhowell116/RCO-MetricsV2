@@ -119,7 +119,7 @@ body {
 
 .carousel-image {
   width: 100%;
-  max-height: 80px;
+  max-height: 140px;
   object-fit: contain;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
@@ -230,14 +230,14 @@ iframe {
 
     <div class="sidebar-footer">
       <div class="product-carousel">
-        <div class="carousel-label">Featured Top Products</div>
+        <div class="carousel-label">Top Products</div>
         <img id="sidebarProductImage" src="tartcherry.png" class="carousel-image" alt="Product">
       </div>
 
       <div class="orders-widget">
         <div class="orders-label">TODAY'S ORDERS</div>
         <div class="orders-value" id="orderCount">--</div>
-        <div class="orders-updated" id="orderUpdated">Loading...</div>
+        <div class="orders-updated" id="orderUpdated">Last updated: Loading...</div>
       </div>
 
       <div class="sidebar-separator"></div>
@@ -312,11 +312,30 @@ function cellValue(table, r, c) {
 async function updateOrderCount() {
   try {
     const table = await fetchGvizTable();
-    document.getElementById('orderCount').textContent = cellValue(table,0,1) ?? '--';
-    document.getElementById('orderUpdated').textContent = cellValue(table,0,0) ?? '';
+    const rawTimestamp = cellValue(table, 0, 0);
+    const orderValue = cellValue(table, 0, 1);
+    
+    document.getElementById('orderCount').textContent = orderValue ?? '--';
+    
+    // Format the timestamp to "Last updated: mm/dd/yy time"
+    if (rawTimestamp) {
+      const date = new Date(rawTimestamp);
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const year = String(date.getFullYear()).slice(-2);
+      const hours = date.getHours();
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      
+      const formattedTime = `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`;
+      document.getElementById('orderUpdated').textContent = `Last updated: ${formattedTime}`;
+    } else {
+      document.getElementById('orderUpdated').textContent = 'Last updated: Unknown';
+    }
   } catch {
     document.getElementById('orderCount').textContent = '—';
-    document.getElementById('orderUpdated').textContent = 'Error';
+    document.getElementById('orderUpdated').textContent = 'Last updated: Error';
   }
 }
 
