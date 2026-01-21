@@ -99,6 +99,37 @@ body {
   padding-top: 16px;
 }
 
+/* ================= PRODUCT CAROUSEL ================= */
+.product-carousel {
+  background: white;
+  border: 2px solid #d7d1ca;
+  border-radius: 12px;
+  padding: 12px;
+  text-align: center;
+}
+
+.carousel-label {
+  font-size: 0.65em;
+  font-weight: 600;
+  color: #8d8173;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.carousel-image {
+  width: 100%;
+  max-height: 80px;
+  object-fit: contain;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.carousel-image.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* ================= ORDERS WIDGET ================= */
 .orders-widget {
   background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
   border-radius: 12px;
@@ -198,6 +229,11 @@ iframe {
     </div>
 
     <div class="sidebar-footer">
+      <div class="product-carousel">
+        <div class="carousel-label">Featured Top Products</div>
+        <img id="sidebarProductImage" src="tartcherry.png" class="carousel-image" alt="Product">
+      </div>
+
       <div class="orders-widget">
         <div class="orders-label">TODAY'S ORDERS</div>
         <div class="orders-value" id="orderCount">--</div>
@@ -237,6 +273,22 @@ document.querySelectorAll('.nav-btn').forEach(btn => {
     document.getElementById(`${tab}-frame`).classList.add('active');
   });
 });
+
+/* PRODUCT CAROUSEL */
+const sidebarProductImage = document.getElementById("sidebarProductImage");
+const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
+let productIndex = 0;
+
+setInterval(() => {
+  if (sidebarProductImage) {
+    sidebarProductImage.classList.add("fade-out");
+    setTimeout(() => {
+      productIndex = (productIndex + 1) % products.length;
+      sidebarProductImage.src = products[productIndex];
+      sidebarProductImage.classList.remove("fade-out");
+    }, 350);
+  }
+}, 5000);
 </script>
 
 <!-- GOOGLE SHEETS ORDERS COUNTER -->
