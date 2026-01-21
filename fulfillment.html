@@ -1,416 +1,334 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RCO Fulfillment Dashboard</title>
 
-<link rel="stylesheet" href="main.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="data.js"></script>
+<script src="wholesale.js"></script>
 
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-
-body {
-  font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f5f5f5;
-  height: 100vh;
-  overflow: hidden;
-}
-
-/* ===== CONTAINER ===== */
-.dashboard-container {
-  height: 100vh;
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
-  gap: 16px;
-}
-
-/* ===== HEADER ===== */
-.dashboard-header {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  background: white;
-  padding: 14px 20px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
-  gap: 12px;
-}
-
-.header-left {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-
-.header-title {
-  text-align: center;
-  font-size: 1.6em;
-  font-weight: 600;
-  color: #5f4b3c;
-  font-family: "Noto Serif", Georgia, serif;
-}
-
-.header-controls {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-}
-
-/* Keep selects styled */
-.header-left select {
-  background: white;
-  color: #5f4b3c;
-  border: 2px solid #d7d1ca;
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.header-left select:hover {
-  border-color: #bd9979;
-  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
-}
-
-/* If your main.css already styles .view-btn, great.
-   This ensures they don't look like default HTML buttons if main.css isn't loading. */
-.view-btn,
-#datasetToggleBtn {
-  background: white;
-  color: #5f4b3c;
-  border: 2px solid #d7d1ca;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-.view-btn:hover,
-#datasetToggleBtn:hover {
-  border-color: #bd9979;
-  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
-}
-.view-btn.active,
-#datasetToggleBtn.active {
-  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
-  color: #fff;
-  border-color: #5f4b3c;
-}
-
-/* FULLSCREEN BUTTON (Orders-style, darker brown) */
-.fullscreen-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
-  border: 2px solid rgba(95,75,60,0.35);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 8px rgba(95,75,60,0.22);
-}
-
-/* ICON WRAPPER (so SVG never collapses) */
-.fullscreen-btn svg{
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-/* EXIT FULLSCREEN = flip the icon */
-.fullscreen-btn.exit svg {
-  transform: rotate(180deg);
-  transition: transform 0.25s ease;
-}
-
-/* Hover */
-.fullscreen-btn:hover {
-  background: #ffffff;
-  border-color: #bd9979;
-  box-shadow: 0 4px 12px rgba(95,75,60,0.22);
-}
-
-/* Keep icon visible on white */
-.fullscreen-btn:hover svg path {
-  stroke: #5f4b3c !important;
-}
-
-.fullscreen-btn:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 6px rgba(95,75,60,0.26);
-}
-
-
-/* ===== KPI ROW ===== */
-.kpi-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-}
-
-.kpi-card {
-  background: white;
-  padding: 16px;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
-}
-
-.kpi-label {
-  font-size: 0.75em;
-  color: #8d8173;
-  text-transform: uppercase;
-  font-weight: 600;
-  margin-bottom: 6px;
-}
-
-.kpi-value {
-  font-size: 2em;
-  font-weight: 700;
-  color: #5f4b3c;
-}
-
-.kpi-subtitle {
-  font-size: 0.7em;
-  color: #aaa0a1;
-  margin-top: 4px;
-}
-
-/* ===== GRID ===== */
-.content-grid {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1.3fr 1fr;
-  grid-template-rows: 1fr 1fr;
-  gap: 16px;
-  min-height: 0;
-}
-
-.chart-card {
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-}
-
-.table-section {
-  grid-row: 1 / span 2;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* === RAW TABLE (EXACT STRUCTURE LIKE YOUR PASTED FILE) === */
-.table-wrapper {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8em;
-}
-
-.data-table thead {
-  position: sticky;
-  top: 0;
-  background: #5f4b3c;
-  color: white;
-  z-index: 10;
-}
-
-.data-table th, .data-table td {
-  padding: 8px;
-  text-align: left;
-}
-
-.data-table td {
-  border-bottom: 1px solid #f0f0f0;
-  color: #5f4b3c;
-}
-
-.data-table tbody tr:hover {
-  background: #fbfaf8;
-}
-
-/* Raw data colors (keep as your js classes expect) */
-.rate-excellent { color: #2e7d32; font-weight: 700; }
-.rate-good      { color: #4f8f4f; font-weight: 700; }
-.rate-warning   { color: #b36b00; font-weight: 700; }
-.rate-poor      { color: #b23b3b; font-weight: 700; }
-
-/* ===== CHARTS ===== */
-.chart-wrapper {
-  flex: 1;
-  min-height: 0;
-  position: relative;
-}
-
-canvas {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* Responsive */
-@media (max-width: 1200px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    background: #f7f3ee;
+    color: #5f4b3c;
   }
-  .table-section { grid-row: span 1; min-height: 300px; }
-  .kpi-row { grid-template-columns: repeat(2, 1fr); }
-}
-@media (max-width: 768px) {
-  body { overflow: auto; }
-  .dashboard-container { height: auto; }
-  .dashboard-header { grid-template-columns: 1fr; justify-items: center; }
-  .header-controls { justify-content: center; }
-  .kpi-row { grid-template-columns: 1fr; }
-  .content-grid { display: flex; flex-direction: column; }
-  .chart-card { min-height: 300px; }
-}
+
+  .dashboard-header {
+    background: #ffffff;
+    border-bottom: 1px solid #e6dccf;
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .header-center h1 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #5f4b3c;
+  }
+
+  .header-center .sub-label {
+    margin-left: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #8b7355;
+  }
+
+  .controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .btn {
+    background: #5f4b3c;
+    color: #fff;
+    border: 0;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 700;
+  }
+  .btn.active {
+    background: #8b7355;
+  }
+
+  .selectors {
+    display: flex;
+    gap: 10px;
+    padding: 14px 24px;
+    align-items: center;
+  }
+
+  select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #e6dccf;
+    background: #fff;
+    color: #5f4b3c;
+    font-weight: 700;
+  }
+
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    padding: 0 24px 14px;
+  }
+
+  .kpi {
+    background: #fff;
+    border: 1px solid #e6dccf;
+    border-radius: 12px;
+    padding: 14px;
+  }
+  .kpi .label {
+    font-size: 12px;
+    color: #8b7355;
+    font-weight: 800;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .kpi .value {
+    font-size: 26px;
+    font-weight: 900;
+    color: #5f4b3c;
+  }
+
+  .main {
+    padding: 0 24px 24px;
+  }
+
+  .monthly-view {
+    display: block;
+  }
+
+  .charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 14px;
+  }
+
+  .panel {
+    background: #fff;
+    border: 1px solid #e6dccf;
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .chart-wrap {
+    height: 280px;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table th, .data-table td {
+    border-bottom: 1px solid #efe6da;
+    padding: 10px;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  .data-table th {
+    color: #8b7355;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 12px;
+  }
+
+  /* THIS was overriding your rate colors (too specific) */
+  .data-table td { color: #5f4b3c; }
+
+  /* ✅ FIX: make rate classes more specific than `.data-table td` */
+  .data-table td.rate-excellent { color: #1f7a3a; font-weight: 900; }
+  .data-table td.rate-good      { color: #2f7f7f; font-weight: 900; }
+  .data-table td.rate-warning   { color: #b56b00; font-weight: 900; }
+  .data-table td.rate-poor      { color: #b23b3b; font-weight: 900; }
+
+  /* ==========================
+     CALENDAR VIEW STYLES
+  ========================== */
+  .calendar-view {
+    display: none;
+  }
+
+  .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+  }
+
+  .month-calendar {
+    background: #fff;
+    border: 1px solid #e6dccf;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .month-header {
+    background: #f3ede4;
+    padding: 10px 12px;
+    font-weight: 900;
+    color: #5f4b3c;
+  }
+
+  .calendar-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .day-label {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 900;
+    color: #8b7355;
+    padding-bottom: 2px;
+  }
+
+  .calendar-day {
+    border-radius: 10px;
+    padding: 8px 6px;
+    text-align: center;
+    font-size: 12px;
+    border: 1px solid #efe6da;
+    min-height: 42px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    cursor: default;
+    user-select: none;
+  }
+
+  .calendar-day.empty {
+    border: 0;
+    background: transparent;
+    cursor: default;
+  }
+
+  .cal-rate-none      { background: #fbf7f2; }
+  .cal-rate-excellent { background: rgba(31, 122, 58, 0.16); border-color: rgba(31, 122, 58, 0.35); }
+  .cal-rate-good      { background: rgba(47, 127, 127, 0.16); border-color: rgba(47, 127, 127, 0.35); }
+  .cal-rate-warning   { background: rgba(181, 107, 0, 0.16); border-color: rgba(181, 107, 0, 0.35); }
+  .cal-rate-poor      { background: rgba(178, 59, 59, 0.16); border-color: rgba(178, 59, 59, 0.35); }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed;
+    background: #ffffff;
+    border: 1px solid #e6dccf;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    pointer-events: none;
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity 0.12s ease, transform 0.12s ease;
+    z-index: 9999;
+    max-width: 260px;
+  }
+  #tooltip.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
 </style>
 </head>
 
 <body>
 
-<div class="dashboard-container">
-
-  <!-- HEADER -->
-  <div class="dashboard-header">
-    <div class="header-left">
-      <select id="yearSelect"></select>
-      <select id="monthSelect"></select>
-    </div>
-
-    <div class="header-title">
-      RCO Fulfillment Dashboard
-      <span id="datasetLabel" style="font-size:0.6em;color:#8d8173;">- Retail</span>
-    </div>
-
-    <div class="header-controls">
-      <button class="view-btn active" data-view="monthly" id="monthlyBtn">Monthly</button>
-      <button class="view-btn" data-view="calendar" id="calendarBtn">Calendar</button>
-      <button id="datasetToggleBtn">Wholesale</button>
-
-      <!-- FULLSCREEN (SVG ICON, will not be blank) -->
-      <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">
-        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M9 4H4v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M15 4h5v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M9 20H4v-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          <path d="M15 20h5v-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-    </div>
+<header class="dashboard-header">
+  <div class="header-center">
+    <h1>📦 RCO Fulfillment Dashboard <span id="datasetLabel" class="sub-label">- Retail</span></h1>
   </div>
-
-  <!-- KPI ROW -->
-  <div class="kpi-row">
-    <div class="kpi-card">
-      <div class="kpi-label">4-Day Fill Rate</div>
-      <div class="kpi-value" id="fillRate4Day">-</div>
-      <div class="kpi-subtitle">Target: 85%</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">7-Day Fill Rate</div>
-      <div class="kpi-value" id="fillRate7Day">-</div>
-      <div class="kpi-subtitle">Target: 95%</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Total Orders</div>
-      <div class="kpi-value" id="totalOrders">-</div>
-      <div class="kpi-subtitle">This <span id="periodLabel">month</span></div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Avg Daily Orders</div>
-      <div class="kpi-value" id="avgOrders">-</div>
-      <div class="kpi-subtitle">Per day</div>
-    </div>
+  <div class="controls">
+    <button class="btn" id="datasetToggleBtn">Wholesale</button>
+    <button class="btn active" data-view="monthly">Monthly</button>
+    <button class="btn" data-view="calendar">Calendar</button>
   </div>
+</header>
 
-  <!-- GRID (Monthly) -->
-  <div class="content-grid monthly-view" id="monthlyView">
-    <div class="chart-card table-section">
-      <div class="table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Date</th><th>Orders</th><th>Rem 4D</th><th>Rem 7D</th><th>Rate 4D</th><th>Rate 7D</th>
-            </tr>
-          </thead>
-          <tbody id="dataTable"></tbody>
-        </table>
+<div class="selectors">
+  <label>Year:</label>
+  <select id="yearSelect"></select>
+
+  <label>Month:</label>
+  <select id="monthSelect"></select>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi">
+    <div class="label">Fill Rate (4 day)</div>
+    <div class="value" id="fillRate4Day">—</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Fill Rate (7 day)</div>
+    <div class="value" id="fillRate7Day">—</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Total Orders (<span id="periodLabel">month</span>)</div>
+    <div class="value" id="totalOrders">—</div>
+  </div>
+  <div class="kpi">
+    <div class="label">Avg Orders / Day</div>
+    <div class="value" id="avgOrders">—</div>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="monthly-view">
+    <div class="charts">
+      <div class="panel">
+        <h3>Fill Rate</h3>
+        <div class="chart-wrap"><canvas id="fillRateChart"></canvas></div>
+      </div>
+      <div class="panel">
+        <h3>Orders Remaining</h3>
+        <div class="chart-wrap"><canvas id="ordersChart"></canvas></div>
       </div>
     </div>
 
-    <div class="chart-card">
-      <div class="chart-wrapper">
-        <canvas id="fillRateChart"></canvas>
-      </div>
-    </div>
-
-    <div class="chart-card">
-      <div class="chart-wrapper">
-        <canvas id="ordersChart"></canvas>
-      </div>
+    <div class="panel">
+      <h3>Raw Data</h3>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Orders</th>
+            <th>Rem 4D</th>
+            <th>Rem 7D</th>
+            <th>Rate 4D</th>
+            <th>Rate 7D</th>
+          </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+      </table>
     </div>
   </div>
 
-  <!-- CALENDAR VIEW (kept for JS swapping) -->
-  <div class="calendar-view" id="calendarView" style="display:none; flex:1; overflow:auto; background:white; border-radius:12px; padding:20px; box-shadow:0 2px 8px rgba(95,75,60,0.08); min-height:0;">
-    <div id="calendarGrid" class="calendar-grid"></div>
+  <div class="calendar-view">
+    <div class="panel">
+      <h3>Year Calendar (7-Day Rate)</h3>
+      <div id="calendarGrid" class="calendar-grid"></div>
+    </div>
   </div>
 
 </div>
 
-<script src="data.js"></script>
-<script src="wholesale.js"></script>
+<div id="tooltip"></div>
+
 <script src="fulfillment.js"></script>
-
-<script>
-/* FULLSCREEN LOGIC (fixed + exit state) */
-const fsBtn = document.getElementById('fullscreenBtn');
-
-if (fsBtn) {
-  fsBtn.addEventListener('click', async () => {
-    try {
-      if (!document.fullscreenElement) {
-        await document.documentElement.requestFullscreen();
-      } else {
-        await document.exitFullscreen();
-      }
-    } catch (e) {
-      console.error('Fullscreen failed:', e);
-    }
-  });
-
-  document.addEventListener('fullscreenchange', () => {
-    if (document.fullscreenElement) fsBtn.classList.add('exit');
-    else fsBtn.classList.remove('exit');
-  });
-}
-</script>
-
-<!--
-RAW DATA COLORS FIX:
-This page's HTML/CSS already has the rate-* classes.
-To color Rem 4D / Rem 7D too, make sure your fulfillment.js updateTable() sets:
-<td class="${getRateClass(row.rate4)}"> for rem4
-<td class="${getRateClass(row.rate7)}"> for rem7
--->
 </body>
 </html>
