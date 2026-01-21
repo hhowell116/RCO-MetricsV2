@@ -103,6 +103,7 @@ body {
   color: #fff;
   border-color: #5f4b3c;
 }
+
 /* FULLSCREEN BUTTON (Orders-style, darker brown) */
 .fullscreen-btn {
   width: 36px;
@@ -118,43 +119,17 @@ body {
   box-shadow: 0 3px 8px rgba(95,75,60,0.22);
 }
 
-/* ICON */
-.fullscreen-icon {
-  position: relative;
+/* ICON WRAPPER (so SVG never collapses) */
+.fullscreen-btn svg{
   width: 18px;
   height: 18px;
-  transition: transform 0.25s ease;
+  display: block;
 }
 
-/* ARROWS */
-.fullscreen-icon::before,
-.fullscreen-icon::after {
-  content: "";
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border: 2px solid #fff;
-}
-
-/* ↖ arrow */
-.fullscreen-icon::before {
-  top: 0;
-  left: 0;
-  border-right: none;
-  border-bottom: none;
-}
-
-/* ↘ arrow */
-.fullscreen-icon::after {
-  bottom: 0;
-  right: 0;
-  border-left: none;
-  border-top: none;
-}
-
-/* EXIT FULLSCREEN = INVERT ARROWS */
-.fullscreen-btn.exit .fullscreen-icon {
+/* EXIT FULLSCREEN = flip the icon */
+.fullscreen-btn.exit svg {
   transform: rotate(180deg);
+  transition: transform 0.25s ease;
 }
 
 /* Hover */
@@ -165,9 +140,8 @@ body {
 }
 
 /* Keep icon visible on white */
-.fullscreen-btn:hover .fullscreen-icon::before,
-.fullscreen-btn:hover .fullscreen-icon::after {
-  border-color: #5f4b3c;
+.fullscreen-btn:hover svg path {
+  stroke: #5f4b3c !important;
 }
 
 .fullscreen-btn:active {
@@ -408,18 +382,35 @@ canvas {
 <script src="fulfillment.js"></script>
 
 <script>
-/* FULLSCREEN LOGIC */
+/* FULLSCREEN LOGIC (fixed + exit state) */
 const fsBtn = document.getElementById('fullscreenBtn');
+
 if (fsBtn) {
-  fsBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen?.();
-    } else {
-      document.exitFullscreen?.();
+  fsBtn.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (e) {
+      console.error('Fullscreen failed:', e);
     }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) fsBtn.classList.add('exit');
+    else fsBtn.classList.remove('exit');
   });
 }
 </script>
 
+<!--
+RAW DATA COLORS FIX:
+This page's HTML/CSS already has the rate-* classes.
+To color Rem 4D / Rem 7D too, make sure your fulfillment.js updateTable() sets:
+<td class="${getRateClass(row.rate4)}"> for rem4
+<td class="${getRateClass(row.rate7)}"> for rem7
+-->
 </body>
 </html>
