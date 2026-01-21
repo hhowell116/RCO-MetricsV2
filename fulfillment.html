@@ -3,28 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fulfillment KPI Dashboard</title>
+<title>RCO Fulfillment Dashboard</title>
 
 <link rel="stylesheet" href="main.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 body {
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f5f5f5;
-  overflow: hidden;
   height: 100vh;
+  overflow: hidden;
 }
 
-/* ====== MAIN CONTAINER ====== */
+/* ===== CONTAINER ===== */
 .dashboard-container {
-  width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -32,23 +27,30 @@ body {
   gap: 16px;
 }
 
-/* ====== HEADER ====== */
+/* ===== HEADER ===== */
 .dashboard-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   background: white;
-  padding: 16px 20px;
+  padding: 14px 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
-  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
+  gap: 12px;
+}
+
+.header-left {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .header-title {
-  font-size: 1.5em;
+  text-align: center;
+  font-size: 1.6em;
   font-weight: 600;
   color: #5f4b3c;
-  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+  font-family: "Noto Serif", Georgia, serif;
 }
 
 .header-controls {
@@ -56,80 +58,130 @@ body {
   gap: 10px;
   align-items: center;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.header-controls select,
-.header-controls button {
+/* Keep selects styled */
+.header-left select {
   background: white;
   color: #5f4b3c;
   border: 2px solid #d7d1ca;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
-
-.header-controls select:hover,
-.header-controls button:hover {
+.header-left select:hover {
   border-color: #bd9979;
   box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
 }
 
-.header-controls button.active {
-  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-  color: white;
+.view-btn,
+#datasetToggleBtn {
+  background: white;
+  color: #5f4b3c;
+  border: 2px solid #d7d1ca;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.view-btn:hover,
+#datasetToggleBtn:hover {
   border-color: #bd9979;
+  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
+}
+.view-btn.active,
+#datasetToggleBtn.active {
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+  color: #fff;
+  border-color: #5f4b3c;
 }
 
-/* ====== KPI STATS ROW ====== */
+/* FULLSCREEN BUTTON */
+.fullscreen-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+  border: 2px solid rgba(95,75,60,0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(95,75,60,0.22);
+}
+
+.fullscreen-btn svg{
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.fullscreen-btn.exit svg {
+  transform: rotate(180deg);
+  transition: transform 0.25s ease;
+}
+
+.fullscreen-btn:hover {
+  background: #ffffff;
+  border-color: #bd9979;
+  box-shadow: 0 4px 12px rgba(95,75,60,0.22);
+}
+
+.fullscreen-btn:hover svg path {
+  stroke: #5f4b3c !important;
+}
+
+.fullscreen-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(95,75,60,0.26);
+}
+
+/* ===== KPI ROW ===== */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  flex-shrink: 0;
 }
 
 .kpi-card {
   background: white;
   padding: 16px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.12);
+  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
 }
 
 .kpi-label {
   font-size: 0.75em;
   color: #8d8173;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
   font-weight: 600;
+  margin-bottom: 6px;
 }
 
 .kpi-value {
   font-size: 2em;
   font-weight: 700;
   color: #5f4b3c;
-  margin-bottom: 4px;
 }
 
 .kpi-subtitle {
   font-size: 0.7em;
   color: #aaa0a1;
+  margin-top: 4px;
 }
 
-/* ====== MAIN CONTENT GRID ====== */
+/* ===== GRID ===== */
 .content-grid {
   flex: 1;
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.3fr 1fr;
   grid-template-rows: 1fr 1fr;
   gap: 16px;
   min-height: 0;
@@ -139,10 +191,11 @@ body {
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
+  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: hidden;
 }
 
 .chart-title {
@@ -150,42 +203,35 @@ body {
   font-weight: 600;
   color: #5f4b3c;
   margin-bottom: 4px;
-  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+  font-family: "Noto Serif", Georgia, serif;
+  flex-shrink: 0;
 }
 
 .chart-subtitle {
   font-size: 0.75em;
   color: #8d8173;
   margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
-.chart-wrapper {
-  flex: 1;
-  position: relative;
-  min-height: 0;
-}
-
-/* ====== DATA TABLE (spans 2 rows on LEFT) ====== */
 .table-section {
-  grid-row: span 2;
-  grid-column: 1;
+  grid-row: 1 / span 2;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-/* ====== FILL RATE CHART (top right) ====== */
 .fill-rate-section {
   grid-row: 1;
   grid-column: 2;
 }
 
-/* ====== ORDERS CHART (bottom right) ====== */
 .orders-section {
   grid-row: 2;
   grid-column: 2;
 }
 
+/* === TABLE === */
 .table-wrapper {
   flex: 1;
   overflow-y: auto;
@@ -210,12 +256,11 @@ body {
   padding: 10px 8px;
   text-align: left;
   font-weight: 600;
-  font-size: 0.85em;
-  white-space: nowrap;
 }
 
 .data-table td {
   padding: 8px;
+  text-align: left;
   border-bottom: 1px solid #f0f0f0;
   color: #5f4b3c;
 }
@@ -224,20 +269,33 @@ body {
   background: #fbfaf8;
 }
 
-.rate-excellent { color: #5a8c5a; font-weight: 600; }
-.rate-good { color: #7ca87c; font-weight: 600; }
-.rate-warning { color: #d4a05c; font-weight: 600; }
-.rate-poor { color: #c67b7b; font-weight: 600; }
+.rate-excellent { color: #2e7d32; font-weight: 700; }
+.rate-good      { color: #4f8f4f; font-weight: 700; }
+.rate-warning   { color: #b36b00; font-weight: 700; }
+.rate-poor      { color: #b23b3b; font-weight: 700; }
 
-/* ====== CALENDAR VIEW ====== */
+/* ===== CHARTS ===== */
+.chart-wrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===== CALENDAR VIEW ===== */
 .calendar-view {
   display: none;
-  grid-column: 1 / -1;
+  flex: 1;
   overflow-y: auto;
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
+  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
+  min-height: 0;
 }
 
 .calendar-view.active {
@@ -263,7 +321,7 @@ body {
   font-weight: 600;
   margin-bottom: 12px;
   text-align: center;
-  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+  font-family: "Noto Serif", Georgia, serif;
 }
 
 .calendar-days {
@@ -331,7 +389,7 @@ body {
   color: #999;
 }
 
-/* ====== TOOLTIP ====== */
+/* ===== TOOLTIP ===== */
 .tooltip {
   position: fixed;
   background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
@@ -351,122 +409,105 @@ body {
   display: block;
 }
 
-/* ====== RESPONSIVE ====== */
+/* Responsive */
 @media (max-width: 1200px) {
   .content-grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
   }
-  
-  .table-section {
-    grid-row: span 1;
+  .table-section { 
+    grid-row: span 1; 
     grid-column: 1;
-    min-height: 300px;
+    min-height: 300px; 
   }
-  
   .fill-rate-section {
     grid-row: auto;
     grid-column: 1;
   }
-  
   .orders-section {
     grid-row: auto;
     grid-column: 1;
   }
-  
-  .kpi-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .dashboard-container {
-    padding: 12px;
+  body { overflow: auto; }
+  .dashboard-container { height: auto; }
+  .dashboard-header { 
+    grid-template-columns: 1fr; 
+    justify-items: center;
     gap: 12px;
   }
-  
-  .dashboard-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: stretch;
-  }
-  
-  .header-controls {
-    justify-content: center;
-  }
-  
-  .kpi-row {
-    grid-template-columns: 1fr;
-    gap: 10px;
-  }
-  
-  .kpi-value {
-    font-size: 1.6em;
-  }
-  
-  .content-grid {
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-  
-  .chart-card {
-    min-height: 300px;
-  }
-}
-
-@media (max-width: 480px) {
   .header-title {
-    font-size: 1.2em;
+    order: -1;
   }
-  
-  .kpi-value {
-    font-size: 1.4em;
+  .header-left {
+    order: 1;
   }
-  
-  .chart-title {
-    font-size: 1em;
+  .header-controls { 
+    justify-content: center;
+    order: 2;
   }
+  .kpi-row { grid-template-columns: 1fr; }
+  .content-grid { 
+    display: flex; 
+    flex-direction: column; 
+  }
+  .chart-card { min-height: 300px; }
 }
 </style>
-
 </head>
 
 <body>
+
 <div class="dashboard-container">
 
   <!-- HEADER -->
   <div class="dashboard-header">
-    <div class="header-title">📦 RCO Fulfillment Dashboard <span id="datasetLabel" style="color: #8d8173; font-size: 0.7em;">- Retail</span></div>
-    <div class="header-controls">
+    <div class="header-left">
       <select id="yearSelect"></select>
       <select id="monthSelect"></select>
+    </div>
+
+    <div class="header-title">
+      RCO Fulfillment Dashboard
+      <span id="datasetLabel" style="font-size:0.6em;color:#8d8173;">- Retail</span>
+    </div>
+
+    <div class="header-controls">
       <button class="view-btn active" data-view="monthly">Monthly</button>
       <button class="view-btn" data-view="calendar">Calendar</button>
       <button id="datasetToggleBtn">Wholesale</button>
+
+      <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M9 4H4v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M15 4h5v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M9 20H4v-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M15 20h5v-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <!-- KPI STATS ROW -->
+  <!-- KPI ROW -->
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-label">4-Day Fill Rate</div>
       <div class="kpi-value" id="fillRate4Day">-</div>
       <div class="kpi-subtitle">Target: 85%</div>
     </div>
-
     <div class="kpi-card">
       <div class="kpi-label">7-Day Fill Rate</div>
       <div class="kpi-value" id="fillRate7Day">-</div>
       <div class="kpi-subtitle">Target: 95%</div>
     </div>
-
     <div class="kpi-card">
       <div class="kpi-label">Total Orders</div>
       <div class="kpi-value" id="totalOrders">-</div>
       <div class="kpi-subtitle">This <span id="periodLabel">month</span></div>
     </div>
-
     <div class="kpi-card">
       <div class="kpi-label">Avg Daily Orders</div>
       <div class="kpi-value" id="avgOrders">-</div>
@@ -523,6 +564,30 @@ body {
 <script src="data.js"></script>
 <script src="wholesale.js"></script>
 <script src="fulfillment.js"></script>
+
+<script>
+/* FULLSCREEN LOGIC */
+const fsBtn = document.getElementById('fullscreenBtn');
+
+if (fsBtn) {
+  fsBtn.addEventListener('click', async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch (e) {
+      console.error('Fullscreen failed:', e);
+    }
+  });
+
+  document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) fsBtn.classList.add('exit');
+    else fsBtn.classList.remove('exit');
+  });
+}
+</script>
 
 </body>
 </html>
