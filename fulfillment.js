@@ -493,31 +493,36 @@ function updateTable(monthData) {
 }
 
 // FIXED: Event listeners for view switching
-document.querySelectorAll('.view-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        // Remove active from all view buttons
-        document.querySelectorAll('.view-btn').forEach(b => {
-            b.classList.remove('active');
-        });
-        btn.classList.add('active');
-        
-        currentView = btn.dataset.view;
-        
-        const monthlyView = document.getElementById('monthlyView');
-        const calendarView = document.getElementById('calendarView');
-        
-        if (currentView === 'monthly') {
-            monthlyView.style.display = 'grid';  // Use 'grid' to maintain layout
-            calendarView.style.display = 'none';
-            document.getElementById('monthSelect').disabled = false;
-        } else {
-            monthlyView.style.display = 'none';
-            calendarView.style.display = 'block';
-            document.getElementById('monthSelect').disabled = true;
-        }
-        
-        updateDashboard();
-    });
+document.getElementById('monthlyBtn').addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('monthlyBtn').classList.add('active');
+    
+    currentView = 'monthly';
+    
+    const monthlyView = document.getElementById('monthlyView');
+    const calendarView = document.getElementById('calendarView');
+    
+    monthlyView.style.display = 'grid';
+    calendarView.style.display = 'none';
+    document.getElementById('monthSelect').disabled = false;
+    
+    updateDashboard();
+});
+
+document.getElementById('calendarBtn').addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('calendarBtn').classList.add('active');
+    
+    currentView = 'calendar';
+    
+    const monthlyView = document.getElementById('monthlyView');
+    const calendarView = document.getElementById('calendarView');
+    
+    monthlyView.style.display = 'none';
+    calendarView.style.display = 'block';
+    document.getElementById('monthSelect').disabled = true;
+    
+    updateDashboard();
 });
 
 document.getElementById('yearSelect').addEventListener('change', e => {
