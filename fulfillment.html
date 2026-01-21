@@ -1,79 +1,70 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Fulfillment KPI Dashboard</title>
 
-<!-- NOTE: Removed main.css to prevent layout overrides that break the grid -->
+<link rel="stylesheet" href="main.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
 <style>
-/* ===== Reset ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
-
-html, body {
-  width: 100%;
-  height: 100%;
-}
 
 body {
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f5f5f5;
-  /* IMPORTANT: do NOT lock overflow hidden in an iframe; it can cause reflow loops */
-  overflow: auto;
+  background: #f5f3ee;
+  overflow: hidden;
+  height: 100vh;
 }
 
-/* ===== Scoped root to avoid collisions ===== */
-.fulfillment-root {
+/* ====== MAIN CONTAINER ====== */
+.dashboard-container {
   width: 100%;
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 20px;
-  gap: 16px;
+  padding: 18px;
+  gap: 14px;
 }
 
-/* ===== Header ===== */
+/* ====== HEADER ====== */
 .dashboard-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   background: white;
-  padding: 16px 20px;
+  padding: 14px 18px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
   flex-shrink: 0;
 }
 
-.header-title-wrap {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.header-title {
-  font-size: 1.5em;
-  font-weight: 600;
-  color: #5f4b3c;
-  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
-  text-align: center;
-}
-
-#datasetLabel {
-  color: #8d8173;
-  font-size: 0.75em;
-  font-weight: 600;
-}
-
-.header-controls {
+/* left controls (year/month) */
+.header-left {
   display: flex;
   gap: 10px;
   align-items: center;
-  flex-wrap: wrap;
   justify-content: flex-start;
+}
+
+/* centered title */
+.header-center {
+  text-align: center;
+  font-size: 1.6em;
+  font-weight: 600;
+  color: #5f4b3c;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+  white-space: nowrap;
+}
+
+/* right controls (view + dataset) */
+.header-right {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .header-controls select,
@@ -81,7 +72,7 @@ body {
   background: white;
   color: #5f4b3c;
   border: 2px solid #d7d1ca;
-  padding: 8px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
   font-size: 13px;
   font-weight: 600;
@@ -91,21 +82,21 @@ body {
 
 .header-controls select:hover,
 .header-controls button:hover {
-  border-color: #bd9979;
+  border-color: #c8b59a;
   box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
 }
 
 .header-controls button.active {
-  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
+  background: linear-gradient(135deg, #e6dccd 0%, #c8b59a 100%);
   color: white;
-  border-color: #bd9979;
+  border-color: #c8b59a;
 }
 
-/* ===== KPI Row ===== */
+/* ====== KPI STATS ROW ====== */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: 14px;
   flex-shrink: 0;
 }
 
@@ -114,12 +105,6 @@ body {
   padding: 16px;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.kpi-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.12);
 }
 
 .kpi-label {
@@ -143,26 +128,20 @@ body {
   color: #aaa0a1;
 }
 
-/* ===== Main Grid (ENFORCED) ===== */
-.monthly-view {
+/* ====== MAIN CONTENT GRID ====== */
+.content-grid {
   flex: 1;
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;   /* table bigger on left */
+  grid-template-rows: 1fr 1fr;
+  gap: 14px;
   min-height: 0;
 }
 
-/* Strongly enforce grid even if some global CSS exists elsewhere */
-.monthly-view.content-grid {
-  display: grid !important;
-  grid-template-columns: 1.2fr 0.8fr !important;
-  grid-template-rows: 1fr 1fr !important;
-  gap: 16px !important;
-  min-height: 0;
-}
-
-/* Cards */
 .chart-card {
   background: white;
   border-radius: 12px;
-  padding: 20px;
+  padding: 18px;
   box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
   display: flex;
   flex-direction: column;
@@ -189,31 +168,19 @@ body {
   min-height: 0;
 }
 
-/* ===== Table Section (LEFT spanning rows) ===== */
+/* ====== TABLE (spans 2 rows on LEFT) ====== */
 .table-section {
-  grid-column: 1 !important;
-  grid-row: 1 / span 2 !important;
+  grid-row: span 2;
+  grid-column: 1;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  padding-top: 8px; /* slight breathing room since we removed the title */
 }
 
-/* Hide the “Daily Data” title (per your earlier request) */
-.table-section .chart-title {
-  display: none !important;
-}
+.table-wrapper { flex: 1; overflow-y: auto; min-height: 0; }
 
-.table-wrapper {
-  flex: 1;
-  overflow-y: auto;
-  min-height: 0;
-}
-
-.data-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8em;
-}
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.8em; }
 
 .data-table thead {
   position: sticky;
@@ -244,21 +211,10 @@ body {
 .rate-warning { color: #d4a05c; font-weight: 600; }
 .rate-poor { color: #c67b7b; font-weight: 600; }
 
-/* ===== Right side charts ===== */
-.fill-rate-section {
-  grid-column: 2 !important;
-  grid-row: 1 !important;
-}
-
-.orders-section {
-  grid-column: 2 !important;
-  grid-row: 2 !important;
-}
-
-/* ===== Calendar View ===== */
+/* ====== CALENDAR VIEW ====== */
 .calendar-view {
   display: none;
-  flex: 1;
+  grid-column: 1 / -1;
   overflow-y: auto;
   background: white;
   border-radius: 12px;
@@ -274,63 +230,7 @@ body {
   gap: 16px;
 }
 
-.month-calendar {
-  background: #fbfaf8;
-  border-radius: 10px;
-  padding: 16px;
-  border: 1px solid #d7d1ca;
-}
-
-.month-header {
-  color: #5f4b3c;
-  font-size: 1.1em;
-  font-weight: 600;
-  margin-bottom: 12px;
-  text-align: center;
-  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
-}
-
-.calendar-days {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 4px;
-}
-
-.day-label {
-  text-align: center;
-  font-size: 0.7em;
-  color: #8d8173;
-  font-weight: 600;
-  padding: 4px 2px;
-}
-
-.calendar-day {
-  aspect-ratio: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
-  font-size: 0.7em;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.calendar-day:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.calendar-day.empty { cursor: default; }
-.calendar-day.empty:hover { transform: none; box-shadow: none; }
-
-.cal-rate-excellent { background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); color: #2e7d32; }
-.cal-rate-good { background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); color: #558b2f; }
-.cal-rate-warning { background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); color: #e65100; }
-.cal-rate-poor { background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%); color: #c62828; }
-.cal-rate-none { background: #f5f5f5; color: #999; }
-
-/* ===== Tooltip ===== */
+/* ====== TOOLTIP ====== */
 .tooltip {
   position: fixed;
   background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
@@ -347,52 +247,46 @@ body {
 }
 .tooltip.show { display: block; }
 
-/* ===== Responsive ===== */
-@media (max-width: 1200px) {
-  .monthly-view.content-grid {
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto auto auto !important;
+/* ====== RESPONSIVE ======
+   IMPORTANT: lowered breakpoint so sidebar doesn’t force stack on desktop/TV
+*/
+@media (max-width: 900px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
   }
-  .table-section {
-    grid-column: 1 !important;
-    grid-row: auto !important;
-    min-height: 320px;
-  }
-  .fill-rate-section, .orders-section {
-    grid-column: 1 !important;
-    grid-row: auto !important;
-  }
+  .table-section { grid-row: span 1; grid-column: 1; min-height: 320px; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
-  .fulfillment-root { padding: 12px; gap: 12px; }
-  .dashboard-header { flex-direction: column; gap: 10px; align-items: stretch; }
-
-  /* Center title; selectors remain left inside controls row */
-  .header-title-wrap { justify-content: center; }
-  .header-controls { justify-content: flex-start; }
-
+  .dashboard-container { padding: 12px; gap: 12px; }
+  .dashboard-header { grid-template-columns: 1fr; gap: 10px; }
+  .header-left, .header-right { justify-content: center; }
+  .header-center { font-size: 1.25em; }
   .kpi-row { grid-template-columns: 1fr; gap: 10px; }
   .kpi-value { font-size: 1.6em; }
+  .content-grid { display: flex; flex-direction: column; overflow-y: auto; }
+  .chart-card { min-height: 300px; }
 }
-
 </style>
 </head>
 
 <body>
-<div class="fulfillment-root">
+<div class="dashboard-container">
 
   <!-- HEADER -->
-  <div class="dashboard-header">
-    <div class="header-title-wrap">
-      <div class="header-title">RCO Fulfillment Dashboard</div>
-      <span id="datasetLabel">- Retail</span>
-    </div>
-
-    <div class="header-controls">
+  <div class="dashboard-header header-controls">
+    <div class="header-left">
       <select id="yearSelect"></select>
       <select id="monthSelect"></select>
+    </div>
+
+    <div class="header-center">
+      RCO Fulfillment Dashboard <span id="datasetLabel" style="color:#8d8173; font-size:0.7em;">- Retail</span>
+    </div>
+
+    <div class="header-right">
       <button class="view-btn active" data-view="monthly">Monthly</button>
       <button class="view-btn" data-view="calendar">Calendar</button>
       <button id="datasetToggleBtn">Wholesale</button>
@@ -429,9 +323,7 @@ body {
   <!-- MONTHLY VIEW -->
   <div class="content-grid monthly-view" data-view="monthly">
     <div class="chart-card table-section">
-      <!-- Title intentionally hidden via CSS -->
-      <div class="chart-title">Daily Data</div>
-
+      <!-- removed "Daily Data" title -->
       <div class="table-wrapper">
         <table class="data-table">
           <thead>
@@ -449,7 +341,7 @@ body {
       </div>
     </div>
 
-    <div class="chart-card fill-rate-section">
+    <div class="chart-card">
       <div class="chart-title">Daily Fill Rate Performance</div>
       <div class="chart-subtitle">Target lines: 95% (7-day) • 85% (4-day)</div>
       <div class="chart-wrapper">
@@ -457,7 +349,7 @@ body {
       </div>
     </div>
 
-    <div class="chart-card orders-section">
+    <div class="chart-card">
       <div class="chart-title">Orders Remaining</div>
       <div class="chart-wrapper">
         <canvas id="ordersChart"></canvas>
@@ -471,10 +363,12 @@ body {
   </div>
 
   <div id="tooltip" class="tooltip"></div>
+
 </div>
 
 <script src="data.js"></script>
 <script src="wholesale.js"></script>
 <script src="fulfillment.js"></script>
+
 </body>
 </html>
