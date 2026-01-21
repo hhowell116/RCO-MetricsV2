@@ -6,68 +6,72 @@
 <title>RCO Metrics Dashboard</title>
 
 <style>
-/* RESET */
+/* =========================
+   RESET
+========================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; }
 
 body{
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f6f2eb; /* matches dashboard */
+  background: #f6f2eb;
   color: #5f4b3c;
 }
 
-/* LAYOUT */
+/* =========================
+   LAYOUT
+========================= */
 .app-shell{
   display: flex;
   width: 100%;
   height: 100vh;
 }
 
-/* SIDEBAR (STATIC) */
+/* =========================
+   SIDEBAR (THIN + STATIC)
+========================= */
 .sidebar{
-  width: 280px;
+  width: 180px;                 /* THINNER */
   height: 100vh;
-  background: #efe6da;            /* NOT white */
+  background: #efe6da;
   border-right: 1px solid rgba(189,153,121,0.35);
-  padding: 18px 16px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
 }
 
 /* LOGO */
 .brand-logo{
-  width: 100%;
   display: flex;
   justify-content: center;
-  padding: 6px 0 0;
+  margin-bottom: 16px;
 }
 
 .brand-logo img{
-  width: 190px;      /* smaller so it won’t pixelate */
+  width: 140px;                /* smaller, crisp */
   max-width: 100%;
   height: auto;
   object-fit: contain;
 }
 
-/* BUTTONS */
+/* NAV BUTTONS */
 .nav-tabs{
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 6px;
 }
 
 .nav-tab{
   border: 1px solid rgba(189,153,121,0.45);
   background: #ffffff;
   color: #5f4b3c;
-  padding: 12px 14px;
-  border-radius: 14px;
+  padding: 10px 12px;
+  border-radius: 12px;
   font-weight: 800;
   cursor: pointer;
   transition: all 0.18s ease;
   text-align: left;
+  font-size: 0.85em;
 }
 
 .nav-tab:hover{
@@ -80,7 +84,61 @@ body{
   border-color: rgba(189,153,121,0.65);
 }
 
-/* CONTENT */
+/* PUSH BOTTOM CONTENT DOWN */
+.sidebar-spacer{
+  flex: 1;
+}
+
+/* =========================
+   DAILY ORDERS (BOTTOM)
+========================= */
+.orders-counter{
+  border-top: 1px solid rgba(189,153,121,0.35);
+  padding-top: 12px;
+  margin-bottom: 12px;
+}
+
+.orders-label{
+  font-size: 0.65em;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(95,75,60,0.75);
+  margin-bottom: 4px;
+}
+
+.orders-value{
+  font-size: 1.6em;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.orders-updated{
+  font-size: 0.6em;
+  color: rgba(95,75,60,0.7);
+  font-weight: 600;
+}
+
+/* SIGN OUT */
+.sign-out-btn{
+  border: 1px solid rgba(189,153,121,0.45);
+  background: #ffffff;
+  color: #5f4b3c;
+  padding: 10px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: 0.8em;
+  transition: all 0.18s ease;
+}
+
+.sign-out-btn:hover{
+  background: rgba(189,153,121,0.15);
+}
+
+/* =========================
+   CONTENT
+========================= */
 .content-area{
   flex: 1;
   height: 100vh;
@@ -109,6 +167,7 @@ iframe{
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
+
     <div class="brand-logo">
       <img src="logo.png" alt="Rowe Casa Organics Logo">
     </div>
@@ -118,6 +177,18 @@ iframe{
       <button class="nav-tab" data-tab="shipping">Shipping</button>
       <button class="nav-tab" data-tab="orders">Orders</button>
     </div>
+
+    <div class="sidebar-spacer"></div>
+
+    <!-- DAILY ORDERS -->
+    <div class="orders-counter">
+      <div class="orders-label">Today's Orders</div>
+      <div class="orders-value" id="orderCount">--</div>
+      <div class="orders-updated" id="orderUpdated">Loading…</div>
+    </div>
+
+    <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
+
   </aside>
 
   <!-- CONTENT -->
@@ -138,18 +209,20 @@ iframe{
 </div>
 
 <script>
-/* TAB SWITCHING ONLY */
+/* TAB SWITCHING */
 document.querySelectorAll(".nav-tab").forEach(tab => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
 
     document.querySelectorAll(".iframe-wrapper").forEach(w => w.classList.remove("active"));
-    const target = document.getElementById(`${tab.dataset.tab}-frame`);
-    if (target) target.classList.add("active");
+    document.getElementById(`${tab.dataset.tab}-frame`).classList.add("active");
   });
 });
 </script>
+
+<!-- AUTH CHECK (kept) -->
+<script type="module" src="auth-check.js"></script>
 
 </body>
 </html>
