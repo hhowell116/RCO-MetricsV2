@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>RCO Fulfillment Dashboard</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Fulfillment KPI Dashboard</title>
 
-<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="main.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
 <style>
@@ -14,12 +14,13 @@
 body {
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: #f5f5f5;
-  height: 100vh;
   overflow: hidden;
+  height: 100vh;
 }
 
-/* ===== CONTAINER ===== */
+/* ====== MAIN CONTAINER ====== */
 .dashboard-container {
+  width: 100%;
   height: 100vh;
   display: flex;
   flex-direction: column;
@@ -27,7 +28,7 @@ body {
   gap: 16px;
 }
 
-/* ===== HEADER ===== */
+/* ====== HEADER ====== */
 .dashboard-header {
   display: grid;
   grid-template-columns: auto 1fr auto;
@@ -35,49 +36,52 @@ body {
   background: white;
   padding: 14px 20px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
+  box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
   flex-shrink: 0;
+  gap: 12px;
 }
 
 .header-left {
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 
 .header-title {
-  text-align: center;
-  font-size: 1.6em;
+  font-size: 1.5em;
   font-weight: 600;
   color: #5f4b3c;
-  font-family: "Noto Serif", Georgia, serif;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+  text-align: center;
 }
 
 .header-controls {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-/* ===== SELECTS ===== */
-select {
+.header-controls select {
   background: white;
   color: #5f4b3c;
   border: 2px solid #d7d1ca;
-  padding: 8px 14px;
+  padding: 8px 16px;
   border-radius: 8px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
-select:hover {
+.header-controls select:hover {
   border-color: #bd9979;
-  box-shadow: 0 2px 6px rgba(95,75,60,0.12);
+  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
 }
 
-/* ===== BUTTONS ===== */
-.view-btn,
-#datasetToggleBtn {
+/* Buttons restored to nice styling */
+.header-controls button {
   background: white;
   color: #5f4b3c;
   border: 2px solid #d7d1ca;
@@ -89,44 +93,36 @@ select:hover {
   transition: all 0.2s ease;
 }
 
-.view-btn:hover,
-#datasetToggleBtn:hover {
+.header-controls button:hover {
   border-color: #bd9979;
-  box-shadow: 0 2px 6px rgba(95,75,60,0.15);
+  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
 }
 
-/* ACTIVE = DARKER BROWN GRADIENT (requested) */
-.view-btn.active {
+/* ACTIVE gradient for Monthly/Calendar AND Wholesale when active */
+.header-controls button.active {
   background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
-  border-color: #5f4b3c;
   color: white;
+  border-color: #5f4b3c;
 }
 
-/* ===== FULLSCREEN ===== */
+/* ===== Fullscreen button ===== */
 .fullscreen-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: 2px solid #d7d1ca;
-  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
-  cursor: pointer;
-  display: flex;
+  width: 40px;
+  height: 40px;
+  padding: 0 !important;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+  border: 2px solid #5f4b3c;
 }
-
-.fullscreen-btn:hover {
-  box-shadow: 0 2px 8px rgba(95,75,60,0.2);
-  transform: translateY(-1px);
-}
-
+.fullscreen-btn:hover { transform: translateY(-1px); }
 .fullscreen-icon {
   width: 16px;
   height: 16px;
   position: relative;
 }
-
 .fullscreen-icon::before,
 .fullscreen-icon::after {
   content: "";
@@ -135,22 +131,18 @@ select:hover {
   height: 7px;
   border: 2px solid #fff;
 }
-
 .fullscreen-icon::before {
-  top: 0;
-  left: 0;
+  top: 0; left: 0;
   border-right: none;
   border-bottom: none;
 }
-
 .fullscreen-icon::after {
-  bottom: 0;
-  right: 0;
+  bottom: 0; right: 0;
   border-left: none;
   border-top: none;
 }
 
-/* ===== KPI ROW ===== */
+/* ====== KPI STATS ROW ====== */
 .kpi-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -162,7 +154,13 @@ select:hover {
   background: white;
   padding: 16px;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
+  box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.12);
 }
 
 .kpi-label {
@@ -170,15 +168,14 @@ select:hover {
   color: #8d8173;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  font-weight: 600;
   margin-bottom: 8px;
+  font-weight: 600;
 }
 
 .kpi-value {
   font-size: 2em;
   font-weight: 700;
   color: #5f4b3c;
-  line-height: 1.1;
   margin-bottom: 4px;
 }
 
@@ -187,7 +184,7 @@ select:hover {
   color: #aaa0a1;
 }
 
-/* ===== GRID ===== */
+/* ====== MAIN CONTENT GRID (Monthly) ====== */
 .content-grid {
   flex: 1;
   display: grid;
@@ -197,53 +194,72 @@ select:hover {
   min-height: 0;
 }
 
-/* Cards */
 .chart-card {
   background: white;
   border-radius: 12px;
   padding: 20px;
-  box-shadow: 0 2px 8px rgba(95,75,60,0.08);
+  box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
-/* ===== TABLE ===== */
-.table-section {
-  grid-row: 1 / span 2;
-  overflow: hidden;
+.chart-title {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #5f4b3c;
+  margin-bottom: 4px;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
 }
 
-.table-wrapper {
+.chart-subtitle {
+  font-size: 0.75em;
+  color: #8d8173;
+  margin-bottom: 12px;
+}
+
+.chart-wrapper {
   flex: 1;
-  overflow-y: auto;
+  position: relative;
   min-height: 0;
 }
 
-/* Rounded header corners: put radius on table and hide overflow */
+/* ====== TABLE (left, spans 2 rows) ====== */
+.table-section {
+  grid-row: 1 / span 2;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* IMPORTANT FIX:
+   Round + clip the SCROLL CONTAINER, not the sticky header.
+   This makes the header corners stay correct while scrolling and fixes weird scroll feel. */
+.table-wrapper {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  border-radius: 10px;
+  border: 1px solid #eee;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Table */
 .data-table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
   font-size: 0.8em;
-  border-radius: 10px;
-  overflow: hidden;
 }
 
+/* Sticky header */
 .data-table thead {
   position: sticky;
   top: 0;
-  z-index: 10;
   background: #5f4b3c;
   color: white;
-}
-
-/* Smooth top corners on first/last header cells */
-.data-table thead th:first-child {
-  border-top-left-radius: 10px;
-}
-.data-table thead th:last-child {
-  border-top-right-radius: 10px;
+  z-index: 10;
 }
 
 .data-table th {
@@ -253,6 +269,10 @@ select:hover {
   font-size: 0.85em;
   white-space: nowrap;
 }
+
+/* rounded header corners ALWAYS (clipped by .table-wrapper) */
+.data-table thead th:first-child { border-top-left-radius: 10px; }
+.data-table thead th:last-child  { border-top-right-radius: 10px; }
 
 .data-table td {
   padding: 8px;
@@ -264,37 +284,125 @@ select:hover {
   background: #fbfaf8;
 }
 
-/* ===== RATE COLORS (REVERTED + LOCKED) ===== */
+/* ====== RAW DATA RATE COLORS (lighter set — KEEP THESE) ====== */
 .rate-excellent { color: #5a8c5a; font-weight: 600; }
 .rate-good      { color: #7ca87c; font-weight: 600; }
 .rate-warning   { color: #d4a05c; font-weight: 600; }
 .rate-poor      { color: #c67b7b; font-weight: 600; }
 
-/* ===== CHARTS ===== */
-.chart-wrapper {
+/* ====== CALENDAR VIEW ====== */
+.calendar-view {
+  display: none;
   flex: 1;
+  overflow: auto;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(95, 75, 60, 0.08);
   min-height: 0;
-  position: relative;
 }
 
-canvas {
-  width: 100% !important;
-  height: 100% !important;
+.calendar-view.active { display: block; }
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
 }
 
-/* ===== RESPONSIVE ===== */
+.month-calendar {
+  background: #fbfaf8;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid #d7d1ca;
+}
+
+.month-header {
+  color: #5f4b3c;
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-bottom: 12px;
+  text-align: center;
+  font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+}
+
+.calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.day-label {
+  text-align: center;
+  font-size: 0.7em;
+  color: #8d8173;
+  font-weight: 600;
+  padding: 4px 2px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.7em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.calendar-day:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.calendar-day.empty { cursor: default; }
+.calendar-day.empty:hover { transform: none; box-shadow: none; }
+
+.cal-rate-excellent {
+  background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+  color: #2e7d32;
+}
+.cal-rate-good {
+  background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
+  color: #558b2f;
+}
+.cal-rate-warning {
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  color: #e65100;
+}
+.cal-rate-poor {
+  background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+  color: #c62828;
+}
+.cal-rate-none { background: #f5f5f5; color: #999; }
+
+/* Tooltip */
+.tooltip {
+  position: fixed;
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+  color: white;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 0.8em;
+  line-height: 1.5;
+  pointer-events: none;
+  z-index: 1000;
+  display: none;
+  max-width: 240px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.tooltip.show { display: block; }
+
+/* ====== RESPONSIVE ====== */
 @media (max-width: 1200px) {
   .content-grid {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
   }
-  .table-section {
-    grid-row: span 1;
-    min-height: 300px;
-  }
-  .kpi-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .table-section { grid-row: span 1; min-height: 300px; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
@@ -303,13 +411,11 @@ canvas {
     grid-template-columns: 1fr;
     gap: 12px;
     justify-items: center;
-    text-align: center;
   }
-  .header-left { justify-content: center; flex-wrap: wrap; }
-  .header-controls { justify-content: center; flex-wrap: wrap; }
+  .header-controls { justify-content: center; }
   .kpi-row { grid-template-columns: 1fr; gap: 10px; }
   .kpi-value { font-size: 1.6em; }
-  .content-grid { display: flex; flex-direction: column; overflow-y: auto; }
+  .content-grid { display: flex; flex-direction: column; overflow: auto; }
   .chart-card { min-height: 300px; }
 }
 </style>
@@ -327,21 +433,20 @@ canvas {
 
     <div class="header-title">
       RCO Fulfillment Dashboard
-      <span id="datasetLabel" style="font-size:0.6em;color:#8d8173;">- Retail</span>
+      <span id="datasetLabel" style="color:#8d8173; font-size:0.7em;">- Retail</span>
     </div>
 
     <div class="header-controls">
       <button class="view-btn active" data-view="monthly">Monthly</button>
       <button class="view-btn" data-view="calendar">Calendar</button>
       <button id="datasetToggleBtn">Wholesale</button>
-
       <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen">
         <div class="fullscreen-icon"></div>
       </button>
     </div>
   </div>
 
-  <!-- KPI -->
+  <!-- KPI STATS ROW -->
   <div class="kpi-row">
     <div class="kpi-card">
       <div class="kpi-label">4-Day Fill Rate</div>
@@ -368,7 +473,7 @@ canvas {
     </div>
   </div>
 
-  <!-- GRID -->
+  <!-- MONTHLY VIEW -->
   <div class="content-grid monthly-view">
     <div class="chart-card table-section">
       <div class="table-wrapper">
@@ -388,19 +493,28 @@ canvas {
       </div>
     </div>
 
-    <div class="chart-card">
+    <div class="chart-card fill-rate-section">
+      <div class="chart-title">Daily Fill Rate Performance</div>
+      <div class="chart-subtitle">Target lines: 95% (7-day) • 85% (4-day)</div>
       <div class="chart-wrapper">
         <canvas id="fillRateChart"></canvas>
       </div>
     </div>
 
-    <div class="chart-card">
+    <div class="chart-card orders-section">
+      <div class="chart-title">Orders Remaining</div>
       <div class="chart-wrapper">
         <canvas id="ordersChart"></canvas>
       </div>
     </div>
   </div>
 
+  <!-- CALENDAR VIEW -->
+  <div class="calendar-view" id="calendarView">
+    <div id="calendarGrid" class="calendar-grid"></div>
+  </div>
+
+  <div id="tooltip" class="tooltip"></div>
 </div>
 
 <script src="data.js"></script>
@@ -410,13 +524,12 @@ canvas {
 <script>
   // Fullscreen toggle
   const fsBtn = document.getElementById('fullscreenBtn');
-  fsBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen();
-    } else {
-      document.exitFullscreen();
-    }
-  });
+  if (fsBtn) {
+    fsBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+      else document.exitFullscreen();
+    });
+  }
 </script>
 
 </body>
