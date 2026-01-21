@@ -275,10 +275,22 @@ body {
 }
 
 /* Raw data colors (keep as your js classes expect) */
-.rate-excellent { color: #2e7d32; font-weight: 700; }
-.rate-good      { color: #4f8f4f; font-weight: 700; }
-.rate-warning   { color: #b36b00; font-weight: 700; }
-.rate-poor      { color: #b23b3b; font-weight: 700; }
+.rate-excellent { 
+  color: #2e7d32 !important; 
+  font-weight: 700 !important; 
+}
+.rate-good { 
+  color: #4f8f4f !important; 
+  font-weight: 700 !important; 
+}
+.rate-warning { 
+  color: #d4a05c !important; 
+  font-weight: 700 !important; 
+}
+.rate-poor { 
+  color: #c62828 !important; 
+  font-weight: 700 !important; 
+}
 
 /* ===== CHARTS ===== */
 .chart-wrapper {
@@ -510,7 +522,7 @@ canvas {
   </div>
 
   <!-- GRID (Monthly) -->
-  <div class="content-grid monthly-view" id="monthlyView">
+  <div class="content-grid monthly-view" id="monthlyView" data-view="monthly">
     <div class="chart-card table-section">
       <div class="chart-title">Daily Data</div>
       <div class="table-wrapper">
@@ -547,7 +559,7 @@ canvas {
   </div>
 
   <!-- CALENDAR VIEW (kept for JS swapping) -->
-  <div class="calendar-view" id="calendarView">
+  <div class="calendar-view" id="calendarView" data-view="calendar">
     <div id="calendarGrid" class="calendar-grid"></div>
   </div>
 
