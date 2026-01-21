@@ -1,7 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-  // ==========================================================
-  // DIAGNOSTICS
-  // ==========================================================
   console.log('[Fulfillment] DOM loaded');
   console.log('[Fulfillment] Chart.js loaded?', !!window.Chart);
   console.log('[Fulfillment] fullData exists?', typeof fullData !== 'undefined');
@@ -16,198 +13,109 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================
   function parseDate(dateStr) {
     // expects M/D/YYYY
-    const parts = String(dateStr).split('/');
+    const parts = dateStr.split('/');
     return new Date(parseInt(parts[2], 10), parseInt(parts[0], 10) - 1, parseInt(parts[1], 10));
   }
 
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
+  function monthName(m) {
+    return [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ][m];
   }
 
   // ==========================================================
-  // ELEMENTS
+  // STATE (Retail vs Wholesale)
   // ==========================================================
-  const yearSelect = document.getElementById('yearSelect');
-  const monthSelect = document.getElementById('monthSelect');
-  const datasetToggleBtn = document.getElementById('datasetToggleBtn');
-  const datasetLabelEl = document.getElementById('datasetLabel');
+  let isWholesale = false;
 
-  const fillRate4El = document.getElementById('fillRate4Day');
-  const fillRate7El = document.getElementById('fillRate7Day');
-  const totalOrdersEl = document.getElementById('totalOrders');
-  const avgOrdersEl = document.getElementById('avgOrders');
-  const periodLabelEl = document.getElementById('periodLabel');
-
-  const tooltipEl = document.getElementById('tooltip');
-
-  // Panels (from the fixed HTML)
-  const monthlyPanel = document.querySelector('.monthly-view.view-panel');
-  const calendarPanel = document.querySelector('.calendar-view.view-panel');
-
-  const calendarGrid = document.getElementById('calendarGrid');
-
-  // ==========================================================
-  // STATE
-  // ==========================================================
-  let currentDataset = 'retail'; // 'retail' | 'wholesale'
-  let currentView = 'monthly';   // 'monthly' | 'calendar'
-  let currentYear;
-  let currentMonth;
-
-  let fillRateChart = null;
-  let ordersChart = null;
-
-  function activeData() {
-    if (currentDataset === 'wholesale') return (typeof wholesaleData !== 'undefined' ? wholesaleData : []);
-    return (typeof fullData !== 'undefined' ? fullData : []);
+  function getActiveData() {
+    if (isWholesale) {
+      if (typeof wholesaleData !== 'undefined' && Array.isArray(wholesaleData)) return wholesaleData;
+      return []; // fallback
+    }
+    if (typeof fullData !== 'undefined' && Array.isArray(fullData)) return fullData;
+    return [];
   }
 
-  function getAvailableYears(data) {
-    const years = new Set();
-    (data || []).forEach(d => {
-      const dt = parseDate(d.date);
-      if (!Number.isNaN(dt.getTime())) years.add(dt.getFullYear());
-    });
-    return Array.from(years).sort((a, b) => a - b);
-  }
-
-  function getMostRecentDataMonth(data) {
-    try {
-      if (!Array.isArray(data) || data.length === 0) {
-        const now = new Date();
-        return { month: now.getMonth(), year: now.getFullYear() };
-      }
-
-      // Prefer rows that have orders (ignore completely empty/zero-only periods)
-      const filtered = data.filter(d => d && typeof d.date === 'string');
-      if (filtered.length === 0) {
-        const now = new Date();
-        return { month: now.getMonth(), year: now.getFullYear() };
-      }
-
-      const sorted = [...filtered].sort((a, b) => parseDate(b.date) - parseDate(a.date));
-      const mostRecent = parseDate(sorted[0].date);
-
-      return { month: mostRecent.getMonth(), year: mostRecent.getFullYear() };
-    } catch (e) {
-      console.error('[Fulfillment] getMostRecentDataMonth failed:', e);
+  function getMostRecentDataMonth() {
+    const data = getActiveData();
+    if (!data.length) {
       const now = new Date();
       return { month: now.getMonth(), year: now.getFullYear() };
     }
+    const sorted = [...data].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+    const mostRecent = parseDate(sorted[0].date);
+    return { month: mostRecent.getMonth(), year: mostRecent.getFullYear() };
   }
 
-  // NOTE: keep your original behavior: filter out orders=0 for the MONTHLY table/charts
   function getMonthData(year, month) {
-    const data = activeData();
-    return (data || []).filter(d => {
+    const data = getActiveData();
+    return data.filter(d => {
       const dt = parseDate(d.date);
-      return dt.getFullYear() === year && dt.getMonth() === month && (d.orders || 0) > 0;
+      return dt.getFullYear() === year && dt.getMonth() === month && d.orders > 0;
     });
   }
 
-  // For calendar/year KPIs we can still filter orders>0 so 0-days don't crush averages
   function getYearData(year) {
-    const data = activeData();
-    return (data || []).filter(d => parseDate(d.date).getFullYear() === year);
+    const data = getActiveData();
+    return data.filter(d => parseDate(d.date).getFullYear() === year);
   }
 
-  function setTooltip(show, html, x, y) {
-    if (!tooltipEl) return;
-    if (!show) {
-      tooltipEl.classList.remove('show');
-      return;
-    }
-    tooltipEl.innerHTML = html;
-    tooltipEl.style.left = (x + 12) + 'px';
-    tooltipEl.style.top = (y + 12) + 'px';
-    tooltipEl.classList.add('show');
-  }
+  // ==========================================================
+  // DOM
+  // ==========================================================
+  const yearSelect = document.getElementById('yearSelect');
+  const monthSelect = document.getElementById('monthSelect');
+  const datasetLabel = document.getElementById('datasetLabel');
+  const datasetToggleBtn = document.getElementById('datasetToggleBtn');
+
+  const monthlyView = document.querySelector('.monthly-view');
+  const calendarView = document.getElementById('calendarView');
+  const calendarGrid = document.getElementById('calendarGrid');
+
+  const tooltip = document.getElementById('tooltip');
+
+  // ==========================================================
+  // CHART INSTANCES
+  // ==========================================================
+  let currentView = 'monthly';
+  let currentMonth, currentYear;
+  let fillRateChart, ordersChart;
 
   // ==========================================================
   // UI: YEAR/MONTH SELECTORS
   // ==========================================================
   function populateYearMonthSelectors() {
-    if (!yearSelect || !monthSelect) {
-      console.warn('[Fulfillment] Missing yearSelect or monthSelect in DOM');
-      return;
-    }
+    if (!yearSelect || !monthSelect) return;
 
-    const years = getAvailableYears(activeData());
     yearSelect.innerHTML = '';
+    const years = [2025, 2026];
     years.forEach(y => {
       const opt = document.createElement('option');
-      opt.value = String(y);
-      opt.textContent = String(y);
+      opt.value = y;
+      opt.textContent = y;
       yearSelect.appendChild(opt);
     });
 
     monthSelect.innerHTML = '';
-    const months = [
-      'January','February','March','April','May','June',
-      'July','August','September','October','November','December'
-    ];
-    months.forEach((m, idx) => {
+    for (let m = 0; m < 12; m++) {
       const opt = document.createElement('option');
-      opt.value = String(idx);
-      opt.textContent = m;
+      opt.value = m;
+      opt.textContent = monthName(m);
       monthSelect.appendChild(opt);
-    });
-
-    // If currentYear/currentMonth are not set or no longer valid, re-anchor to most recent
-    const mostRecent = getMostRecentDataMonth(activeData());
-    if (typeof currentYear !== 'number' || !years.includes(currentYear)) currentYear = mostRecent.year;
-    if (typeof currentMonth !== 'number') currentMonth = mostRecent.month;
-
-    // Clamp month just in case
-    currentMonth = clamp(currentMonth, 0, 11);
-
-    yearSelect.value = String(currentYear);
-    monthSelect.value = String(currentMonth);
-  }
-
-  // ==========================================================
-  // TABLE: PAD TO FILL
-  // ==========================================================
-  function padTableToFill() {
-    const tbody = document.getElementById("dataTable");
-    if (!tbody) return;
-
-    const wrapper = tbody.closest(".table-wrapper");
-    if (!wrapper) return;
-
-    tbody.querySelectorAll("tr.filler-row").forEach(tr => tr.remove());
-
-    const realRows = Array.from(tbody.querySelectorAll("tr")).filter(tr => !tr.classList.contains('filler-row'));
-    if (realRows.length === 0) return;
-
-    const rowHeight = realRows[0].getBoundingClientRect().height || 28;
-    const avail = wrapper.getBoundingClientRect().height;
-
-    const targetRows = Math.max(0, Math.floor(avail / rowHeight));
-    const needed = Math.max(0, targetRows - realRows.length);
-
-    const colCount = wrapper.querySelectorAll("thead th").length || 6;
-
-    for (let i = 0; i < needed; i++) {
-      const tr = document.createElement("tr");
-      tr.className = "filler-row";
-      for (let c = 0; c < colCount; c++) {
-        const td = document.createElement("td");
-        td.innerHTML = "&nbsp;";
-        tr.appendChild(td);
-      }
-      tbody.appendChild(tr);
     }
   }
 
+  // ==========================================================
+  // TABLE
+  // ==========================================================
   function updateTable(monthData) {
     const tbody = document.getElementById('dataTable');
-    if (!tbody) {
-      console.warn('[Fulfillment] Missing #dataTable tbody');
-      return;
-    }
+    if (!tbody) return;
     tbody.innerHTML = '';
 
+    // "lighter" red/green/yellow text colors — KEEP THESE
     const getRateClass = rate => {
       if (rate >= 95) return 'rate-excellent';
       if (rate >= 85) return 'rate-good';
@@ -218,19 +126,16 @@ document.addEventListener('DOMContentLoaded', () => {
     monthData.forEach(row => {
       const tr = document.createElement('tr');
       const dt = parseDate(row.date);
-
       tr.innerHTML = `
         <td>${dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-        <td>${(row.orders || 0).toLocaleString()}</td>
-        <td>${(row.rem4 || 0).toLocaleString()}</td>
-        <td>${(row.rem7 || 0).toLocaleString()}</td>
-        <td class="${getRateClass(row.rate4 || 0)}">${(row.rate4 ?? 0).toFixed(2)}%</td>
-        <td class="${getRateClass(row.rate7 || 0)}">${(row.rate7 ?? 0).toFixed(2)}%</td>
+        <td>${row.orders.toLocaleString()}</td>
+        <td>${row.rem4.toLocaleString()}</td>
+        <td>${row.rem7.toLocaleString()}</td>
+        <td class="${getRateClass(row.rate4)}">${row.rate4.toFixed(2)}%</td>
+        <td class="${getRateClass(row.rate7)}">${row.rate7.toFixed(2)}%</td>
       `;
       tbody.appendChild(tr);
     });
-
-    padTableToFill();
   }
 
   // ==========================================================
@@ -241,12 +146,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const labels = monthData.map(d => parseDate(d.date).getDate());
 
+    // Fill Rate Chart
     if (fillRateChart) fillRateChart.destroy();
     const c1 = document.getElementById('fillRateChart');
     if (!c1) return;
-    const ctx1 = c1.getContext('2d');
-
-    fillRateChart = new Chart(ctx1, {
+    fillRateChart = new Chart(c1.getContext('2d'), {
       type: 'line',
       data: {
         labels,
@@ -288,7 +192,6 @@ document.addEventListener('DOMContentLoaded', () => {
             borderWidth: 2,
             borderDash: [8, 4],
             pointRadius: 0,
-            pointHoverRadius: 0,
             fill: false,
             order: 3
           },
@@ -299,7 +202,6 @@ document.addEventListener('DOMContentLoaded', () => {
             borderWidth: 2,
             borderDash: [8, 4],
             pointRadius: 0,
-            pointHoverRadius: 0,
             fill: false,
             order: 4
           }
@@ -311,32 +213,22 @@ document.addEventListener('DOMContentLoaded', () => {
         devicePixelRatio: window.devicePixelRatio || 1,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: {
-            display: true,
-            labels: { color: '#8b7355', font: { size: 11 }, usePointStyle: true, padding: 12, boxWidth: 15 }
-          }
+          legend: { display: true, labels: { font: { size: 11 }, usePointStyle: true, padding: 12, boxWidth: 15 } }
         },
         scales: {
           y: {
-            min: 0,
-            max: 105,
-            ticks: { callback: v => v + '%', color: '#a0906f', stepSize: 10 },
-            grid: { color: 'rgba(210, 180, 140, 0.1)' }
-          },
-          x: {
-            ticks: { color: '#a0906f' },
-            grid: { color: 'rgba(210, 180, 140, 0.1)' }
+            min: 0, max: 105,
+            ticks: { callback: v => v + '%', stepSize: 10 },
           }
         }
       }
     });
 
+    // Orders Chart
     if (ordersChart) ordersChart.destroy();
     const c2 = document.getElementById('ordersChart');
     if (!c2) return;
-    const ctx2 = c2.getContext('2d');
-
-    ordersChart = new Chart(ctx2, {
+    ordersChart = new Chart(c2.getContext('2d'), {
       type: 'line',
       data: {
         labels,
@@ -377,255 +269,244 @@ document.addEventListener('DOMContentLoaded', () => {
         devicePixelRatio: window.devicePixelRatio || 1,
         interaction: { mode: 'index', intersect: false },
         plugins: {
-          legend: {
-            display: true,
-            labels: { color: '#8b7355', font: { size: 11 }, usePointStyle: true, padding: 12, boxWidth: 15 }
-          }
+          legend: { display: true, labels: { font: { size: 11 }, usePointStyle: true, padding: 12, boxWidth: 15 } }
         },
         scales: {
-          y: {
-            beginAtZero: true,
-            ticks: { color: '#a0906f', callback: v => v.toLocaleString() },
-            grid: { color: 'rgba(210, 180, 140, 0.1)' }
-          },
-          x: {
-            ticks: { color: '#a0906f' },
-            grid: { color: 'rgba(210, 180, 140, 0.1)' }
-          }
+          y: { beginAtZero: true }
         }
       }
     });
   }
 
   // ==========================================================
-  // CALENDAR RENDERING (FIXES "BLANK CALENDAR")
+  // CALENDAR RENDER
   // ==========================================================
-  function getCalendarClass(rate7, orders) {
-    if (!orders || orders <= 0) return 'cal-rate-none';
+  function rateClassFromRate7(rate7) {
+    if (rate7 == null) return 'cal-rate-none';
     if (rate7 >= 95) return 'cal-rate-excellent';
     if (rate7 >= 85) return 'cal-rate-good';
     if (rate7 >= 70) return 'cal-rate-warning';
     return 'cal-rate-poor';
   }
 
-  function renderCalendar(year) {
-    if (!calendarGrid) return;
+  function showTooltip(x, y, html) {
+    if (!tooltip) return;
+    tooltip.innerHTML = html;
+    tooltip.style.left = (x + 12) + 'px';
+    tooltip.style.top = (y + 12) + 'px';
+    tooltip.classList.add('show');
+  }
 
+  function hideTooltip() {
+    if (!tooltip) return;
+    tooltip.classList.remove('show');
+  }
+
+  function buildCalendar(year) {
+    if (!calendarGrid) return;
     calendarGrid.innerHTML = '';
 
-    const data = getYearData(year);
+    const yearData = getYearData(year).filter(d => d.orders > 0);
+
+    // map date -> row
     const byKey = new Map();
-    data.forEach(d => {
-      const dt = parseDate(d.date);
+    yearData.forEach(r => {
+      const dt = parseDate(r.date);
       const key = `${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`;
-      byKey.set(key, d);
+      byKey.set(key, r);
     });
 
-    const months = [
-      'January','February','March','April','May','June',
-      'July','August','September','October','November','December'
-    ];
-    const dayLabels = ['S','M','T','W','T','F','S'];
-
     for (let m = 0; m < 12; m++) {
-      const monthWrap = document.createElement('div');
-      monthWrap.className = 'month-calendar';
+      const monthCard = document.createElement('div');
+      monthCard.className = 'month-calendar';
 
       const header = document.createElement('div');
       header.className = 'month-header';
-      header.textContent = `${months[m]} ${year}`;
-      monthWrap.appendChild(header);
+      header.textContent = `${monthName(m)} ${year}`;
+      monthCard.appendChild(header);
 
-      const daysGrid = document.createElement('div');
-      daysGrid.className = 'calendar-days';
+      const days = document.createElement('div');
+      days.className = 'calendar-days';
 
-      // Day labels
-      dayLabels.forEach(lbl => {
-        const d = document.createElement('div');
-        d.className = 'day-label';
-        d.textContent = lbl;
-        daysGrid.appendChild(d);
+      // Labels
+      ['S','M','T','W','T','F','S'].forEach(ch => {
+        const lab = document.createElement('div');
+        lab.className = 'day-label';
+        lab.textContent = ch;
+        days.appendChild(lab);
       });
 
       const first = new Date(year, m, 1);
-      const firstDay = first.getDay(); // 0=Sun
-      const daysInMonth = new Date(year, m + 1, 0).getDate();
+      const startDay = first.getDay(); // 0 Sun
+      const last = new Date(year, m + 1, 0).getDate();
 
-      // Empty leading cells
-      for (let i = 0; i < firstDay; i++) {
+      // empties
+      for (let i = 0; i < startDay; i++) {
         const empty = document.createElement('div');
         empty.className = 'calendar-day empty';
-        daysGrid.appendChild(empty);
+        days.appendChild(empty);
       }
 
-      // Real days
-      for (let day = 1; day <= daysInMonth; day++) {
-        const cell = document.createElement('div');
-
-        const key = `${year}-${m}-${day}`;
+      // days
+      for (let d = 1; d <= last; d++) {
+        const key = `${year}-${m}-${d}`;
         const row = byKey.get(key);
 
-        const orders = row ? (row.orders || 0) : 0;
-        const rate7 = row ? (row.rate7 ?? 0) : 0;
+        const cell = document.createElement('div');
+        cell.className = 'calendar-day ' + rateClassFromRate7(row?.rate7);
 
-        cell.className = `calendar-day ${getCalendarClass(rate7, orders)}`;
-        cell.innerHTML = `<div style="font-weight:700;font-size:0.95em;line-height:1;">${day}</div>`;
+        cell.innerHTML = `<div style="font-weight:700;">${d}</div>`;
 
-        if (row && tooltipEl) {
-          cell.addEventListener('mousemove', (e) => {
-            setTooltip(
-              true,
-              `
-                <div style="font-weight:700;margin-bottom:6px;">${months[m]} ${day}, ${year}</div>
-                <div>Orders: <b>${(row.orders || 0).toLocaleString()}</b></div>
-                <div>Rem 4D: <b>${(row.rem4 || 0).toLocaleString()}</b></div>
-                <div>Rem 7D: <b>${(row.rem7 || 0).toLocaleString()}</b></div>
-                <div>Rate 4D: <b>${(row.rate4 ?? 0).toFixed(2)}%</b></div>
-                <div>Rate 7D: <b>${(row.rate7 ?? 0).toFixed(2)}%</b></div>
-              `,
-              e.clientX,
-              e.clientY
-            );
+        if (row) {
+          cell.addEventListener('mouseenter', (e) => {
+            const html = `
+              <div style="font-weight:700; margin-bottom:6px;">
+                ${monthName(m)} ${d}, ${year}
+              </div>
+              <div><b>Orders:</b> ${row.orders.toLocaleString()}</div>
+              <div><b>Rate 7D:</b> ${row.rate7.toFixed(2)}%</div>
+              <div><b>Rate 4D:</b> ${row.rate4.toFixed(2)}%</div>
+              <div><b>Rem 7D:</b> ${row.rem7.toLocaleString()}</div>
+              <div><b>Rem 4D:</b> ${row.rem4.toLocaleString()}</div>
+            `;
+            showTooltip(e.clientX, e.clientY, html);
           });
-          cell.addEventListener('mouseleave', () => setTooltip(false));
+          cell.addEventListener('mousemove', (e) => {
+            if (!tooltip?.classList.contains('show')) return;
+            tooltip.style.left = (e.clientX + 12) + 'px';
+            tooltip.style.top = (e.clientY + 12) + 'px';
+          });
+          cell.addEventListener('mouseleave', hideTooltip);
+        } else {
+          cell.classList.add('cal-rate-none');
         }
 
-        daysGrid.appendChild(cell);
+        days.appendChild(cell);
       }
 
-      monthWrap.appendChild(daysGrid);
-      calendarGrid.appendChild(monthWrap);
+      monthCard.appendChild(days);
+      calendarGrid.appendChild(monthCard);
     }
   }
 
   // ==========================================================
   // DASHBOARD UPDATE
   // ==========================================================
-  function updateDatasetUI() {
-    if (datasetLabelEl) datasetLabelEl.textContent = (currentDataset === 'wholesale' ? '- Wholesale' : '- Retail');
-    if (datasetToggleBtn) datasetToggleBtn.textContent = (currentDataset === 'wholesale' ? 'Retail' : 'Wholesale');
-  }
+  function updateKpisFromData(rows, periodLabelText) {
+    const fill4El = document.getElementById('fillRate4Day');
+    const fill7El = document.getElementById('fillRate7Day');
+    const totalEl = document.getElementById('totalOrders');
+    const avgEl = document.getElementById('avgOrders');
+    const periodEl = document.getElementById('periodLabel');
 
-  function setKpis(avg4, avg7, total, avgOrders, periodLabel) {
-    if (fillRate4El) fillRate4El.textContent = Number.isFinite(avg4) ? Math.round(avg4) + '%' : 'N/A';
-    if (fillRate7El) fillRate7El.textContent = Number.isFinite(avg7) ? Math.round(avg7) + '%' : 'N/A';
-    if (totalOrdersEl) totalOrdersEl.textContent = (total || 0).toLocaleString();
-    if (avgOrdersEl) avgOrdersEl.textContent = Math.round(avgOrders || 0).toLocaleString();
-    if (periodLabelEl) periodLabelEl.textContent = periodLabel;
+    if (!rows.length) {
+      if (fill4El) fill4El.textContent = 'N/A';
+      if (fill7El) fill7El.textContent = 'N/A';
+      if (totalEl) totalEl.textContent = '0';
+      if (avgEl) avgEl.textContent = '0';
+      if (periodEl) periodEl.textContent = periodLabelText;
+      return;
+    }
+
+    const avg4 = rows.reduce((s, d) => s + d.rate4, 0) / rows.length;
+    const avg7 = rows.reduce((s, d) => s + d.rate7, 0) / rows.length;
+    const total = rows.reduce((s, d) => s + d.orders, 0);
+
+    if (fill4El) fill4El.textContent = avg4.toFixed(0) + '%';
+    if (fill7El) fill7El.textContent = avg7.toFixed(0) + '%';
+    if (totalEl) totalEl.textContent = total.toLocaleString();
+    if (avgEl) avgEl.textContent = Math.round(total / rows.length).toLocaleString();
+    if (periodEl) periodEl.textContent = periodLabelText;
   }
 
   function updateDashboard() {
-    const data = activeData();
-
-    if (!Array.isArray(data) || data.length === 0) {
-      console.error('[Fulfillment] Active dataset missing/empty. Check data.js / wholesale.js loading paths.');
+    const data = getActiveData();
+    if (!data.length) {
+      // clear views
+      updateKpisFromData([], currentView === 'calendar' ? 'year' : 'month');
       const tbody = document.getElementById('dataTable');
-      if (tbody) {
-        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">ERROR: Dataset not loaded (${currentDataset})</td></tr>`;
-      }
-      setKpis(NaN, NaN, 0, 0, (currentView === 'calendar' ? 'year' : 'month'));
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No data loaded</td></tr>';
+      if (calendarGrid) calendarGrid.innerHTML = '';
       return;
     }
 
     if (currentView === 'calendar') {
-      const yearData = getYearData(currentYear).filter(d => (d.orders || 0) > 0);
-
-      if (yearData.length === 0) {
-        setKpis(NaN, NaN, 0, 0, 'year');
-        if (calendarGrid) calendarGrid.innerHTML = `<div style="color:#8d8173;">No data available for ${currentYear}</div>`;
-        return;
-      }
-
-      const avg4 = yearData.reduce((s, d) => s + (d.rate4 || 0), 0) / yearData.length;
-      const avg7 = yearData.reduce((s, d) => s + (d.rate7 || 0), 0) / yearData.length;
-      const total = yearData.reduce((s, d) => s + (d.orders || 0), 0);
-      const avgOrders = total / yearData.length;
-
-      setKpis(avg4, avg7, total, avgOrders, 'year');
-      renderCalendar(currentYear);
+      const yearData = getYearData(currentYear).filter(d => d.orders > 0);
+      updateKpisFromData(yearData, 'year');
+      buildCalendar(currentYear);
       return;
     }
 
-    // MONTHLY
     const monthData = getMonthData(currentYear, currentMonth);
+    updateKpisFromData(monthData, 'month');
 
-    console.log(`[Fulfillment] Rendering ${currentDataset} ${currentYear}-${currentMonth + 1}, rows:`, monthData.length);
-
-    if (monthData.length === 0) {
-      setKpis(NaN, NaN, 0, 0, 'month');
-
+    if (!monthData.length) {
+      const tbody = document.getElementById('dataTable');
+      if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No data available for this month</td></tr>';
       if (fillRateChart) fillRateChart.destroy();
       if (ordersChart) ordersChart.destroy();
-
-      const tbody = document.getElementById('dataTable');
-      if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">No data available for this month</td></tr>';
-      }
       return;
     }
 
-    const avg4 = monthData.reduce((s, d) => s + (d.rate4 || 0), 0) / monthData.length;
-    const avg7 = monthData.reduce((s, d) => s + (d.rate7 || 0), 0) / monthData.length;
-    const total = monthData.reduce((s, d) => s + (d.orders || 0), 0);
-    const avgOrders = total / monthData.length;
-
-    setKpis(avg4, avg7, total, avgOrders, 'month');
-
     updateTable(monthData);
-    try {
-      updateCharts(monthData);
-    } catch (e) {
-      console.error('[Fulfillment] Chart render failed, table still shown:', e);
-    }
+    try { updateCharts(monthData); }
+    catch (e) { console.error('[Fulfillment] Chart render failed:', e); }
   }
 
   // ==========================================================
-  // VIEW SWITCHING (works with .view-panel.active)
+  // VIEW BUTTONS
   // ==========================================================
-  function setView(view) {
-    currentView = view;
-
-    // Button active styling
-    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
-    const activeBtn = document.querySelector(`.view-btn[data-view="${view}"]`);
-    if (activeBtn) activeBtn.classList.add('active');
-
-    // Panel switching
-    if (monthlyPanel) monthlyPanel.classList.toggle('active', view === 'monthly');
-    if (calendarPanel) calendarPanel.classList.toggle('active', view === 'calendar');
-
-    // Month disabled in calendar view
-    if (monthSelect) monthSelect.disabled = (view === 'calendar');
-
-    updateDashboard();
-  }
-
   document.querySelectorAll('.view-btn').forEach(btn => {
-    btn.addEventListener('click', () => setView(btn.dataset.view));
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      currentView = btn.dataset.view;
+
+      if (currentView === 'monthly') {
+        if (monthlyView) monthlyView.style.display = 'grid';
+        if (calendarView) calendarView.classList.remove('active');
+        if (monthSelect) monthSelect.disabled = false;
+      } else {
+        if (monthlyView) monthlyView.style.display = 'none';
+        if (calendarView) calendarView.classList.add('active');
+        if (monthSelect) monthSelect.disabled = true;
+      }
+
+      updateDashboard();
+    });
   });
 
   // ==========================================================
-  // DATASET TOGGLE (FIXES "WHOLESALE DOESN'T SWAP")
+  // DATASET TOGGLE (Retail <-> Wholesale)
   // ==========================================================
+  function syncDatasetUI() {
+    if (datasetLabel) datasetLabel.textContent = isWholesale ? '- Wholesale' : '- Retail';
+    if (datasetToggleBtn) {
+      datasetToggleBtn.textContent = isWholesale ? 'Retail' : 'Wholesale';
+      datasetToggleBtn.classList.toggle('active', isWholesale);
+    }
+  }
+
   if (datasetToggleBtn) {
     datasetToggleBtn.addEventListener('click', () => {
-      currentDataset = (currentDataset === 'wholesale') ? 'retail' : 'wholesale';
-      updateDatasetUI();
+      isWholesale = !isWholesale;
+      syncDatasetUI();
 
-      // Rebuild year list based on the NEW dataset
-      const mostRecent = getMostRecentDataMonth(activeData());
-      currentYear = mostRecent.year;
-      currentMonth = mostRecent.month;
+      // jump selectors to most recent month in the new dataset
+      const recent = getMostRecentDataMonth();
+      currentMonth = recent.month;
+      currentYear = recent.year;
 
-      populateYearMonthSelectors();
+      if (yearSelect) yearSelect.value = String(currentYear);
+      if (monthSelect) monthSelect.value = String(currentMonth);
 
-      // If currently on calendar view, make sure calendar renders for the new dataset
       updateDashboard();
     });
   }
 
   // ==========================================================
-  // YEAR/MONTH CHANGE LISTENERS
+  // YEAR/MONTH LISTENERS
   // ==========================================================
   if (yearSelect) {
     yearSelect.addEventListener('change', e => {
@@ -644,24 +525,28 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================
   // INIT
   // ==========================================================
-  updateDatasetUI();
-
-  const mostRecent = getMostRecentDataMonth(activeData());
-  currentYear = mostRecent.year;
-  currentMonth = mostRecent.month;
-
   populateYearMonthSelectors();
-  setView('monthly');
 
+  const recent = getMostRecentDataMonth();
+  currentMonth = recent.month;
+  currentYear = recent.year;
+
+  if (yearSelect) yearSelect.value = String(currentYear);
+  if (monthSelect) monthSelect.value = String(currentMonth);
+
+  syncDatasetUI();
+
+  // start in monthly mode
+  if (monthlyView) monthlyView.style.display = 'grid';
+  if (calendarView) calendarView.classList.remove('active');
+
+  updateDashboard();
+
+  // Keep tooltip from sticking
+  window.addEventListener('scroll', hideTooltip, true);
   window.addEventListener('resize', () => {
-    padTableToFill();
+    hideTooltip();
     if (fillRateChart) fillRateChart.resize();
     if (ordersChart) ordersChart.resize();
-  });
-
-  // Hide tooltip on scroll / escape
-  window.addEventListener('scroll', () => setTooltip(false), true);
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') setTooltip(false);
   });
 });
