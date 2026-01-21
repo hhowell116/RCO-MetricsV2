@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Fulfillment KPI Dashboard</title>
 
-<link rel="stylesheet" href="main.css">
+<link rel="stylesheet" href="main.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
 
 <style>
@@ -20,8 +20,17 @@ body {
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  /* Ensure this page also uses brand typography */
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Hide scrollbars for kiosk / TV view */
+html, body {
+  scrollbar-width: none;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 /* ====== LAYOUT ====== */
@@ -30,6 +39,12 @@ body {
   max-width: none;
   margin: 0 auto;
   padding: 20px 45px 45px;
+
+  /* NEW: allow fixed “one page” layout where monthly area scrolls internally */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 /* ====== HEADER ====== */
@@ -44,7 +59,6 @@ body {
   margin: 0;
   font-size: 2em;
   font-weight: 600;
-  /* Headings use accent serif per brand guide */
   font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
   color: var(--tan-dark);
 }
@@ -68,7 +82,6 @@ body {
 .header-center {
   text-align: center;
 }
-
 .header-center h1 {
   margin: 0;
   font-size: 1.8em;
@@ -95,15 +108,163 @@ body {
   align-items: center;
 }
 
-/* Hide scrollbars for kiosk / TV view */
-html, body {
-  scrollbar-width: none;
+/* Fullscreen icon button */
+.fullscreen-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--tan-light) 0%, var(--tan-medium) 100%);
+  border: 2px solid rgba(95, 75, 60, 0.35);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(95, 75, 60, 0.22);
+  flex-shrink: 0;
+}
+.fullscreen-btn:hover {
+  background: #ffffff;
+  border-color: var(--tan-medium);
+  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.22);
+}
+.fullscreen-btn:hover .fullscreen-icon::before,
+.fullscreen-btn:hover .fullscreen-icon::after {
+  border-color: var(--tan-dark);
+}
+.fullscreen-btn:active {
+  transform: scale(0.96);
+  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.26);
 }
 
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+/* ICON */
+.fullscreen-icon {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  transition: transform 0.25s ease;
+}
+.fullscreen-icon::before,
+.fullscreen-icon::after {
+  content: "";
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border: 2px solid #fff;
+}
+.fullscreen-icon::before {
+  top: 0;
+  left: 0;
+  border-right: none;
+  border-bottom: none;
+}
+.fullscreen-icon::after {
+  bottom: 0;
+  right: 0;
+  border-left: none;
+  border-top: none;
+}
+.fullscreen-btn.exit .fullscreen-icon {
+  transform: rotate(180deg);
+}
+
+/* ====== KPI CARDS ====== */
+.kpi-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  padding: 14px 16px;
+}
+.stat-label {
+  font-size: 0.75em;
+}
+.stat-value {
+  font-size: 1.6em;
+  margin-top: 4px;
+}
+.stat-subtitle {
+  font-size: 0.7em;
+}
+
+/* ====== CHARTS ====== */
+.chart-container {
+  background: white;
+  padding: 24px;
+  border-radius: 15px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border-light);
+}
+
+.chart-wrapper {
+  position: relative;
+  height: 350px; /* base fallback; overridden in split layout */
+}
+
+/* FORCE Year/Month selects to display text */
+#yearSelect, #monthSelect {
+  color: var(--tan-dark) !important;
+  background: #ffffff !important;
+  font-size: 14px !important;
+  line-height: 1.2 !important;
+  padding: 10px 36px 10px 14px !important;
+  min-width: 140px;
+  border: 2px solid var(--tan-light) !important;
+  border-radius: 10px !important;
+  appearance: auto;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+}
+#yearSelect option, #monthSelect option {
+  color: #111 !important;
+}
+
+/* Button interactions */
+button,
+.btn-secondary {
+  transition: all 0.25s ease;
+}
+button:hover,
+.btn-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.18);
+}
+button:active,
+.btn-secondary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.18);
+}
+.btn-secondary.active {
+  background: linear-gradient(135deg, var(--tan-light) 0%, var(--tan-medium) 100%);
+  color: #ffffff;
+  border-color: var(--tan-medium);
+  box-shadow: 0 4px 15px rgba(95, 75, 60, 0.22);
+}
+
+.kpi-header,
+.fulfillment-header,
+.header-bar {
+  transform: none !important;
+}
+
+.kpi-header.card,
+.kpi-header.card:hover {
+  background: white !important;
+  box-shadow: 0 10px 40px rgba(95, 75, 60, 0.14) !important;
+  transition: none !important;
+}
+.kpi-header {
+  background: white !important;
+}
+.kpi-header .header-bar {
+  background: transparent !important;
+}
+.kpi-header:hover,
+.kpi-header:hover .header-bar {
+  background: white !important;
 }
 
 /* ===== Calendar View ===== */
@@ -169,7 +330,6 @@ body::-webkit-scrollbar {
 .calendar-day.empty {
   cursor: default;
 }
-
 .calendar-day.empty:hover {
   transform: none;
   box-shadow: none;
@@ -179,7 +339,6 @@ body::-webkit-scrollbar {
   font-weight: 600;
   font-size: 1em;
 }
-
 .day-rate {
   font-size: 0.85em;
   font-weight: 600;
@@ -190,22 +349,18 @@ body::-webkit-scrollbar {
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
 }
-
 .cal-rate-good {
   background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
   color: #558b2f;
 }
-
 .cal-rate-warning {
   background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
   color: #e65100;
 }
-
 .cal-rate-poor {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   color: #c62828;
 }
-
 .cal-rate-none {
   background: #f5f5f5;
   color: #999;
@@ -227,186 +382,88 @@ body::-webkit-scrollbar {
   box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   border: 1px solid rgba(141, 129, 115, 0.25);
 }
-
 .tooltip.show {
   display: block;
 }
 
-/* Fullscreen icon button */
-.fullscreen-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, var(--tan-light) 0%, var(--tan-medium) 100%);
-  border: 2px solid rgba(95, 75, 60, 0.35);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 8px rgba(95, 75, 60, 0.22);
-  flex-shrink: 0;
+/* =========================================
+   NEW: MONTHLY "ONE PAGE" SPLIT LAYOUT
+   - Left: table (scroll)
+   - Right: 2 charts stacked
+   - Entire monthly area is a fixed viewport box
+========================================= */
+.monthly-view {
+  flex: 1;
+  min-height: 0; /* critical for nested scrolling */
 }
 
-.fullscreen-btn:hover {
-  background: #ffffff;
-  border-color: var(--tan-medium);
-  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.22);
-}
-
-.fullscreen-btn:hover .fullscreen-icon::before,
-.fullscreen-btn:hover .fullscreen-icon::after {
-  border-color: var(--tan-dark);
-}
-
-.fullscreen-btn:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.26);
-}
-
-/* ICON */
-.fullscreen-icon {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  transition: transform 0.25s ease;
-}
-
-.fullscreen-icon::before,
-.fullscreen-icon::after {
-  content: "";
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border: 2px solid #fff;
-}
-
-.fullscreen-icon::before {
-  top: 0;
-  left: 0;
-  border-right: none;
-  border-bottom: none;
-}
-
-.fullscreen-icon::after {
-  bottom: 0;
-  right: 0;
-  border-left: none;
-  border-top: none;
-}
-
-.fullscreen-btn.exit .fullscreen-icon {
-  transform: rotate(180deg);
-}
-
-/* ====== KPI CARDS ====== */
-.kpi-stats-grid {
+.monthly-split {
+  height: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  grid-template-columns: minmax(420px, 1.25fr) minmax(360px, 0.9fr);
   gap: 16px;
-  margin-bottom: 16px;
+  align-items: stretch;
+  min-height: 0; /* critical */
 }
 
-.stat-card {
-  padding: 14px 16px;
-}
-
-.stat-label {
-  font-size: 0.75em;
-}
-
-.stat-value {
-  font-size: 1.6em;
-  margin-top: 4px;
-}
-
-.stat-subtitle {
-  font-size: 0.7em;
-}
-
-/* ====== CHARTS ====== */
-.chart-container {
-  background: white;
-  padding: 24px;
+/* LEFT: table panel */
+.table-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* critical */
+  overflow: hidden; /* keep header fixed; body scrolls */
   border-radius: 15px;
-  box-shadow: var(--shadow-md);
-  margin-bottom: 20px;
+  background: white;
   border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-md);
 }
 
-.chart-wrapper {
-  position: relative;
-  height: 350px;
+.table-panel-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border-light);
 }
 
-/* FORCE Year/Month selects to display text */
-#yearSelect, #monthSelect {
-  color: var(--tan-dark) !important;
-  background: #ffffff !important;
-  font-size: 14px !important;
-  line-height: 1.2 !important;
-  padding: 10px 36px 10px 14px !important;
-  min-width: 140px;
-  border: 2px solid var(--tan-light) !important;
-  border-radius: 10px !important;
-  appearance: auto;
-  -webkit-appearance: menulist;
-  -moz-appearance: menulist;
+.table-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto; /* scroll to day 30/31 */
+  -webkit-overflow-scrolling: touch;
 }
 
-#yearSelect option, #monthSelect option {
-  color: #111 !important;
+/* Sticky header inside scrolling region */
+.table-panel thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: white;
 }
 
-/* Button interactions */
-button,
-.btn-secondary {
-  transition: all 0.25s ease;
+/* RIGHT: charts stacked */
+.charts-panel {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 16px;
+  min-height: 0; /* critical */
 }
 
-button:hover,
-.btn-secondary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(95, 75, 60, 0.18);
+/* Make chart cards fill available height */
+.chart-card {
+  margin-bottom: 0; /* override your old margin-bottom behavior */
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
-button:active,
-.btn-secondary:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.18);
+.chart-card .chart-wrapper {
+  flex: 1;
+  min-height: 0;
+  height: auto;
 }
 
-.btn-secondary.active {
-  background: linear-gradient(135deg, var(--tan-light) 0%, var(--tan-medium) 100%);
-  color: #ffffff;
-  border-color: var(--tan-medium);
-  box-shadow: 0 4px 15px rgba(95, 75, 60, 0.22);
-}
-
-.kpi-header,
-.fulfillment-header,
-.header-bar {
-  transform: none !important;
-}
-
-.kpi-header.card,
-.kpi-header.card:hover {
-  background: white !important;
-  box-shadow: 0 10px 40px rgba(95, 75, 60, 0.14) !important;
-  transition: none !important;
-}
-
-.kpi-header {
-  background: white !important;
-}
-
-.kpi-header .header-bar {
-  background: transparent !important;
-}
-
-.kpi-header:hover,
-.kpi-header:hover .header-bar {
-  background: white !important;
+/* Help Chart.js be responsive to container size */
+.chart-wrapper canvas {
+  width: 100% !important;
+  height: 100% !important;
 }
 
 /* =========================================
@@ -417,35 +474,51 @@ button:active,
 @media (max-width: 1023px) {
   .container {
     padding: 15px 20px 30px;
+    height: auto;
+    min-height: 100vh;
   }
-  
+
   .header-bar {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .header-left,
   .header-right {
     justify-content: center;
     flex-wrap: wrap;
   }
-  
+
   .header-center h1 {
     font-size: 1.5em;
   }
-  
+
   .kpi-stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 12px;
   }
-  
+
   .calendar-grid {
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 15px;
   }
-  
+
+  /* Collapse monthly view into one column */
+  .monthly-split {
+    height: auto;
+    grid-template-columns: 1fr;
+  }
+
+  .charts-panel {
+    grid-template-rows: auto;
+  }
+
   .chart-wrapper {
     height: 300px;
+  }
+
+  .table-panel-body {
+    max-height: 55vh;
   }
 }
 
@@ -454,118 +527,112 @@ button:active,
   .container {
     padding: 12px 15px 20px;
   }
-  
+
   .kpi-header {
     padding: 15px 12px;
     margin-bottom: 12px;
   }
-  
+
   .header-bar {
     gap: 10px;
   }
-  
+
   .header-center h1 {
     font-size: 1.3em;
   }
-  
+
   .header-left,
   .header-right {
     gap: 8px;
   }
-  
+
   #yearSelect, #monthSelect {
     font-size: 13px !important;
     padding: 8px 28px 8px 10px !important;
     min-width: 120px;
   }
-  
+
   .btn-secondary {
     padding: 8px 14px;
     font-size: 13px;
   }
-  
+
   .fullscreen-btn {
     width: 32px;
     height: 32px;
   }
-  
+
   .fullscreen-icon {
     width: 16px;
     height: 16px;
   }
-  
+
   .fullscreen-icon::before,
   .fullscreen-icon::after {
     width: 6px;
     height: 6px;
   }
-  
+
   .kpi-stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 10px;
   }
-  
+
   .stat-card {
     padding: 12px 14px;
   }
-  
+
   .stat-label {
     font-size: 0.7em;
   }
-  
+
   .stat-value {
     font-size: 1.4em;
   }
-  
+
   .stat-subtitle {
     font-size: 0.65em;
   }
-  
+
   .chart-container {
     padding: 16px;
-    margin-bottom: 15px;
   }
-  
+
   .chart-wrapper {
     height: 250px;
   }
-  
+
   .calendar-grid {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .month-calendar {
     padding: 15px;
   }
-  
+
   .month-header {
     font-size: 1.1em;
     margin-bottom: 12px;
   }
-  
+
   .calendar-days {
     gap: 3px;
   }
-  
+
   .day-label {
     font-size: 0.7em;
     padding: 4px 2px;
   }
-  
+
   .calendar-day {
     font-size: 0.65em;
   }
-  
-  /* Make table scrollable on mobile */
-  .card.mt-3 {
-    overflow-x: auto;
-  }
-  
+
+  /* Table readability on mobile */
   table {
     min-width: 600px;
   }
-  
   th, td {
     padding: 10px 8px;
     font-size: 0.85em;
@@ -577,88 +644,88 @@ button:active,
   .container {
     padding: 10px 12px 15px;
   }
-  
+
   .kpi-header {
     padding: 12px 10px;
   }
-  
+
   .header-center h1 {
     font-size: 1.1em;
   }
-  
+
   #yearSelect, #monthSelect {
     font-size: 12px !important;
     padding: 7px 24px 7px 8px !important;
     min-width: 100px;
   }
-  
+
   .btn-secondary {
     padding: 7px 12px;
     font-size: 12px;
   }
-  
+
   .view-toggle {
     gap: 6px;
   }
-  
+
   .fullscreen-btn {
     width: 30px;
     height: 30px;
   }
-  
+
   .kpi-stats-grid {
     grid-template-columns: 1fr;
     gap: 8px;
   }
-  
+
   .stat-card {
     padding: 10px 12px;
   }
-  
+
   .stat-value {
     font-size: 1.3em;
   }
-  
+
   .chart-container {
     padding: 12px;
   }
-  
+
   .chart-wrapper {
     height: 220px;
   }
-  
+
   .calendar-grid {
     gap: 10px;
   }
-  
+
   .month-calendar {
     padding: 12px;
   }
-  
+
   .month-header {
     font-size: 1em;
     margin-bottom: 10px;
   }
-  
+
   .calendar-days {
     gap: 2px;
   }
-  
+
   .day-label {
     font-size: 0.65em;
     padding: 3px 1px;
   }
-  
+
   .calendar-day {
     font-size: 0.6em;
     border-radius: 4px;
   }
-  
+
   th, td {
     padding: 8px 6px;
     font-size: 0.8em;
   }
-  
+
   .tooltip {
     font-size: 0.75em;
     padding: 10px 12px;
@@ -671,138 +738,149 @@ button:active,
   .chart-wrapper {
     height: 200px;
   }
-  
+
   .kpi-stats-grid {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 </style>
-
 </head>
 
 <body>
-<div class="container">
+  <div class="container">
 
     <!-- HEADER -->
-   <header class="card kpi-header">
-  <div class="header-bar">
+    <header class="card kpi-header">
+      <div class="header-bar">
 
-    <!-- LEFT -->
-    <div class="header-left">
-      <select id="yearSelect" class="btn-secondary"></select>
-      <select id="monthSelect" class="btn-secondary"></select>
-    </div>
+        <!-- LEFT -->
+        <div class="header-left">
+          <select id="yearSelect" class="btn-secondary"></select>
+          <select id="monthSelect" class="btn-secondary"></select>
+        </div>
 
-    <!-- CENTER -->
-    <div class="header-center">
-      <h1>📦 RCO Fulfillment Dashboard</h1>
-    </div>
+        <!-- CENTER -->
+        <div class="header-center">
+          <h1>📦 RCO Fulfillment Dashboard</h1>
+        </div>
 
-    <!-- RIGHT -->
-    <div class="header-right">
-      <div class="view-toggle">
-        <button class="btn-secondary active" data-view="monthly">Monthly</button>
-        <button class="btn-secondary" data-view="calendar">Calendar</button>
-        <button id="datasetToggleBtn" class="btn-secondary">Wholesale</button>
+        <!-- RIGHT -->
+        <div class="header-right">
+          <div class="view-toggle">
+            <button class="btn-secondary active" data-view="monthly">Monthly</button>
+            <button class="btn-secondary" data-view="calendar">Calendar</button>
+            <button id="datasetToggleBtn" class="btn-secondary">Wholesale</button>
+          </div>
+
+          <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Toggle Fullscreen">
+            <div class="fullscreen-icon"></div>
+          </button>
+        </div>
+
       </div>
-
-      <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Toggle Fullscreen">
-        <div class="fullscreen-icon"></div>
-      </button>
-    </div>
-
-  </div>
-</header>
+    </header>
 
     <!-- KPI CARDS -->
     <div class="kpi-stats-grid">
-        <div class="stat-card">
-            <div class="stat-label">Monthly Fill Rate (4 Day)</div>
-            <div class="stat-value" id="fillRate4Day">-</div>
-            <div class="stat-subtitle">Target: 85%</div>
-        </div>
+      <div class="stat-card">
+        <div class="stat-label">Monthly Fill Rate (4 Day)</div>
+        <div class="stat-value" id="fillRate4Day">-</div>
+        <div class="stat-subtitle">Target: 85%</div>
+      </div>
 
-        <div class="stat-card">
-            <div class="stat-label">Monthly Fill Rate (7 Day)</div>
-            <div class="stat-value" id="fillRate7Day">-</div>
-            <div class="stat-subtitle">Target: 95%</div>
-        </div>
+      <div class="stat-card">
+        <div class="stat-label">Monthly Fill Rate (7 Day)</div>
+        <div class="stat-value" id="fillRate7Day">-</div>
+        <div class="stat-subtitle">Target: 95%</div>
+      </div>
 
-        <div class="stat-card">
-            <div class="stat-label">Total Orders Processed</div>
-            <div class="stat-value" id="totalOrders">-</div>
-            <div class="stat-subtitle">This <span id="periodLabel">month</span></div>
-        </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Orders Processed</div>
+        <div class="stat-value" id="totalOrders">-</div>
+        <div class="stat-subtitle">This <span id="periodLabel">month</span></div>
+      </div>
 
-        <div class="stat-card">
-            <div class="stat-label">Average Daily Orders</div>
-            <div class="stat-value" id="avgOrders">-</div>
-            <div class="stat-subtitle">Per day</div>
-        </div>
+      <div class="stat-card">
+        <div class="stat-label">Average Daily Orders</div>
+        <div class="stat-value" id="avgOrders">-</div>
+        <div class="stat-subtitle">Per day</div>
+      </div>
     </div>
 
-    <!-- MONTHLY VIEW -->
+    <!-- MONTHLY VIEW (NEW SPLIT LAYOUT) -->
     <div class="monthly-view" data-view="monthly" style="display: block;">
-        <div class="chart-container">
+      <div class="monthly-split">
+
+        <!-- LEFT: RAW DATA TABLE (scrolls to day 30/31) -->
+        <section class="table-panel">
+          <div class="table-panel-header">
+            <h2 class="panel-title">Raw Data</h2>
+          </div>
+
+          <div class="table-panel-body">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Orders Received</th>
+                  <th>Remaining (4 Day)</th>
+                  <th>Remaining (7 Day)</th>
+                  <th>Fill Rate (4 Day)</th>
+                  <th>Fill Rate (7 Day)</th>
+                </tr>
+              </thead>
+              <tbody id="dataTable"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- RIGHT: CHARTS STACKED -->
+        <section class="charts-panel">
+          <div class="chart-container chart-card">
             <h2 class="chart-title">Daily Fill Rate Performance</h2>
             <p class="chart-subtitle">Target lines: 95% (7-day) • 85% (4-day)</p>
             <div class="chart-wrapper">
-                <canvas id="fillRateChart"></canvas>
+              <canvas id="fillRateChart"></canvas>
             </div>
-        </div>
+          </div>
 
-        <div class="chart-container">
+          <div class="chart-container chart-card">
             <h2 class="chart-title">Orders Remaining</h2>
             <div class="chart-wrapper">
-                <canvas id="ordersChart"></canvas>
+              <canvas id="ordersChart"></canvas>
             </div>
-        </div>
+          </div>
+        </section>
 
-        <div class="card mt-3">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Orders Received</th>
-                        <th>Remaining (4 Day)</th>
-                        <th>Remaining (7 Day)</th>
-                        <th>Fill Rate (4 Day)</th>
-                        <th>Fill Rate (7 Day)</th>
-                    </tr>
-                </thead>
-                <tbody id="dataTable"></tbody>
-            </table>
-        </div>
+      </div>
     </div>
 
     <!-- CALENDAR VIEW -->
-    <div class="calendar-view" data-view="calendar">
+    <div class="calendar-view" data-view="calendar" style="display:none;">
       <div id="calendarGrid" class="calendar-grid"></div>
     </div>
 
     <div id="tooltip" class="tooltip"></div>
+  </div>
 
-</div>
+  <script src="data.js"></script>
+  <script src="wholesale.js"></script>
+  <script src="fulfillment.js"></script>
 
-<script src="data.js"></script>
-<script src="wholesale.js"></script>
-<script src="fulfillment.js"></script>
+  <script>
+    const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-<script>
-const fullscreenBtn = document.getElementById('fullscreenBtn');
-
-fullscreenBtn.addEventListener('click', () => {
-    if (!document.fullscreenElement) {
+    fullscreenBtn.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen();
-    } else {
+      } else {
         document.exitFullscreen();
-    }
-});
+      }
+    });
 
-document.addEventListener('fullscreenchange', () => {
-    fullscreenBtn.classList.toggle('exit', !!document.fullscreenElement);
-});
-</script>
-
+    document.addEventListener('fullscreenchange', () => {
+      fullscreenBtn.classList.toggle('exit', !!document.fullscreenElement);
+    });
+  </script>
 </body>
 </html>
