@@ -1,15 +1,12 @@
 document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================
-  // DIAGNOSTICS (helps you see what is failing)
+  // DIAGNOSTICS
   // ==========================================================
   console.log('[Fulfillment] DOM loaded');
   console.log('[Fulfillment] Chart.js loaded?', !!window.Chart);
   console.log('[Fulfillment] fullData exists?', typeof fullData !== 'undefined');
   console.log('[Fulfillment] wholesaleData exists?', typeof wholesaleData !== 'undefined');
 
-  // ==========================================================
-  // CRISP CHARTS (Retina/TV)
-  // ==========================================================
   if (window.Chart) {
     Chart.defaults.devicePixelRatio = window.devicePixelRatio || 1;
   }
@@ -19,18 +16,76 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================
   function parseDate(dateStr) {
     // expects M/D/YYYY
-    const parts = dateStr.split('/');
+    const parts = String(dateStr).split('/');
     return new Date(parseInt(parts[2], 10), parseInt(parts[0], 10) - 1, parseInt(parts[1], 10));
   }
 
-  function getMostRecentDataMonth() {
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  // ==========================================================
+  // ELEMENTS
+  // ==========================================================
+  const yearSelect = document.getElementById('yearSelect');
+  const monthSelect = document.getElementById('monthSelect');
+  const datasetToggleBtn = document.getElementById('datasetToggleBtn');
+  const datasetLabelEl = document.getElementById('datasetLabel');
+
+  const fillRate4El = document.getElementById('fillRate4Day');
+  const fillRate7El = document.getElementById('fillRate7Day');
+  const totalOrdersEl = document.getElementById('totalOrders');
+  const avgOrdersEl = document.getElementById('avgOrders');
+  const periodLabelEl = document.getElementById('periodLabel');
+
+  const tooltipEl = document.getElementById('tooltip');
+
+  // Panels (from the fixed HTML)
+  const monthlyPanel = document.querySelector('.monthly-view.view-panel');
+  const calendarPanel = document.querySelector('.calendar-view.view-panel');
+
+  const calendarGrid = document.getElementById('calendarGrid');
+
+  // ==========================================================
+  // STATE
+  // ==========================================================
+  let currentDataset = 'retail'; // 'retail' | 'wholesale'
+  let currentView = 'monthly';   // 'monthly' | 'calendar'
+  let currentYear;
+  let currentMonth;
+
+  let fillRateChart = null;
+  let ordersChart = null;
+
+  function activeData() {
+    if (currentDataset === 'wholesale') return (typeof wholesaleData !== 'undefined' ? wholesaleData : []);
+    return (typeof fullData !== 'undefined' ? fullData : []);
+  }
+
+  function getAvailableYears(data) {
+    const years = new Set();
+    (data || []).forEach(d => {
+      const dt = parseDate(d.date);
+      if (!Number.isNaN(dt.getTime())) years.add(dt.getFullYear());
+    });
+    return Array.from(years).sort((a, b) => a - b);
+  }
+
+  function getMostRecentDataMonth(data) {
     try {
-      if (typeof fullData === 'undefined' || !Array.isArray(fullData) || fullData.length === 0) {
+      if (!Array.isArray(data) || data.length === 0) {
         const now = new Date();
         return { month: now.getMonth(), year: now.getFullYear() };
       }
 
-      const sorted = [...fullData].sort((a, b) => parseDate(b.date) - parseDate(a.date));
+      // Prefer rows that have orders (ignore completely empty/zero-only periods)
+      const filtered = data.filter(d => d && typeof d.date === 'string');
+      if (filtered.length === 0) {
+        const now = new Date();
+        return { month: now.getMonth(), year: now.getFullYear() };
+      }
+
+      const sorted = [...filtered].sort((a, b) => parseDate(b.date) - parseDate(a.date));
       const mostRecent = parseDate(sorted[0].date);
 
       return { month: mostRecent.getMonth(), year: mostRecent.getFullYear() };
@@ -41,31 +96,32 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // NOTE: currently filters out orders=0 days
+  // NOTE: keep your original behavior: filter out orders=0 for the MONTHLY table/charts
   function getMonthData(year, month) {
-    if (typeof fullData === 'undefined') return [];
-    return fullData.filter(d => {
+    const data = activeData();
+    return (data || []).filter(d => {
       const dt = parseDate(d.date);
-      return dt.getFullYear() === year && dt.getMonth() === month && d.orders > 0;
+      return dt.getFullYear() === year && dt.getMonth() === month && (d.orders || 0) > 0;
     });
   }
 
+  // For calendar/year KPIs we can still filter orders>0 so 0-days don't crush averages
   function getYearData(year) {
-    if (typeof fullData === 'undefined') return [];
-    return fullData.filter(d => parseDate(d.date).getFullYear() === year);
+    const data = activeData();
+    return (data || []).filter(d => parseDate(d.date).getFullYear() === year);
   }
 
-  // ==========================================================
-  // STATE
-  // ==========================================================
-  const recent = getMostRecentDataMonth();
-  let currentMonth = recent.month;
-  let currentYear = recent.year;
-  let currentView = 'monthly';
-  let fillRateChart, ordersChart;
-
-  const yearSelect = document.getElementById('yearSelect');
-  const monthSelect = document.getElementById('monthSelect');
+  function setTooltip(show, html, x, y) {
+    if (!tooltipEl) return;
+    if (!show) {
+      tooltipEl.classList.remove('show');
+      return;
+    }
+    tooltipEl.innerHTML = html;
+    tooltipEl.style.left = (x + 12) + 'px';
+    tooltipEl.style.top = (y + 12) + 'px';
+    tooltipEl.classList.add('show');
+  }
 
   // ==========================================================
   // UI: YEAR/MONTH SELECTORS
@@ -76,13 +132,12 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const years = getAvailableYears(activeData());
     yearSelect.innerHTML = '';
-    // You had [2025, 2026]; keep that, but if you want dynamic, you can change later
-    const years = [2025, 2026];
     years.forEach(y => {
       const opt = document.createElement('option');
-      opt.value = y;
-      opt.textContent = y;
+      opt.value = String(y);
+      opt.textContent = String(y);
       yearSelect.appendChild(opt);
     });
 
@@ -93,10 +148,21 @@ document.addEventListener('DOMContentLoaded', () => {
     ];
     months.forEach((m, idx) => {
       const opt = document.createElement('option');
-      opt.value = idx;
+      opt.value = String(idx);
       opt.textContent = m;
       monthSelect.appendChild(opt);
     });
+
+    // If currentYear/currentMonth are not set or no longer valid, re-anchor to most recent
+    const mostRecent = getMostRecentDataMonth(activeData());
+    if (typeof currentYear !== 'number' || !years.includes(currentYear)) currentYear = mostRecent.year;
+    if (typeof currentMonth !== 'number') currentMonth = mostRecent.month;
+
+    // Clamp month just in case
+    currentMonth = clamp(currentMonth, 0, 11);
+
+    yearSelect.value = String(currentYear);
+    monthSelect.value = String(currentMonth);
   }
 
   // ==========================================================
@@ -155,11 +221,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       tr.innerHTML = `
         <td>${dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-        <td>${row.orders.toLocaleString()}</td>
-        <td>${row.rem4.toLocaleString()}</td>
-        <td>${row.rem7.toLocaleString()}</td>
-        <td class="${getRateClass(row.rate4)}">${row.rate4.toFixed(2)}%</td>
-        <td class="${getRateClass(row.rate7)}">${row.rate7.toFixed(2)}%</td>
+        <td>${(row.orders || 0).toLocaleString()}</td>
+        <td>${(row.rem4 || 0).toLocaleString()}</td>
+        <td>${(row.rem7 || 0).toLocaleString()}</td>
+        <td class="${getRateClass(row.rate4 || 0)}">${(row.rate4 ?? 0).toFixed(2)}%</td>
+        <td class="${getRateClass(row.rate7 || 0)}">${(row.rate7 ?? 0).toFixed(2)}%</td>
       `;
       tbody.appendChild(tr);
     });
@@ -168,10 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================
-  // CHARTS (GUARDED: if Chart.js fails, dashboard still shows data)
+  // CHARTS
   // ==========================================================
   function updateCharts(monthData) {
-    if (!window.Chart) return; // critical guard
+    if (!window.Chart) return;
 
     const labels = monthData.map(d => parseDate(d.date).getDate());
 
@@ -332,54 +398,161 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================
+  // CALENDAR RENDERING (FIXES "BLANK CALENDAR")
+  // ==========================================================
+  function getCalendarClass(rate7, orders) {
+    if (!orders || orders <= 0) return 'cal-rate-none';
+    if (rate7 >= 95) return 'cal-rate-excellent';
+    if (rate7 >= 85) return 'cal-rate-good';
+    if (rate7 >= 70) return 'cal-rate-warning';
+    return 'cal-rate-poor';
+  }
+
+  function renderCalendar(year) {
+    if (!calendarGrid) return;
+
+    calendarGrid.innerHTML = '';
+
+    const data = getYearData(year);
+    const byKey = new Map();
+    data.forEach(d => {
+      const dt = parseDate(d.date);
+      const key = `${dt.getFullYear()}-${dt.getMonth()}-${dt.getDate()}`;
+      byKey.set(key, d);
+    });
+
+    const months = [
+      'January','February','March','April','May','June',
+      'July','August','September','October','November','December'
+    ];
+    const dayLabels = ['S','M','T','W','T','F','S'];
+
+    for (let m = 0; m < 12; m++) {
+      const monthWrap = document.createElement('div');
+      monthWrap.className = 'month-calendar';
+
+      const header = document.createElement('div');
+      header.className = 'month-header';
+      header.textContent = `${months[m]} ${year}`;
+      monthWrap.appendChild(header);
+
+      const daysGrid = document.createElement('div');
+      daysGrid.className = 'calendar-days';
+
+      // Day labels
+      dayLabels.forEach(lbl => {
+        const d = document.createElement('div');
+        d.className = 'day-label';
+        d.textContent = lbl;
+        daysGrid.appendChild(d);
+      });
+
+      const first = new Date(year, m, 1);
+      const firstDay = first.getDay(); // 0=Sun
+      const daysInMonth = new Date(year, m + 1, 0).getDate();
+
+      // Empty leading cells
+      for (let i = 0; i < firstDay; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'calendar-day empty';
+        daysGrid.appendChild(empty);
+      }
+
+      // Real days
+      for (let day = 1; day <= daysInMonth; day++) {
+        const cell = document.createElement('div');
+
+        const key = `${year}-${m}-${day}`;
+        const row = byKey.get(key);
+
+        const orders = row ? (row.orders || 0) : 0;
+        const rate7 = row ? (row.rate7 ?? 0) : 0;
+
+        cell.className = `calendar-day ${getCalendarClass(rate7, orders)}`;
+        cell.innerHTML = `<div style="font-weight:700;font-size:0.95em;line-height:1;">${day}</div>`;
+
+        if (row && tooltipEl) {
+          cell.addEventListener('mousemove', (e) => {
+            setTooltip(
+              true,
+              `
+                <div style="font-weight:700;margin-bottom:6px;">${months[m]} ${day}, ${year}</div>
+                <div>Orders: <b>${(row.orders || 0).toLocaleString()}</b></div>
+                <div>Rem 4D: <b>${(row.rem4 || 0).toLocaleString()}</b></div>
+                <div>Rem 7D: <b>${(row.rem7 || 0).toLocaleString()}</b></div>
+                <div>Rate 4D: <b>${(row.rate4 ?? 0).toFixed(2)}%</b></div>
+                <div>Rate 7D: <b>${(row.rate7 ?? 0).toFixed(2)}%</b></div>
+              `,
+              e.clientX,
+              e.clientY
+            );
+          });
+          cell.addEventListener('mouseleave', () => setTooltip(false));
+        }
+
+        daysGrid.appendChild(cell);
+      }
+
+      monthWrap.appendChild(daysGrid);
+      calendarGrid.appendChild(monthWrap);
+    }
+  }
+
+  // ==========================================================
   // DASHBOARD UPDATE
   // ==========================================================
+  function updateDatasetUI() {
+    if (datasetLabelEl) datasetLabelEl.textContent = (currentDataset === 'wholesale' ? '- Wholesale' : '- Retail');
+    if (datasetToggleBtn) datasetToggleBtn.textContent = (currentDataset === 'wholesale' ? 'Retail' : 'Wholesale');
+  }
+
+  function setKpis(avg4, avg7, total, avgOrders, periodLabel) {
+    if (fillRate4El) fillRate4El.textContent = Number.isFinite(avg4) ? Math.round(avg4) + '%' : 'N/A';
+    if (fillRate7El) fillRate7El.textContent = Number.isFinite(avg7) ? Math.round(avg7) + '%' : 'N/A';
+    if (totalOrdersEl) totalOrdersEl.textContent = (total || 0).toLocaleString();
+    if (avgOrdersEl) avgOrdersEl.textContent = Math.round(avgOrders || 0).toLocaleString();
+    if (periodLabelEl) periodLabelEl.textContent = periodLabel;
+  }
+
   function updateDashboard() {
-    // HARD FAIL CHECK: if fullData missing, show a clear message
-    if (typeof fullData === 'undefined') {
-      console.error('[Fulfillment] fullData is undefined. data.js did not load or is in wrong path.');
+    const data = activeData();
+
+    if (!Array.isArray(data) || data.length === 0) {
+      console.error('[Fulfillment] Active dataset missing/empty. Check data.js / wholesale.js loading paths.');
       const tbody = document.getElementById('dataTable');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">ERROR: data.js not loaded (fullData is undefined)</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">ERROR: Dataset not loaded (${currentDataset})</td></tr>`;
       }
+      setKpis(NaN, NaN, 0, 0, (currentView === 'calendar' ? 'year' : 'month'));
       return;
     }
 
     if (currentView === 'calendar') {
-      // If you have calendar functions elsewhere, keep; otherwise just compute KPIs on year
-      const yearData = getYearData(currentYear).filter(d => d.orders > 0);
+      const yearData = getYearData(currentYear).filter(d => (d.orders || 0) > 0);
 
       if (yearData.length === 0) {
-        document.getElementById('fillRate4Day').textContent = 'N/A';
-        document.getElementById('fillRate7Day').textContent = 'N/A';
-        document.getElementById('totalOrders').textContent = '0';
-        document.getElementById('avgOrders').textContent = '0';
-        document.getElementById('periodLabel').textContent = 'year';
+        setKpis(NaN, NaN, 0, 0, 'year');
+        if (calendarGrid) calendarGrid.innerHTML = `<div style="color:#8d8173;">No data available for ${currentYear}</div>`;
         return;
       }
 
-      const avg4 = yearData.reduce((s, d) => s + d.rate4, 0) / yearData.length;
-      const avg7 = yearData.reduce((s, d) => s + d.rate7, 0) / yearData.length;
-      const total = yearData.reduce((s, d) => s + d.orders, 0);
+      const avg4 = yearData.reduce((s, d) => s + (d.rate4 || 0), 0) / yearData.length;
+      const avg7 = yearData.reduce((s, d) => s + (d.rate7 || 0), 0) / yearData.length;
+      const total = yearData.reduce((s, d) => s + (d.orders || 0), 0);
+      const avgOrders = total / yearData.length;
 
-      document.getElementById('fillRate4Day').textContent = avg4.toFixed(0) + '%';
-      document.getElementById('fillRate7Day').textContent = avg7.toFixed(0) + '%';
-      document.getElementById('totalOrders').textContent = total.toLocaleString();
-      document.getElementById('avgOrders').textContent = Math.round(total / yearData.length).toLocaleString();
-      document.getElementById('periodLabel').textContent = 'year';
+      setKpis(avg4, avg7, total, avgOrders, 'year');
+      renderCalendar(currentYear);
       return;
     }
 
+    // MONTHLY
     const monthData = getMonthData(currentYear, currentMonth);
 
-    console.log(`[Fulfillment] Rendering ${currentYear}-${currentMonth + 1}, rows:`, monthData.length);
+    console.log(`[Fulfillment] Rendering ${currentDataset} ${currentYear}-${currentMonth + 1}, rows:`, monthData.length);
 
     if (monthData.length === 0) {
-      document.getElementById('fillRate4Day').textContent = 'N/A';
-      document.getElementById('fillRate7Day').textContent = 'N/A';
-      document.getElementById('totalOrders').textContent = '0';
-      document.getElementById('avgOrders').textContent = '0';
-      document.getElementById('periodLabel').textContent = 'month';
+      setKpis(NaN, NaN, 0, 0, 'month');
 
       if (fillRateChart) fillRateChart.destroy();
       if (ordersChart) ordersChart.destroy();
@@ -391,17 +564,13 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    const avg4 = monthData.reduce((s, d) => s + d.rate4, 0) / monthData.length;
-    const avg7 = monthData.reduce((s, d) => s + d.rate7, 0) / monthData.length;
-    const total = monthData.reduce((s, d) => s + d.orders, 0);
+    const avg4 = monthData.reduce((s, d) => s + (d.rate4 || 0), 0) / monthData.length;
+    const avg7 = monthData.reduce((s, d) => s + (d.rate7 || 0), 0) / monthData.length;
+    const total = monthData.reduce((s, d) => s + (d.orders || 0), 0);
+    const avgOrders = total / monthData.length;
 
-    document.getElementById('fillRate4Day').textContent = avg4.toFixed(0) + '%';
-    document.getElementById('fillRate7Day').textContent = avg7.toFixed(0) + '%';
-    document.getElementById('totalOrders').textContent = total.toLocaleString();
-    document.getElementById('avgOrders').textContent = Math.round(total / monthData.length).toLocaleString();
-    document.getElementById('periodLabel').textContent = 'month';
+    setKpis(avg4, avg7, total, avgOrders, 'month');
 
-    // IMPORTANT: TABLE FIRST, THEN CHARTS (so Chart failures never hide your data)
     updateTable(monthData);
     try {
       updateCharts(monthData);
@@ -411,35 +580,49 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ==========================================================
-  // VIEW TOGGLE BUTTONS
+  // VIEW SWITCHING (works with .view-panel.active)
   // ==========================================================
-  document.querySelectorAll('[data-view]').forEach(btn => {
-    if (btn.tagName !== 'BUTTON') return;
+  function setView(view) {
+    currentView = view;
 
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-view]').forEach(b => {
-        if (b.tagName === 'BUTTON') b.classList.remove('active');
-      });
-      btn.classList.add('active');
+    // Button active styling
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    const activeBtn = document.querySelector(`.view-btn[data-view="${view}"]`);
+    if (activeBtn) activeBtn.classList.add('active');
 
-      currentView = btn.dataset.view;
+    // Panel switching
+    if (monthlyPanel) monthlyPanel.classList.toggle('active', view === 'monthly');
+    if (calendarPanel) calendarPanel.classList.toggle('active', view === 'calendar');
 
-      const monthlyView = document.querySelector('.monthly-view');
-      const calendarView = document.querySelector('.calendar-view');
+    // Month disabled in calendar view
+    if (monthSelect) monthSelect.disabled = (view === 'calendar');
 
-      if (currentView === 'monthly') {
-        if (monthlyView) monthlyView.style.display = 'block';
-        if (calendarView) calendarView.style.display = 'none';
-        if (monthSelect) monthSelect.disabled = false;
-      } else {
-        if (monthlyView) monthlyView.style.display = 'none';
-        if (calendarView) calendarView.style.display = 'block';
-        if (monthSelect) monthSelect.disabled = true;
-      }
+    updateDashboard();
+  }
 
+  document.querySelectorAll('.view-btn').forEach(btn => {
+    btn.addEventListener('click', () => setView(btn.dataset.view));
+  });
+
+  // ==========================================================
+  // DATASET TOGGLE (FIXES "WHOLESALE DOESN'T SWAP")
+  // ==========================================================
+  if (datasetToggleBtn) {
+    datasetToggleBtn.addEventListener('click', () => {
+      currentDataset = (currentDataset === 'wholesale') ? 'retail' : 'wholesale';
+      updateDatasetUI();
+
+      // Rebuild year list based on the NEW dataset
+      const mostRecent = getMostRecentDataMonth(activeData());
+      currentYear = mostRecent.year;
+      currentMonth = mostRecent.month;
+
+      populateYearMonthSelectors();
+
+      // If currently on calendar view, make sure calendar renders for the new dataset
       updateDashboard();
     });
-  });
+  }
 
   // ==========================================================
   // YEAR/MONTH CHANGE LISTENERS
@@ -461,17 +644,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // ==========================================================
   // INIT
   // ==========================================================
+  updateDatasetUI();
+
+  const mostRecent = getMostRecentDataMonth(activeData());
+  currentYear = mostRecent.year;
+  currentMonth = mostRecent.month;
+
   populateYearMonthSelectors();
+  setView('monthly');
 
-  // Default selectors to most recent data month
-  if (yearSelect) yearSelect.value = String(currentYear);
-  if (monthSelect) monthSelect.value = String(currentMonth);
-
-  updateDashboard();
-
-  window.addEventListener("resize", () => {
+  window.addEventListener('resize', () => {
     padTableToFill();
     if (fillRateChart) fillRateChart.resize();
     if (ordersChart) ordersChart.resize();
+  });
+
+  // Hide tooltip on scroll / escape
+  window.addEventListener('scroll', () => setTooltip(false), true);
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') setTooltip(false);
   });
 });
