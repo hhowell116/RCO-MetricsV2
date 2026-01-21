@@ -119,7 +119,7 @@ body {
 
 .carousel-image {
   width: 100%;
-  max-height: 140px;
+  max-height: 160px;
   object-fit: contain;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
@@ -155,6 +155,7 @@ body {
 .orders-updated {
   font-size: 0.65em;
   opacity: 0.85;
+  line-height: 1.3;
 }
 
 .sidebar-separator {
@@ -224,7 +225,7 @@ iframe {
 
     <div class="sidebar-nav">
       <button class="nav-btn active" data-tab="fulfillment">Fulfillment KPI</button>
-      <button class="nav-btn" data-tab="shipping">Shipping Leaderboard</button>
+      <button class="nav-btn" data-tab="shipping">Shipping Leaderboards</button>
       <button class="nav-btn" data-tab="orders">Orders Overview</button>
     </div>
 
@@ -237,7 +238,7 @@ iframe {
       <div class="orders-widget">
         <div class="orders-label">TODAY'S ORDERS</div>
         <div class="orders-value" id="orderCount">--</div>
-        <div class="orders-updated" id="orderUpdated">Last updated: Loading...</div>
+        <div class="orders-updated" id="orderUpdated">Last updated:<br>Loading...</div>
       </div>
 
       <div class="sidebar-separator"></div>
@@ -317,25 +318,44 @@ async function updateOrderCount() {
     
     document.getElementById('orderCount').textContent = orderValue ?? '--';
     
-    // Format the timestamp to "Last updated: mm/dd/yy time"
+    // Format the timestamp to "mm/dd/yy time"
     if (rawTimestamp) {
-      const date = new Date(rawTimestamp);
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const year = String(date.getFullYear()).slice(-2);
-      const hours = date.getHours();
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      const ampm = hours >= 12 ? 'PM' : 'AM';
-      const displayHours = hours % 12 || 12;
+      // Try to parse the timestamp - it might be a string or Date object
+      let date;
+      if (typeof rawTimestamp === 'string') {
+        // Try parsing as a date string
+        date = new Date(rawTimestamp);
+      } else if (rawTimestamp instanceof Date) {
+        date = rawTimestamp;
+      } else {
+        // If it's a number, treat as timestamp
+        date = new Date(rawTimestamp);
+      }
       
-      const formattedTime = `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`;
-      document.getElementById('orderUpdated').textContent = `Last updated: ${formattedTime}`;
+      // Check if date is valid
+      if (!isNaN(date.getTime())) {
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const year = String(date.getFullYear()).slice(-2);
+        const hours = date.getHours();
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours % 12 || 12;
+        
+        const formattedTime = `${month}/${day}/${year} ${displayHours}:${minutes} ${ampm}`;
+        document.getElementById('orderUpdated').textContent = `Last updated:\n${formattedTime}`;
+        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${formattedTime}`;
+      } else {
+        // If parsing fails, just display the raw value
+        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${rawTimestamp}`;
+      }
     } else {
-      document.getElementById('orderUpdated').textContent = 'Last updated: Unknown';
+      document.getElementById('orderUpdated').innerHTML = 'Last updated:<br>Unknown';
     }
-  } catch {
+  } catch (e) {
+    console.error('Order count error:', e);
     document.getElementById('orderCount').textContent = '—';
-    document.getElementById('orderUpdated').textContent = 'Last updated: Error';
+    document.getElementById('orderUpdated').innerHTML = 'Last updated:<br>Error';
   }
 }
 
