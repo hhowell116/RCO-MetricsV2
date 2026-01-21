@@ -52,14 +52,38 @@ document.addEventListener('DOMContentLoaded', () => {
   let currentView = 'monthly';
 
   /* ===============================
-     INIT YEAR / MONTH
+     INIT / CLEAN DATA
+     (IMPORTANT FIX: if the dataset contains duplicate dates,
+      keep the *best* row instead of the first one. Your data.js
+      has duplicates like 12/1 and 12/2 where the first copy has
+      orders=0 but the later copy has real numbers. The old
+      "keep first" de-dupe was throwing away the real rows,
+      making months look empty.)
   =============================== */
-  // Remove duplicate entries and invalid data
-  const cleanData = data.filter((row, index, self) => {
-    // Remove duplicates based on date
-    const firstIndex = self.findIndex(r => r.date === row.date);
-    return index === firstIndex;
-  });
+
+  function buildCleanData(dataset) {
+    const byDate = new Map();
+    for (const row of dataset) {
+      if (!row || !row.date) continue;
+
+      const existing = byDate.get(row.date);
+      if (!existing) {
+        byDate.set(row.date, row);
+        continue;
+      }
+
+      // Prefer the row with higher orders; if tie, prefer the later row
+      // (so the "most recently pasted" / corrected entry wins).
+      const existingOrders = Number(existing.orders) || 0;
+      const incomingOrders = Number(row.orders) || 0;
+      if (incomingOrders > existingOrders || (incomingOrders === existingOrders)) {
+        byDate.set(row.date, row);
+      }
+    }
+    return Array.from(byDate.values());
+  }
+
+  let cleanData = buildCleanData(data);
 
   console.log('[Fulfillment] Cleaned data:', cleanData.length, 'rows');
 
@@ -131,7 +155,11 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     });
 
-    console.log(`[Fulfillment] Filtered data for ${monthSelect.options[monthSelect.selectedIndex].text} ${yearSelect.value}:`, filtered.length, 'rows');
+    console.log(
+      `[Fulfillment] Filtered data for ${monthSelect.options[monthSelect.selectedIndex].text} ${yearSelect.value}:`,
+      filtered.length,
+      'rows'
+    );
     
     return filtered;
   }
@@ -143,7 +171,8 @@ document.addEventListener('DOMContentLoaded', () => {
     dataTable.innerHTML = '';
 
     if (rows.length === 0) {
-      dataTable.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8d8173;">No data available for this month</td></tr>';
+      dataTable.innerHTML =
+        '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8d8173;">No data available for this month</td></tr>';
       return;
     }
 
@@ -282,15 +311,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const label = document.getElementById('datasetLabel');
         if (label) label.textContent = '- Retail';
       }
-      
-      // Recalculate with new dataset
-      const newClean = data.filter((row, index, self) => {
-        const firstIndex = self.findIndex(r => r.date === row.date);
-        return index === firstIndex && row.orders > 0;
-      });
-      
-      cleanData.length = 0;
-      cleanData.push(...newClean);
+
+      // Recalculate with new dataset (same de-dupe fix)
+      cleanData = buildCleanData(data);
       
       populateSelectors();
       updateDashboard();
