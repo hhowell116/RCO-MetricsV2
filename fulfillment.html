@@ -705,35 +705,51 @@ window.addEventListener('message', (event) => {
   }
 });
 
-/* NEW — ADD */
+<script>
+/* TV MODE COMMANDS (from index) */
 window.addEventListener('message', (event) => {
   const msg = event.data;
-  if (!msg || msg.type !== 'TV_COMMAND') return;
 
-  if (msg.payload?.dataset) {
-    const wantWholesale = msg.payload.dataset === 'wholesale';
+  // Accept both newer and older formats safely
+  const isTvAction = msg?.type === 'TV_ACTION';
+  const isTvCommand = msg?.type === 'TV_COMMAND';
+  if (!isTvAction && !isTvCommand) return;
+
+  // Normalize payload
+  const payload = isTvAction ? msg : (msg.payload || {});
+
+  // Optional safety: only handle fulfillment-targeted commands
+  if (payload.target && payload.target !== 'fulfillment') return;
+
+  /* ---- Dataset toggle (Retail / Wholesale) ---- */
+  if (payload.dataset) {
+    const wantWholesale = payload.dataset === 'wholesale';
     const btn = document.getElementById('datasetToggleBtn');
     const label = document.getElementById('datasetLabel');
+
     const currentlyWholesale =
-      label?.textContent?.toLowerCase().includes('wholesale');
+      (label?.textContent || '').toLowerCase().includes('wholesale');
 
     if (btn && currentlyWholesale !== wantWholesale) {
       btn.click();
     }
   }
 
-  if (msg.payload?.view) {
+  /* ---- View toggle (Monthly / Calendar) ---- */
+  if (payload.view) {
     const monthlyBtn = document.getElementById('monthlyBtn');
     const calendarBtn = document.getElementById('calendarBtn');
 
-    if (msg.payload.view === 'monthly' && monthlyBtn && !monthlyBtn.classList.contains('active')) {
+    if (payload.view === 'monthly' && monthlyBtn && !monthlyBtn.classList.contains('active')) {
       monthlyBtn.click();
     }
-    if (msg.payload.view === 'calendar' && calendarBtn && !calendarBtn.classList.contains('active')) {
+    if (payload.view === 'calendar' && calendarBtn && !calendarBtn.classList.contains('active')) {
       calendarBtn.click();
     }
   }
 });
+</script>
+
 </script>
 
 
