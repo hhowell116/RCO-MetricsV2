@@ -507,6 +507,20 @@ html, body {
 body.dark {
   background: #2b2f34 !important;  /* soft dark gray */
 }
+   /* ================= DARK MODE: CALENDAR BACKDROP (fix white gaps) ================= */
+body.dark .calendar-view {
+  background: #2f343a !important;
+}
+
+body.dark .calendar-grid {
+  background: transparent !important; /* let calendar-view show */
+}
+
+/* If you still see white peeking through, this ensures the page behind is dark */
+body.dark .container {
+  background: transparent !important;
+}
+
 
 /* ================= TV MODE OVERRIDES ================= */
 body.tv-view-active .fullscreen-btn {
