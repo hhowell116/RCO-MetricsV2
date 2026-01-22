@@ -760,7 +760,6 @@ document.addEventListener('fullscreenchange', () => {
   }
 });
 </script>
-
 <script type="module">
 /* ================= FIREBASE AUTH ================= */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
@@ -779,14 +778,28 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-// Check if user is authenticated
+// Check if user is authenticated and has valid domain
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     // Not signed in, redirect to login
     console.log('No user signed in, redirecting to login...');
     window.location.replace('login.html');
   } else {
-    console.log('Signed in as:', user.email);
+    // Check if email domain is @rowecasaorganics.com
+    const email = user.email;
+    const allowedDomain = '@rowecasaorganics.com';
+    
+    if (!email.endsWith(allowedDomain)) {
+      console.error('Unauthorized domain:', email);
+      alert('Access denied. Only @rowecasaorganics.com accounts are allowed.');
+      
+      // Sign out unauthorized user
+      signOut(auth).then(() => {
+        window.location.replace('login.html');
+      });
+    } else {
+      console.log('Authorized user signed in:', user.email);
+    }
   }
 });
 
