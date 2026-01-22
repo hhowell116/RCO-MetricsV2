@@ -300,6 +300,17 @@ body.dark .sidebar{
 /* ================= TV MODE (HIDE SIDEBAR) ================= */
 body.tv-mode .sidebar{ display:none; }
 body.tv-mode .content-area{ width:100vw; }
+
+/* ================= SIDEBAR TITLE CARD ================= */
+.sidebar-title-box {
+  background: #ffffff;
+  border: 2px solid #d7d1ca;
+  border-radius: 12px;
+  padding: 10px 8px;
+  text-align: center;
+}
+
+  
 </style>
 </head>
 
@@ -310,10 +321,14 @@ body.tv-mode .content-area{ width:100vw; }
   <aside class="sidebar">
 
     <div class="sidebar-header">
-      <img src="logo.png" class="sidebar-logo" alt="Rowe Casa Organics">
-      <div class="sidebar-title">RCO Metrics</div>
-      <div class="sidebar-subtitle">Operational Dashboards</div>
-    </div>
+  <img src="logo.png" class="sidebar-logo" alt="Rowe Casa Organics">
+
+  <div class="sidebar-title-box">
+    <div class="sidebar-title">RCO Metrics</div>
+    <div class="sidebar-subtitle">Operational Dashboards</div>
+  </div>
+</div>
+
 
     <div class="sidebar-nav">
       <button class="nav-btn active" data-tab="fulfillment">Fulfillment KPI</button>
