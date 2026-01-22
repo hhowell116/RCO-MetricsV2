@@ -345,7 +345,25 @@ body.tv-mode .content-area{ width:100vw; }
   pointer-events: none; /* 👈 KEY LINE */
 }
 
-  
+ /* ================= TV TRANSITION OVERLAY ================= */
+.tv-transition {
+  position: fixed;
+  inset: 0;
+  background: var(--page-bg);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 9999;
+  transition: opacity 320ms ease;
+}
+
+body.tv-mode .tv-transition {
+  display: block;
+}
+
+.tv-transition.show {
+  opacity: 1;
+}
+ 
 </style>
 </head>
 
@@ -676,18 +694,20 @@ function broadcastTvStateToIframes(active){
 function runTvStep(i){
   const step = TV_PLAYLIST[i % TV_PLAYLIST.length];
 
-  // 1) switch tab in index
-  setActiveTab(step.tab);
+  withTvFade(() => {
+    // 1) switch tab in index
+    setActiveTab(step.tab);
 
-  // 2) ensure theme stays in sync
-  broadcastThemeToIframes(getSavedTheme());
+    // 2) keep theme synced
+    broadcastThemeToIframes(getSavedTheme());
 
-  // 3) send command to that dashboard (if any)
-  // give the iframe a beat to paint after switching
-  if (step.command){
-    setTimeout(() => postToTab(step.tab, step.command), 350);
-  }
+    // 3) send command (if any) after the iframe is visible
+    if (step.command){
+      setTimeout(() => postToTab(step.tab, step.command), 250);
+    }
+  });
 }
+
 
 function startTvPlaylist(){
   stopTvPlaylist();
@@ -765,6 +785,24 @@ document.addEventListener('fullscreenchange', () => {
     broadcastTvStateToIframes(false);
   }
 });
+
+  const tvTransition = document.getElementById('tvTransition');
+
+function withTvFade(fn){
+  // fade up
+  if (tvTransition) tvTransition.classList.add('show');
+
+  // swap in the middle of the fade
+  setTimeout(() => {
+    try { fn(); } catch(e) {}
+  }, 180);
+
+  // fade back down
+  setTimeout(() => {
+    if (tvTransition) tvTransition.classList.remove('show');
+  }, 420);
+}
+
 </script>
 
 
@@ -774,6 +812,7 @@ function signOutUser(){
   console.log('Sign out clicked (wire this to your auth).');
 }
 </script>
+<div class="tv-transition" id="tvTransition" aria-hidden="true"></div>
 
 </body>
 </html>
