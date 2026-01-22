@@ -335,6 +335,17 @@ body.dark .orders-widget{
 body.tv-mode .sidebar{ display:none; }
 body.tv-mode .content-area{ width:100vw; }
 
+/* ================= FIX ICON BUTTON CLICK AREA ================= */
+.icon-btn {
+  position: relative;
+  pointer-events: auto;
+}
+
+.icon-btn svg {
+  pointer-events: none; /* 👈 KEY LINE */
+}
+
+  
 </style>
 </head>
 
