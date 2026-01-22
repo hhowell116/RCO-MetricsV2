@@ -241,7 +241,7 @@ signInBtn.addEventListener('click', async () => {
     
     if (!email.endsWith(allowedDomain)) {
       // Unauthorized domain - sign out immediately
-      await signOut(auth);
+      await auth.signOut();
       
       // Show error and re-enable button
       errorMessage.textContent = 'Access denied. Only @rowecasaorganics.com accounts are allowed.';
