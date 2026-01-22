@@ -106,6 +106,8 @@ body {
   border-radius: 12px;
   padding: 8px;
   text-align: center;
+
+  height: 300px; /* <-- increase/decrease this to experiment (e.g. 260, 320, 360) */
 }
 
 .carousel-label {
@@ -119,7 +121,8 @@ body {
 
 .carousel-image {
   width: 100%;
-  max-height: 280px;
+  height: calc(100% - 22px); /* <-- leaves room for the "Top Products" label */
+  max-height: none;          /* <-- removes the old cap so it can grow */
   object-fit: contain;
   padding: 4px;
   transition: opacity 0.35s ease, transform 0.35s ease;
