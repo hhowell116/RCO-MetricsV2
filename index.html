@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RCO Metrics Dashboard</title>
 
 <style>
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/* ================= BASE RESET ================= */
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
   width: 100%;
@@ -18,18 +15,70 @@ html, body {
   overflow: hidden;
 }
 
+/* ================= THEME TOKENS ================= */
+:root{
+  /* Light */
+  --bg: #f6f0e6;
+  --panel: #ffffff;
+  --panel-2: #fbfaf8;
+  --text: #5f4b3c;
+  --muted: #8d8173;
+  --border: #d7d1ca;
+  --shadow: rgba(95, 75, 60, 0.12);
+
+  /* Brand gradient */
+  --brand-grad: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+  --brand-brown: #5f4b3c;
+  --brand-taupe: #8d8173;
+  --brand-hover-border: #bd9979;
+
+  /* Product image sizing (EDIT THESE TO EXPERIMENT) */
+  --carousel-img-height: 170px; /* <- change this */
+}
+
 body {
   font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f6f0e6;
+  background: var(--bg);
+}
+
+/* Dark mode overrides */
+body.dark{
+  --bg: #0f1114;
+  --panel: #14181d;
+  --panel-2: #101419;
+  --text: #f2eee8;
+  --muted: #b7a99a;
+  --border: rgba(215,209,202,0.18);
+  --shadow: rgba(0,0,0,0.45);
+}
+
+/* ================= LAYOUT ================= */
+.app-shell {
+  display: flex;
+  height: 100vh;
+}
+
+.content-area {
+  flex: 1;
+  height: 100vh;
+}
+
+.iframe-wrapper { display: none; height: 100%; }
+.iframe-wrapper.active { display: block; }
+
+iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
 }
 
 /* ================= SIDEBAR ================= */
 .sidebar {
-  width: 165px;
-  min-width: 165px;
+  width: 170px;
+  min-width: 170px;
   height: 100vh;
-  background: linear-gradient(180deg, #ffffff 0%, #fbfaf8 100%);
-  border-right: 1px solid #e2dbd1;
+  background: linear-gradient(180deg, var(--panel) 0%, var(--panel-2) 100%);
+  border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   padding: 14px 12px;
@@ -49,13 +98,13 @@ body {
 
 .sidebar-title {
   font-weight: 700;
-  color: #5f4b3c;
+  color: var(--text);
   font-size: 0.95em;
 }
 
 .sidebar-subtitle {
   font-size: 0.7em;
-  color: #8d8173;
+  color: var(--muted);
 }
 
 /* ================= NAV BUTTONS ================= */
@@ -67,26 +116,26 @@ body {
 }
 
 .nav-btn {
-  border: 2px solid #d7d1ca;
-  background: #ffffff;
+  border: 2px solid var(--border);
+  background: var(--panel);
   border-radius: 10px;
   padding: 10px 8px;
   font-weight: 600;
   font-size: 0.85em;
-  color: #5f4b3c;
+  color: var(--text);
   cursor: pointer;
   text-align: center;
   transition: all 0.2s ease;
 }
 
 .nav-btn:hover {
-  border-color: #bd9979;
-  box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
+  border-color: var(--brand-hover-border);
+  box-shadow: 0 2px 6px var(--shadow);
 }
 
 .nav-btn.active {
-  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
-  border-color: #5f4b3c;
+  background: var(--brand-grad);
+  border-color: var(--brand-brown);
   color: #ffffff;
 }
 
@@ -95,142 +144,119 @@ body {
   margin-top: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding-top: 16px;
 }
 
-/* ================= PRODUCT CAROUSEL ================= */
-.product-carousel {
-  background: #ffffff;
-  border: 2px solid #d7d1ca;
-  border-radius: 12px;
-  padding: 8px;
-  text-align: center;
-  height: 230px;         
-  overflow: hidden;      
-}
-
-.carousel-label {
-  font-size: 0.75em;
-  font-weight: 600;
-  color: #8d8173;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
-}
-
-.carousel-image {
-  display: block;
-  margin: 0 auto;
-  width: 100%;
-  height: calc(100% - 22px);
-  max-height: none;
-  object-fit: contain;
-  padding: 0;                
-  transform: scale(1.7);     
-  transform-origin: center;
-  transition: opacity 0.35s ease, transform 0.35s ease;
-}
-
-.carousel-image.fade-out {
-  opacity: 0;
-  transform: scale(1.25);    
-}
-
-
-/* ================= ORDERS WIDGET ================= */
+/* ================= ORDERS WIDGET (INVERTED: WHITE BOX) ================= */
 .orders-widget {
-  background: #ffffff;
-  border: 2px solid #d7d1ca;
+  background: var(--panel);
+  border: 2px solid var(--border); /* lighter border like other boxes */
   border-radius: 12px;
   padding: 12px;
-  color: #5f4b3c;
+  color: var(--text);
   text-align: center;
-  box-shadow: 0 3px 8px rgba(95, 75, 60, 0.12);
+  box-shadow: 0 3px 8px rgba(95,75,60,0.10);
 }
 
 .orders-label {
   font-size: 0.65em;
   letter-spacing: 0.5px;
+  opacity: 0.95;
   font-weight: 700;
-  color: #8d8173;
+  color: var(--muted);
 }
 
 .orders-value {
   font-size: 2em;
-  font-weight: 700;
+  font-weight: 800;
   margin: 6px 0;
-  color: #5f4b3c;
+  color: var(--brand-brown);
 }
 
 .orders-updated {
   font-size: 0.65em;
+  opacity: 0.9;
   line-height: 1.3;
-  color: #8d8173;
+  color: var(--muted);
 }
 
+/* ================= PRODUCT CAROUSEL ================= */
+.product-carousel {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 10px;
+  text-align: center;
+}
+
+.carousel-label {
+  font-size: 0.65em;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+/* Key: give the image a real height to fill */
+.carousel-image {
+  width: 100%;
+  height: var(--carousel-img-height); /* <- THIS is the main knob */
+  max-height: var(--carousel-img-height);
+  object-fit: contain;
+  display: block;
+  margin: 0 auto;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.carousel-image.fade-out {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+/* ================= SEPARATOR ================= */
 .sidebar-separator {
   height: 1px;
-  background: #e2dbd1;
+  background: var(--border);
   width: 100%;
 }
 
-/* ================= SIGN OUT ================= */
-.sign-out-btn {
-  border: 2px solid #d7d1ca;
-  background: #ffffff;
+/* ================= BUTTONS ================= */
+.sign-out-btn, .theme-btn {
+  border: 2px solid var(--border);
+  background: var(--panel);
   padding: 10px;
   border-radius: 10px;
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.85em;
   cursor: pointer;
-  color: #5f4b3c;
+  color: var(--text);
   transition: all 0.2s ease;
+  text-align: center;
+}
+
+.sign-out-btn:hover, .theme-btn:hover {
+  border-color: var(--brand-hover-border);
+  box-shadow: 0 2px 6px var(--shadow);
 }
 
 .sign-out-btn:hover {
-  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
-  border-color: #5f4b3c;
-  color: #ffffff;
-}
-
-/* ================= CONTENT ================= */
-.app-shell {
-  display: flex;
-  height: 100vh;
-}
-
-.content-area {
-  flex: 1;
-  height: 100vh;
-}
-
-.iframe-wrapper {
-  display: none;
-  height: 100%;
-}
-
-.iframe-wrapper.active {
-  display: block;
-}
-
-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
+  background: var(--brand-grad);
+  border-color: var(--brand-brown);
+  color: white;
 }
 </style>
 </head>
 
 <body>
-
 <div class="app-shell">
 
   <!-- SIDEBAR -->
   <aside class="sidebar">
 
     <div class="sidebar-header">
-      <img src="logo.png" class="sidebar-logo" alt="Rowe Casa Organics">
+      <img src="logo.png" class="sidebar-logo" alt="Rowe Casa Organics" />
       <div class="sidebar-title">RCO Metrics</div>
       <div class="sidebar-subtitle">Operational Dashboards</div>
     </div>
@@ -241,31 +267,23 @@ iframe {
       <button class="nav-btn" data-tab="orders">Orders Overview</button>
     </div>
 
-    <!-- FOOTER STACK -->
+    <!-- FOOTER: Orders -> Products -> Theme -> Sign Out -->
     <div class="sidebar-footer">
 
-      <!-- TODAY'S ORDERS -->
       <div class="orders-widget">
         <div class="orders-label">TODAY'S ORDERS</div>
         <div class="orders-value" id="orderCount">--</div>
-        <div class="orders-updated" id="orderUpdated">
-          Last updated:<br>Loading...
-        </div>
+        <div class="orders-updated" id="orderUpdated">Last updated:<br>Loading...</div>
       </div>
 
-      <!-- TOP PRODUCTS -->
       <div class="product-carousel">
         <div class="carousel-label">Top Products</div>
-        <img
-          id="sidebarProductImage"
-          src="tartcherry.png"
-          class="carousel-image"
-          alt="Product"
-        >
+        <img id="sidebarProductImage" src="tartcherry.png" class="carousel-image" alt="Product" />
       </div>
 
       <div class="sidebar-separator"></div>
 
+      <button class="theme-btn" id="themeToggleBtn" type="button">Dark Mode</button>
       <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
     </div>
 
@@ -291,10 +309,15 @@ iframe {
 document.querySelectorAll('.nav-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
+
     document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
+
     document.querySelectorAll('.iframe-wrapper').forEach(f => f.classList.remove('active'));
     document.getElementById(`${tab}-frame`).classList.add('active');
+
+    // Re-broadcast theme when switching tabs (so active iframe stays in sync)
+    broadcastThemeToIframes(getSavedTheme());
   });
 });
 
@@ -304,12 +327,14 @@ const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
 let productIndex = 0;
 
 setInterval(() => {
-  sidebarProductImage.classList.add("fade-out");
-  setTimeout(() => {
-    productIndex = (productIndex + 1) % products.length;
-    sidebarProductImage.src = products[productIndex];
-    sidebarProductImage.classList.remove("fade-out");
-  }, 350);
+  if (sidebarProductImage) {
+    sidebarProductImage.classList.add("fade-out");
+    setTimeout(() => {
+      productIndex = (productIndex + 1) % products.length;
+      sidebarProductImage.src = products[productIndex];
+      sidebarProductImage.classList.remove("fade-out");
+    }, 350);
+  }
 }, 5000);
 </script>
 
@@ -341,21 +366,43 @@ async function updateOrderCount() {
 
     if (rawTimestamp) {
       let date;
+
       if (typeof rawTimestamp === 'string' && rawTimestamp.startsWith('Date(')) {
         const m = rawTimestamp.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
-        if (m) date = new Date(m[1], m[2], m[3], m[4], m[5], m[6]);
+        if (m) {
+          const [, year, month, day, hours, minutes, seconds] = m;
+          date = new Date(
+            parseInt(year), parseInt(month), parseInt(day),
+            parseInt(hours), parseInt(minutes), parseInt(seconds)
+          );
+        }
+      } else if (typeof rawTimestamp === 'string') {
+        date = new Date(rawTimestamp);
+      } else if (rawTimestamp instanceof Date) {
+        date = rawTimestamp;
       } else {
         date = new Date(rawTimestamp);
       }
 
-      if (date && !isNaN(date)) {
-        const formatted =
-          `${date.getMonth()+1}/${date.getDate()}/${String(date.getFullYear()).slice(-2)} ` +
-          `${date.getHours()%12||12}:${String(date.getMinutes()).padStart(2,'0')} ${date.getHours()>=12?'PM':'AM'}`;
-        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${formatted}`;
+      if (date && !isNaN(date.getTime())) {
+        const mm = String(date.getMonth() + 1).padStart(2, '0');
+        const dd = String(date.getDate()).padStart(2, '0');
+        const yy = String(date.getFullYear()).slice(-2);
+        const hrs = date.getHours();
+        const mins = String(date.getMinutes()).padStart(2, '0');
+        const ampm = hrs >= 12 ? 'PM' : 'AM';
+        const displayHours = hrs % 12 || 12;
+
+        const formattedTime = `${mm}/${dd}/${yy} ${displayHours}:${mins} ${ampm}`;
+        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${formattedTime}`;
+      } else {
+        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${rawTimestamp}`;
       }
+    } else {
+      document.getElementById('orderUpdated').innerHTML = 'Last updated:<br>Unknown';
     }
   } catch (e) {
+    console.error('Order count error:', e);
     document.getElementById('orderCount').textContent = '—';
     document.getElementById('orderUpdated').innerHTML = 'Last updated:<br>Error';
   }
@@ -363,6 +410,52 @@ async function updateOrderCount() {
 
 updateOrderCount();
 setInterval(updateOrderCount, 600000);
+</script>
+
+<script>
+/* ================= THEME (INDEX + IFRAMES) ================= */
+const THEME_KEY = 'rco_theme';
+const themeBtn = document.getElementById('themeToggleBtn');
+
+function getSavedTheme(){
+  return localStorage.getItem(THEME_KEY) || 'light';
+}
+
+function updateThemeButtonLabel(theme){
+  if (!themeBtn) return;
+  themeBtn.textContent = (theme === 'dark') ? 'Light Mode' : 'Dark Mode';
+}
+
+function broadcastThemeToIframes(theme){
+  document.querySelectorAll('iframe').forEach(f => {
+    try {
+      f.contentWindow.postMessage({ type: 'RCO_THEME', theme }, '*');
+    } catch(e) {}
+  });
+}
+
+function setTheme(theme){
+  const isDark = theme === 'dark';
+  document.body.classList.toggle('dark', isDark);
+  localStorage.setItem(THEME_KEY, theme);
+  updateThemeButtonLabel(theme);
+  broadcastThemeToIframes(theme);
+}
+
+if (themeBtn){
+  themeBtn.addEventListener('click', () => {
+    const cur = getSavedTheme();
+    setTheme(cur === 'dark' ? 'light' : 'dark');
+  });
+}
+
+/* Apply saved theme on load */
+setTheme(getSavedTheme());
+
+/* Re-push theme when each iframe finishes loading */
+document.querySelectorAll('iframe').forEach(f => {
+  f.addEventListener('load', () => broadcastThemeToIframes(getSavedTheme()));
+});
 </script>
 
 </body>
