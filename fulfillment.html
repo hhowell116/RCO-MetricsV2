@@ -529,6 +529,27 @@ canvas {
 body.dark {
   background: #2b2f34 !important;  /* soft dark gray */
 }
+/* ================= DARK MODE: FULFILLMENT CALENDAR BACKDROP ================= */
+
+/* Main calendar container */
+body.dark .calendar-view {
+  background: #2f343a !important;
+}
+
+/* Grid area (prevents white bleed between months) */
+body.dark .calendar-grid {
+  background: transparent !important;
+}
+
+/* Individual month cards already styled, but ensure borders don’t glow white */
+body.dark .month-calendar {
+  border-color: rgba(242,238,232,0.18) !important;
+}
+
+/* Safety: parent container behind calendar */
+body.dark .dashboard-container {
+  background: transparent !important;
+}
 
 /* ================= TV MODE OVERRIDES ================= */
 body.tv-view-active .fullscreen-btn {
