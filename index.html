@@ -106,8 +106,8 @@ body {
   border-radius: 12px;
   padding: 8px;
   text-align: center;
-
-  height: 300px; /* <-- increase/decrease this to experiment (e.g. 260, 320, 360) */
+  height: 300px;         
+  overflow: hidden;      
 }
 
 .carousel-label {
@@ -120,18 +120,23 @@ body {
 }
 
 .carousel-image {
+  display: block;
+  margin: 0 auto;
   width: 100%;
-  height: calc(100% - 22px); /* <-- leaves room for the "Top Products" label */
-  max-height: none;          /* <-- removes the old cap so it can grow */
+  height: calc(100% - 22px);
+  max-height: none;
   object-fit: contain;
-  padding: 4px;
+  padding: 0;                
+  transform: scale(1.7);     
+  transform-origin: center;
   transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
 .carousel-image.fade-out {
   opacity: 0;
-  transform: scale(0.95);
+  transform: scale(1.25);    
 }
+
 
 /* ================= ORDERS WIDGET ================= */
 .orders-widget {
