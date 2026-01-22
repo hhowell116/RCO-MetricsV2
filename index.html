@@ -6,7 +6,6 @@
 <title>RCO Metrics Dashboard</title>
 
 <style>
-/* ================= BASE RESET ================= */
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
@@ -20,48 +19,31 @@ body {
   background: #f6f0e6;
 }
 
-/* ================= THEME TOKENS ================= */
-/* These are the LIGHT defaults */
+/* ================= THEME TOKENS (LIGHT DEFAULTS) ================= */
 :root{
-  /* Page */
   --page-bg: #f6f0e6;
 
-  /* Sidebar theme (light) */
   --sb-bg1: #ffffff;
   --sb-bg2: #fbfaf8;
   --sb-panel: #ffffff;
   --sb-text: #5f4b3c;
   --sb-muted: #8d8173;
   --sb-border: #d7d1ca;
-  --sb-shadow: rgba(95, 75, 60, 0.12);
+  --sb-shadow: rgba(95,75,60,0.12);
 
-  /* Brand */
   --brand-grad: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
   --brand-brown: #5f4b3c;
-  --brand-taupe: #8d8173;
   --brand-hover-border: #bd9979;
 
-  /* Carousel image height knob */
   --carousel-img-height: 170px;
 }
 
-/* DARK MODE (Index + sidebar only)
-   - Makes the SIDEBAR go dark
-   - Keeps the dashboards themselves controlled separately via postMessage */
+/* ================= DARK MODE (BACKGROUND ONLY) ================= */
 body.dark{
-  --page-bg: #2b2f34;          /* soft dark gray background */
-
-  /* Sidebar goes dark */
-  --sb-bg1: #2f343a;
-  --sb-bg2: #262a2f;
-  --sb-panel: #343a41;
-  --sb-text: #f2eee8;
-  --sb-muted: #d2c6b9;
-  --sb-border: rgba(242,238,232,0.16);
-  --sb-shadow: rgba(0,0,0,0.35);
+  --page-bg: #2b2f34; /* soft dark gray */
 }
 
-/* Apply page background from token */
+/* page background */
 body{
   background: var(--page-bg);
   color: var(--sb-text);
@@ -99,6 +81,12 @@ iframe {
   padding: 14px 12px;
 }
 
+/* 🔑 Dark mode: only darken the sidebar *shell*, not the boxes */
+body.dark .sidebar{
+  background: linear-gradient(180deg, #2f343a 0%, #262a2f 100%);
+}
+
+/* ================= HEADER ================= */
 .sidebar-header {
   text-align: center;
   margin-bottom: 16px;
@@ -108,7 +96,6 @@ iframe {
   width: 100%;
   max-width: 120px;
   margin: 0 auto 10px;
-  display: block;
 }
 
 .sidebar-title {
@@ -122,24 +109,22 @@ iframe {
   color: var(--sb-muted);
 }
 
-/* ================= NAV BUTTONS ================= */
+/* ================= NAV ================= */
 .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 10px;
 }
 
 .nav-btn {
   border: 2px solid var(--sb-border);
   background: var(--sb-panel);
   border-radius: 10px;
-  padding: 10px 8px;
+  padding: 10px;
   font-weight: 800;
   font-size: 0.85em;
   color: var(--sb-text);
   cursor: pointer;
-  text-align: center;
   transition: all 0.2s ease;
 }
 
@@ -151,7 +136,7 @@ iframe {
 .nav-btn.active {
   background: var(--brand-grad);
   border-color: var(--brand-brown);
-  color: #ffffff;
+  color: #fff;
 }
 
 /* ================= FOOTER ================= */
@@ -163,21 +148,20 @@ iframe {
   padding-top: 16px;
 }
 
-/* ================= ORDERS WIDGET ================= */
-.orders-widget {
-  background: var(--sb-panel);
+/* ================= WIDGETS ================= */
+.orders-widget,
+.product-carousel {
+  background: #ffffff;
   border: 2px solid var(--sb-border);
   border-radius: 12px;
   padding: 12px;
-  color: var(--sb-text);
   text-align: center;
-  box-shadow: 0 3px 8px rgba(95,75,60,0.10);
 }
 
-.orders-label {
+.orders-label,
+.carousel-label {
   font-size: 0.65em;
-  letter-spacing: 0.5px;
-  font-weight: 900;
+  font-weight: 800;
   color: var(--sb-muted);
   text-transform: uppercase;
 }
@@ -185,121 +169,34 @@ iframe {
 .orders-value {
   font-size: 2em;
   font-weight: 900;
-  margin: 6px 0;
   color: var(--sb-text);
-}
-
-.orders-updated {
-  font-size: 0.65em;
-  opacity: 0.95;
-  line-height: 1.3;
-  color: var(--sb-muted);
-}
-
-/* ================= PRODUCT CAROUSEL ================= */
-.product-carousel {
-  background: var(--sb-panel);
-  border: 2px solid var(--sb-border);
-  border-radius: 12px;
-  padding: 10px;
-  text-align: center;
-}
-
-.carousel-label {
-  font-size: 0.65em;
-  font-weight: 900;
-  color: var(--sb-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: 8px;
 }
 
 .carousel-image {
   width: 100%;
   height: var(--carousel-img-height);
-  max-height: var(--carousel-img-height);
   object-fit: contain;
-  display: block;
-  margin: 0 auto;
-  transition: opacity 0.35s ease, transform 0.35s ease;
 }
 
-.carousel-image.fade-out {
-  opacity: 0;
-  transform: scale(0.95);
-}
-
-/* ================= SEPARATOR ================= */
-.sidebar-separator {
-  height: 1px;
-  background: var(--sb-border);
-  width: 100%;
-}
-
-/* ================= SIGN OUT ================= */
-.sign-out-btn {
-  border: 2px solid var(--sb-border);
-  background: var(--sb-panel);
-  padding: 10px;
-  border-radius: 10px;
-  font-weight: 900;
-  font-size: 0.85em;
-  cursor: pointer;
-  color: var(--sb-text);
-  transition: all 0.2s ease;
-  text-align: center;
-}
-
-.sign-out-btn:hover {
-  background: var(--brand-grad);
-  border-color: var(--brand-brown);
-  color: white;
-}
-
-/* ================= ICON BUTTONS ROW (equal width) ================= */
+/* ================= ICON BUTTON ROW ================= */
 .footer-mini-row{
   display: flex;
   gap: 8px;
-  width: 100%;
 }
 
 .icon-btn{
-  flex: 1;                 /* equal width */
+  flex: 1;
   height: 38px;
   border-radius: 10px;
   border: 2px solid var(--sb-border);
-  background: var(--sb-panel);
-  color: var(--sb-text);
-  display: inline-flex;
+  background: #ffffff;
+  display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.icon-btn svg{
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-.icon-btn:hover{
-  border-color: var(--brand-hover-border);
-  box-shadow: 0 2px 6px var(--sb-shadow);
-}
-
-/* Active TV mode */
-.icon-btn.active{
-  background: var(--brand-grad);
-  border-color: var(--brand-brown);
-}
-.icon-btn.active svg path,
-.icon-btn.active svg rect,
-.icon-btn.active svg line{
-  stroke: #fff !important;
-}
-
-/* ================= TV MODE (HIDE SIDEBAR) ================= */
+/* ================= TV MODE ================= */
 body.tv-mode .sidebar{ display:none; }
 body.tv-mode .content-area{ width:100vw; }
 </style>
@@ -308,11 +205,9 @@ body.tv-mode .content-area{ width:100vw; }
 <body>
 <div class="app-shell">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
-
     <div class="sidebar-header">
-      <img src="logo.png" class="sidebar-logo" alt="Rowe Casa Organics" />
+      <img src="logo.png" class="sidebar-logo">
       <div class="sidebar-title">RCO Metrics</div>
       <div class="sidebar-subtitle">Operational Dashboards</div>
     </div>
@@ -324,330 +219,45 @@ body.tv-mode .content-area{ width:100vw; }
     </div>
 
     <div class="sidebar-footer">
-
       <div class="orders-widget">
-        <div class="orders-label">TODAY'S ORDERS</div>
-        <div class="orders-value" id="orderCount">--</div>
-        <div class="orders-updated" id="orderUpdated">Last updated:<br>Loading...</div>
+        <div class="orders-label">Today’s Orders</div>
+        <div class="orders-value">--</div>
       </div>
 
       <div class="product-carousel">
         <div class="carousel-label">Top Products</div>
-        <img id="sidebarProductImage" src="tartcherry.png" class="carousel-image" alt="Product" />
+        <img src="tartcherry.png" class="carousel-image">
       </div>
 
-      <div class="sidebar-separator"></div>
-
-      <!-- Small icon buttons row (Moon/Sun + TV) -->
       <div class="footer-mini-row">
-        <button class="icon-btn" id="themeToggleBtn" type="button" aria-label="Toggle Dark Mode" title="Toggle Dark Mode">
-          <!-- icon injected by JS -->
-        </button>
-
-        <button
-          class="icon-btn"
-          id="tvModeBtn"
-          type="button"
-          aria-label="TV Mode"
-          title="TV Mode — Auto rotate through dashboards"
-        >
-          <!-- TV icon -->
-          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="3.5" y="6.5" width="17" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
-            <line x1="8" y1="20" x2="16" y2="20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <line x1="10" y1="4" x2="7" y2="1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            <line x1="14" y1="4" x2="17" y2="1.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
+        <button class="icon-btn" id="themeToggleBtn">🌙</button>
+        <button class="icon-btn" id="tvModeBtn" title="TV Mode — Auto rotate dashboards">📺</button>
       </div>
-
-      <button class="sign-out-btn" onclick="signOutUser()">Sign Out</button>
     </div>
-
   </aside>
 
-  <!-- CONTENT -->
   <main class="content-area">
-    <div id="fulfillment-frame" class="iframe-wrapper active">
-      <iframe src="fulfillment.html"></iframe>
-    </div>
-    <div id="shipping-frame" class="iframe-wrapper">
-      <iframe src="shipping.html"></iframe>
-    </div>
-    <div id="orders-frame" class="iframe-wrapper">
-      <iframe src="orders.html"></iframe>
-    </div>
+    <div id="fulfillment-frame" class="iframe-wrapper active"><iframe src="fulfillment.html"></iframe></div>
+    <div id="shipping-frame" class="iframe-wrapper"><iframe src="shipping.html"></iframe></div>
+    <div id="orders-frame" class="iframe-wrapper"><iframe src="orders.html"></iframe></div>
   </main>
-
 </div>
 
 <script>
-/* ================= NAVIGATION ================= */
-function setActiveTab(tab){
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  document.querySelectorAll('.iframe-wrapper').forEach(f => f.classList.remove('active'));
-  const frame = document.getElementById(`${tab}-frame`);
-  if (frame) frame.classList.add('active');
-}
-
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    setActiveTab(btn.dataset.tab);
-    broadcastThemeToIframes(getSavedTheme());
-  });
-});
-</script>
-
-<script>
-/* ================= PRODUCT CAROUSEL ================= */
-const sidebarProductImage = document.getElementById("sidebarProductImage");
-const products = ["tartcherry.png", "elderberry.png", "hairspritz.png"];
-let productIndex = 0;
-
-setInterval(() => {
-  if (!sidebarProductImage) return;
-  sidebarProductImage.classList.add("fade-out");
-  setTimeout(() => {
-    productIndex = (productIndex + 1) % products.length;
-    sidebarProductImage.src = products[productIndex];
-    sidebarProductImage.classList.remove("fade-out");
-  }, 350);
-}, 5000);
-</script>
-
-<script>
-/* ================= GOOGLE SHEETS ORDERS COUNTER ================= */
-const SHEET_ID = '1H9eeS3zv3DOj7ETw6DgF8m_n1PirPjVKziiISw95khI';
-const SHEET_GID = '1592344464';
-
-async function fetchGvizTable() {
-  const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&gid=${SHEET_GID}`;
-  const res = await fetch(url);
-  const text = await res.text();
-  const match = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*?)\);/);
-  const json = JSON.parse(match[1]);
-  return json.table;
-}
-
-function cellValue(table, r, c) {
-  return table?.rows?.[r]?.c?.[c]?.v ?? null;
-}
-
-async function updateOrderCount() {
-  try {
-    const table = await fetchGvizTable();
-    const rawTimestamp = cellValue(table, 0, 0);
-    const orderValue = cellValue(table, 0, 1);
-
-    document.getElementById('orderCount').textContent = orderValue ?? '--';
-
-    if (rawTimestamp) {
-      let date;
-
-      if (typeof rawTimestamp === 'string' && rawTimestamp.startsWith('Date(')) {
-        const m = rawTimestamp.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+),(\d+)\)/);
-        if (m) {
-          const [, year, month, day, hours, minutes, seconds] = m;
-          date = new Date(
-            parseInt(year), parseInt(month), parseInt(day),
-            parseInt(hours), parseInt(minutes), parseInt(seconds)
-          );
-        }
-      } else if (typeof rawTimestamp === 'string') {
-        date = new Date(rawTimestamp);
-      } else if (rawTimestamp instanceof Date) {
-        date = rawTimestamp;
-      } else {
-        date = new Date(rawTimestamp);
-      }
-
-      if (date && !isNaN(date.getTime())) {
-        const mm = String(date.getMonth() + 1).padStart(2, '0');
-        const dd = String(date.getDate()).padStart(2, '0');
-        const yy = String(date.getFullYear()).slice(-2);
-        const hrs = date.getHours();
-        const mins = String(date.getMinutes()).padStart(2, '0');
-        const ampm = hrs >= 12 ? 'PM' : 'AM';
-        const displayHours = hrs % 12 || 12;
-
-        const formattedTime = `${mm}/${dd}/${yy} ${displayHours}:${mins} ${ampm}`;
-        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${formattedTime}`;
-      } else {
-        document.getElementById('orderUpdated').innerHTML = `Last updated:<br>${rawTimestamp}`;
-      }
-    } else {
-      document.getElementById('orderUpdated').innerHTML = 'Last updated:<br>Unknown';
-    }
-  } catch (e) {
-    console.error('Order count error:', e);
-    document.getElementById('orderCount').textContent = '—';
-    document.getElementById('orderUpdated').innerHTML = 'Last updated:<br>Error';
-  }
-}
-
-updateOrderCount();
-setInterval(updateOrderCount, 600000);
-</script>
-
-<script>
-/* ================= THEME (INDEX + IFRAMES) ================= */
 const THEME_KEY = 'rco_theme';
-const themeBtn = document.getElementById('themeToggleBtn');
+const btn = document.getElementById('themeToggleBtn');
 
-function moonIcon(){
-  return `
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
-    </svg>`;
-}
-function sunIcon(){
-  return `
-    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12Z" stroke="currentColor" stroke-width="2"/>
-      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-    </svg>`;
+function setTheme(t){
+  document.body.classList.toggle('dark', t === 'dark');
+  localStorage.setItem(THEME_KEY, t);
+  btn.textContent = t === 'dark' ? '☀️' : '🌙';
 }
 
-function getSavedTheme(){
-  return localStorage.getItem(THEME_KEY) || 'light';
-}
+btn.onclick = () => {
+  setTheme(document.body.classList.contains('dark') ? 'light' : 'dark');
+};
 
-function broadcastThemeToIframes(theme){
-  document.querySelectorAll('iframe').forEach(f => {
-    try { f.contentWindow.postMessage({ type: 'RCO_THEME', theme }, '*'); } catch(e) {}
-  });
-}
-
-function broadcastTvStateToIframes(active){
-  document.querySelectorAll('iframe').forEach(f => {
-    try { f.contentWindow.postMessage({ type: 'TV_VIEW_STATE', active }, '*'); } catch(e) {}
-  });
-}
-
-function setTheme(theme){
-  const isDark = theme === 'dark';
-  document.body.classList.toggle('dark', isDark);
-  localStorage.setItem(THEME_KEY, theme);
-
-  if (themeBtn){
-    themeBtn.innerHTML = isDark ? sunIcon() : moonIcon();
-  }
-  broadcastThemeToIframes(theme);
-}
-
-if (themeBtn){
-  themeBtn.addEventListener('click', () => {
-    const cur = getSavedTheme();
-    setTheme(cur === 'dark' ? 'light' : 'dark');
-  });
-}
-
-/* Apply saved theme on load */
-setTheme(getSavedTheme());
-
-/* Re-push theme when each iframe finishes loading */
-document.querySelectorAll('iframe').forEach(f => {
-  f.addEventListener('load', () => broadcastThemeToIframes(getSavedTheme()));
-});
+setTheme(localStorage.getItem(THEME_KEY) || 'light');
 </script>
-
-<script>
-/* ================= TV MODE (FULLSCREEN + ROTATE TABS) ================= */
-const tvBtn = document.getElementById('tvModeBtn');
-
-let tvEnabled = false;
-let tvInterval = null;
-const tvOrder = ['fulfillment','shipping','orders'];
-let tvIndex = 0;
-
-/* Change how fast it rotates here (ms) */
-const TV_ROTATE_MS = 20000; // 20 seconds
-
-function startTvRotation(){
-  stopTvRotation();
-  tvInterval = setInterval(() => {
-    tvIndex = (tvIndex + 1) % tvOrder.length;
-    setActiveTab(tvOrder[tvIndex]);
-    broadcastThemeToIframes(getSavedTheme());
-  }, TV_ROTATE_MS);
-}
-
-function stopTvRotation(){
-  if (tvInterval){
-    clearInterval(tvInterval);
-    tvInterval = null;
-  }
-}
-
-async function enterTvMode(){
-  tvEnabled = true;
-  tvBtn?.classList.add('active');
-
-  // hide sidebar
-  document.body.classList.add('tv-mode');
-
-  // notify dashboards
-  broadcastTvStateToIframes(true);
-
-  // fullscreen whole page (sidebar hidden by class)
-  try{
-    if (!document.fullscreenElement){
-      await document.documentElement.requestFullscreen();
-    }
-  } catch(e){
-    console.error('Fullscreen failed:', e);
-  }
-
-  // start rotation
-  tvIndex = 0;
-  setActiveTab(tvOrder[tvIndex]);
-  startTvRotation();
-}
-
-async function exitTvMode(){
-  tvEnabled = false;
-  tvBtn?.classList.remove('active');
-
-  stopTvRotation();
-  document.body.classList.remove('tv-mode');
-
-  broadcastTvStateToIframes(false);
-
-  try{
-    if (document.fullscreenElement){
-      await document.exitFullscreen();
-    }
-  } catch(e){
-    console.error('Exit fullscreen failed:', e);
-  }
-}
-
-if (tvBtn){
-  tvBtn.addEventListener('click', () => {
-    if (!tvEnabled) enterTvMode();
-    else exitTvMode();
-  });
-}
-
-/* If user hits ESC to leave fullscreen, also turn off TV mode cleanly */
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement && tvEnabled){
-    tvEnabled = false;
-    tvBtn?.classList.remove('active');
-    stopTvRotation();
-    document.body.classList.remove('tv-mode');
-    broadcastTvStateToIframes(false);
-  }
-});
-</script>
-
-<script>
-/* Optional: stub so "Sign Out" doesn't throw if you haven't wired auth yet */
-function signOutUser(){
-  console.log('Sign out clicked (wire this to your auth).');
-}
-</script>
-
 </body>
 </html>
