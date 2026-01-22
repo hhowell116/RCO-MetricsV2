@@ -310,16 +310,12 @@ html, body {
       box-shadow:0 5px 15px rgba(95,75,60,0.26);
     }
 
-    /* Fullscreen icon button — MATCHES ORDERS DASHBOARD */
+/* FULLSCREEN BUTTON (Orders-style, darker brown) */
 .fullscreen-btn {
-  position: absolute;      /* ✅ THIS is the key */
-  top: 12px;
-  right: 12px;
-
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: linear-gradient(135deg, var(--tan-light) 0%, var(--rco-soft-camel) 100%);
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
   border: 2px solid rgba(95,75,60,0.35);
   cursor: pointer;
   display: flex;
@@ -327,63 +323,36 @@ html, body {
   justify-content: center;
   transition: all 0.2s ease;
   box-shadow: 0 3px 8px rgba(95,75,60,0.22);
-  z-index: 10;
 }
-/* Fullscreen button hover — matches Orders dashboard */
+
+/* ICON WRAPPER (so SVG never collapses) */
+.fullscreen-btn svg{
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+/* EXIT FULLSCREEN = flip the icon */
+.fullscreen-btn.exit svg {
+  transform: rotate(180deg);
+  transition: transform 0.25s ease;
+}
+
+/* Hover */
 .fullscreen-btn:hover {
   background: #ffffff;
-  border-color: var(--rco-soft-camel);
+  border-color: #bd9979;
   box-shadow: 0 4px 12px rgba(95,75,60,0.22);
 }
 
 /* Keep icon visible on white */
-.fullscreen-btn:hover .fullscreen-icon::before,
-.fullscreen-btn:hover .fullscreen-icon::after {
-  border-color: var(--tan-dark);
+.fullscreen-btn:hover svg path {
+  stroke: #5f4b3c !important;
 }
 
 .fullscreen-btn:active {
   transform: scale(0.96);
   box-shadow: 0 2px 6px rgba(95,75,60,0.26);
-}
-
-/* ICON */
-.fullscreen-icon {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  transition: transform 0.25s ease;
-}
-
-/* TOP-LEFT ARROW */
-.fullscreen-icon::before,
-.fullscreen-icon::after {
-  content: "";
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border: 2px solid #fff;
-}
-
-/* ↖ arrow */
-.fullscreen-icon::before {
-  top: 0;
-  left: 0;
-  border-right: none;
-  border-bottom: none;
-}
-
-/* ↘ arrow */
-.fullscreen-icon::after {
-  bottom: 0;
-  right: 0;
-  border-left: none;
-  border-top: none;
-}
-
-/* EXIT FULLSCREEN = INVERT ARROWS */
-.fullscreen-btn.exit .fullscreen-icon {
-  transform: rotate(180deg);
 }
 
     /* FORCE leaderboard title bars (Fulltime / Parttime / Wholesale) to tan */
