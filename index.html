@@ -466,6 +466,18 @@ function setActiveTab(tab){
   }
 }
 
+/* ✅ FIX: wire up sidebar button clicks */
+document.querySelectorAll('.nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    setActiveTab(tab);
+
+    // Keep theme synced when swapping manually
+    if (typeof broadcastThemeToIframes === 'function' && typeof getSavedTheme === 'function') {
+      broadcastThemeToIframes(getSavedTheme());
+    }
+  });
+});
 </script>
 
 <script>
@@ -667,7 +679,6 @@ const TV_PLAYLIST = [
   { tab: 'fulfillment', command: { type:'TV_ACTION', target:'fulfillment', dataset:'retail', view:'monthly' } },
 ];
 
-
 function runTvStep(i){
   const step = TV_PLAYLIST[i % TV_PLAYLIST.length];
 
@@ -755,12 +766,6 @@ document.addEventListener('fullscreenchange', () => {
 function signOutUser(){
   console.log('Sign out clicked (wire this to your auth).');
 }
-
-/* If your dashboards listen for these messages, you're good.
-   If not, add handlers in fulfillment.html and orders.html:
-   - FULFILLMENT_SET_MODE {dataset:'retail'|'wholesale', view:'monthly'|'calendar'}
-   - ORDERS_SET_VIEW {view:'calendar'|'chart'}
-*/
 </script>
 
 </body>
