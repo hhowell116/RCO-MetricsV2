@@ -241,9 +241,14 @@ signInBtn.addEventListener('click', async () => {
     
     if (!email.endsWith(allowedDomain)) {
       // Unauthorized domain - sign out immediately
-      await auth.signOut();
+      await signOut(auth);
       
-      throw new Error('Access denied. Only @rowecasaorganics.com accounts are allowed.');
+      // Show error and re-enable button
+      errorMessage.textContent = 'Access denied. Only @rowecasaorganics.com accounts are allowed.';
+      errorMessage.classList.add('show');
+      signInBtn.disabled = false;
+      loadingIndicator.classList.remove('show');
+      return; // Stop here, don't redirect
     }
     
     console.log('Successfully signed in:', user.email);
@@ -255,9 +260,7 @@ signInBtn.addEventListener('click', async () => {
     console.error('Sign in error:', error);
     
     // Show error message
-    errorMessage.textContent = error.message.includes('Access denied') 
-      ? error.message 
-      : `Sign in failed: ${error.message}`;
+    errorMessage.textContent = `Sign in failed: ${error.message}`;
     errorMessage.classList.add('show');
     
     // Re-enable button
