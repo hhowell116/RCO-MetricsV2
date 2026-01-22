@@ -340,30 +340,24 @@ body.tv-mode .content-area{ width:100vw; }
   position: relative;
   pointer-events: auto;
 }
-
 .icon-btn svg {
   pointer-events: none; /* 👈 KEY LINE */
 }
 
- /* ================= TV TRANSITION OVERLAY ================= */
-.tv-transition {
+/* ================= TV TRANSITION OVERLAY (FADE BETWEEN SWAPS) ================= */
+.tv-transition{
   position: fixed;
   inset: 0;
   background: var(--page-bg);
   opacity: 0;
   pointer-events: none;
   z-index: 9999;
-  transition: opacity 320ms ease;
+  transition: opacity 180ms ease; /* ✅ faster */
 }
 
-body.tv-mode .tv-transition {
-  display: block;
-}
-
-.tv-transition.show {
+.tv-transition.show{
   opacity: 1;
 }
- 
 </style>
 </head>
 
@@ -444,6 +438,9 @@ body.tv-mode .tv-transition {
   </main>
 
 </div>
+
+<!-- ✅ TV transition overlay -->
+<div class="tv-transition" id="tvTransition" aria-hidden="true"></div>
 
 <script>
 /* ================= NAVIGATION ================= */
@@ -619,124 +616,82 @@ document.querySelectorAll('iframe').forEach(f => {
 </script>
 
 <script>
-/* ================= TV MODE (FULLSCREEN + PLAYLIST) =================
-   This runs the exact sequence you requested:
-
-   1) Fulfillment: Retail + Monthly
-   2) Fulfillment: Retail + Calendar
-   3) Fulfillment: Wholesale + Monthly
-   4) Fulfillment: Wholesale + Calendar
-   5) Shipping
-   6) Orders: Calendar
-   7) Orders: Chart
-   8) Back to Fulfillment: Retail + Monthly
-==================================================================== */
-
+/* ================= TV MODE (FULLSCREEN + ROTATE W/ FADE) ================= */
 const tvBtn = document.getElementById('tvModeBtn');
+const tvTransition = document.getElementById('tvTransition');
 
 let tvEnabled = false;
-let tvTimer = null;
-let stepIndex = 0;
+let tvTimeout = null;
+let tvIndex = 0;
 
-/* ✅ Faster rotation: change this number (milliseconds) */
-const TV_STEP_MS = 12000; // 12s per step (adjust to taste)
+/* ✅ Faster rotation (ms) */
+const TV_STEP_MS = 8000;
 
-/* Your exact playlist */
+/* Helper: post message to a specific tab's iframe */
+function postToTab(tab, message){
+  const frameWrap = document.getElementById(`${tab}-frame`);
+  const iframe = frameWrap?.querySelector('iframe');
+  if (!iframe?.contentWindow) return;
+  try { iframe.contentWindow.postMessage(message, '*'); } catch(e) {}
+}
+
+/* ✅ Fade that stays up long enough so the iframe command lands (prevents “flash”) */
+function withTvFade(workFn, holdMs = 320){
+  if (!tvTransition) { workFn(); return; }
+
+  tvTransition.classList.add('show');
+  setTimeout(() => { try { workFn(); } catch(e) {} }, 90);
+  setTimeout(() => tvTransition.classList.remove('show'), holdMs);
+}
+
+/* ✅ Playlist (no extra calendar flash after Orders chart) */
 const TV_PLAYLIST = [
-  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'retail', view: 'monthly' } } },
-  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'retail', view: 'calendar' } } },
-  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'wholesale', view: 'monthly' } } },
-  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'wholesale', view: 'calendar' } } },
+  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'retail', view: 'monthly' } },
+  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'retail', view: 'calendar' } },
+  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'wholesale', view: 'monthly' } },
+  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'wholesale', view: 'calendar' } },
 
   { tab: 'shipping' },
 
-  { tab: 'orders', command: { type: 'TV_COMMAND', payload: { view: 'calendar' } } },
-  { tab: 'orders', command: { type: 'TV_COMMAND', payload: { view: 'chart' } } },
+  { tab: 'orders', command: { type: 'ORDERS_SET_VIEW', view: 'calendar' } },
+  { tab: 'orders', command: { type: 'ORDERS_SET_VIEW', view: 'chart' } },
 
-  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'retail', view: 'monthly' } } },
+  /* ✅ After Orders chart: go straight to Retail Monthly (no calendar step) */
+  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'retail', view: 'monthly' } },
 ];
-
-/* ---------- helpers ---------- */
-
-function getIframeForTab(tab){
-  // Your iframe wrappers are: fulfillment-frame/shipping-frame/orders-frame
-  const wrapper = document.getElementById(`${tab}-frame`);
-  if (!wrapper) return null;
-  return wrapper.querySelector('iframe') || null;
-}
-
-/* Send a message to a tab’s iframe with a few retries (iframe can be mid-load) */
-function postToTab(tab, message, tries = 8){
-  const iframe = getIframeForTab(tab);
-  if (!iframe || !iframe.contentWindow){
-    if (tries > 0) setTimeout(() => postToTab(tab, message, tries - 1), 250);
-    return;
-  }
-  try {
-    iframe.contentWindow.postMessage(message, '*');
-  } catch (e) {
-    if (tries > 0) setTimeout(() => postToTab(tab, message, tries - 1), 250);
-  }
-}
-
-function broadcastThemeToIframes(theme){
-  document.querySelectorAll('iframe').forEach(f => {
-    try { f.contentWindow.postMessage({ type: 'RCO_THEME', theme }, '*'); } catch(e) {}
-  });
-}
-
-function broadcastTvStateToIframes(active){
-  document.querySelectorAll('iframe').forEach(f => {
-    try { f.contentWindow.postMessage({ type: 'TV_VIEW_STATE', active }, '*'); } catch(e) {}
-  });
-}
 
 function runTvStep(i){
   const step = TV_PLAYLIST[i % TV_PLAYLIST.length];
 
   withTvFade(() => {
-    // 1) switch tab in index
+    // Switch tab while covered
     setActiveTab(step.tab);
 
-    // 2) keep theme synced
+    // Keep theme synced
     broadcastThemeToIframes(getSavedTheme());
 
-    // 3) send command (if any) after the iframe is visible
+    // Send command quickly after iframe becomes visible
     if (step.command){
-      setTimeout(() => postToTab(step.tab, step.command), 250);
+      setTimeout(() => postToTab(step.tab, step.command), 60);
     }
-  });
+  }, 340);
 }
 
-
-function startTvPlaylist(){
-  stopTvPlaylist();
-  runTvStep(stepIndex);
-
-  tvTimer = setInterval(() => {
-    stepIndex = (stepIndex + 1) % TV_PLAYLIST.length;
-    runTvStep(stepIndex);
+function scheduleNext(){
+  clearTimeout(tvTimeout);
+  tvTimeout = setTimeout(() => {
+    tvIndex = (tvIndex + 1) % TV_PLAYLIST.length;
+    runTvStep(tvIndex);
+    scheduleNext();
   }, TV_STEP_MS);
 }
-
-function stopTvPlaylist(){
-  if (tvTimer){
-    clearInterval(tvTimer);
-    tvTimer = null;
-  }
-}
-
-/* ---------- enter/exit ---------- */
 
 async function enterTvMode(){
   tvEnabled = true;
   tvBtn?.classList.add('active');
   document.body.classList.add('tv-mode');
-
-  // tell iframes they're in TV mode (so they can hide fullscreen buttons, etc.)
   broadcastTvStateToIframes(true);
 
-  // full-screen the whole app
   try{
     if (!document.fullscreenElement){
       await document.documentElement.requestFullscreen();
@@ -745,17 +700,17 @@ async function enterTvMode(){
     console.error('Fullscreen failed:', e);
   }
 
-  // start from step 0 every time
-  stepIndex = 0;
-  startTvPlaylist();
+  tvIndex = 0;
+  runTvStep(tvIndex);
+  scheduleNext();
 }
 
 async function exitTvMode(){
   tvEnabled = false;
   tvBtn?.classList.remove('active');
-  stopTvPlaylist();
+  clearTimeout(tvTimeout);
+  tvTimeout = null;
   document.body.classList.remove('tv-mode');
-
   broadcastTvStateToIframes(false);
 
   try{
@@ -767,7 +722,6 @@ async function exitTvMode(){
   }
 }
 
-/* Button click */
 if (tvBtn){
   tvBtn.addEventListener('click', () => {
     if (!tvEnabled) enterTvMode();
@@ -775,44 +729,31 @@ if (tvBtn){
   });
 }
 
-/* If user hits ESC and exits fullscreen, turn TV mode off cleanly */
 document.addEventListener('fullscreenchange', () => {
+  // If user exits fullscreen manually, stop TV mode cleanly
   if (!document.fullscreenElement && tvEnabled){
     tvEnabled = false;
     tvBtn?.classList.remove('active');
-    stopTvPlaylist();
+    clearTimeout(tvTimeout);
+    tvTimeout = null;
     document.body.classList.remove('tv-mode');
     broadcastTvStateToIframes(false);
   }
 });
-
-  const tvTransition = document.getElementById('tvTransition');
-
-function withTvFade(fn){
-  // fade up
-  if (tvTransition) tvTransition.classList.add('show');
-
-  // swap in the middle of the fade
-  setTimeout(() => {
-    try { fn(); } catch(e) {}
-  }, 180);
-
-  // fade back down
-  setTimeout(() => {
-    if (tvTransition) tvTransition.classList.remove('show');
-  }, 420);
-}
-
 </script>
-
 
 <script>
 /* Optional stub */
 function signOutUser(){
   console.log('Sign out clicked (wire this to your auth).');
 }
+
+/* If your dashboards listen for these messages, you're good.
+   If not, add handlers in fulfillment.html and orders.html:
+   - FULFILLMENT_SET_MODE {dataset:'retail'|'wholesale', view:'monthly'|'calendar'}
+   - ORDERS_SET_VIEW {view:'calendar'|'chart'}
+*/
 </script>
-<div class="tv-transition" id="tvTransition" aria-hidden="true"></div>
 
 </body>
 </html>
