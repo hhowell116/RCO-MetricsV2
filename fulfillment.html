@@ -524,6 +524,123 @@ canvas {
   .content-grid { display: flex; flex-direction: column; }
   .chart-card { min-height: 300px; }
 }
+
+/* ================= DARK MODE (FROM INDEX) ================= */
+/* Soft dark – not black */
+body.dark {
+  background: #2b2f34 !important;
+  color: #f2eee8;
+}
+
+/* Main panels / cards */
+body.dark .header,
+body.dark .dashboard-header,
+body.dark .calendar-view,
+body.dark .chart-view,
+body.dark .stat-card,
+body.dark .chart-card,
+body.dark .card,
+body.dark .detail-content {
+  background: #33383f !important;
+  border-color: rgba(242,238,232,0.18) !important;
+  color: #f2eee8 !important;
+}
+
+/* Secondary panels */
+body.dark .chart-stats-sidebar,
+body.dark .table-wrapper,
+body.dark .calendar-grid {
+  background: #2f343a !important;
+}
+
+/* Titles */
+body.dark h1,
+body.dark h2,
+body.dark .header-title,
+body.dark .title,
+body.dark .chart-title,
+body.dark .month-name {
+  color: #f2eee8 !important;
+}
+
+/* Muted text */
+body.dark .subtitle,
+body.dark .meta,
+body.dark .stat-label,
+body.dark .chart-stat-label,
+body.dark .month-info,
+body.dark .orders-updated {
+  color: #d2c6b9 !important;
+}
+
+/* Tables */
+body.dark table,
+body.dark th {
+  color: #f2eee8;
+}
+
+body.dark td {
+  color: #e8e2db;
+}
+
+body.dark thead th {
+  background: #5f4b3c !important;
+  color: #ffffff !important;
+}
+
+body.dark tbody tr:nth-child(odd) td {
+  background: #33383f !important;
+}
+
+body.dark tbody tr:nth-child(even) td {
+  background: #2f343a !important;
+}
+
+/* Month cards (Orders dashboard) */
+body.dark .month-card {
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.04) 0%,
+    rgba(255,255,255,0.02) 100%
+  ) !important;
+  border: 1px solid rgba(242,238,232,0.18);
+  color: #f2eee8;
+}
+
+body.dark .month-card.current-month {
+  border: 2px solid #bd9979 !important;
+  box-shadow: 0 0 0 2px rgba(189,153,121,0.35);
+}
+
+/* Buttons */
+body.dark button,
+body.dark .view-btn {
+  background: #33383f;
+  border-color: rgba(242,238,232,0.18);
+  color: #f2eee8;
+}
+
+body.dark button.active,
+body.dark .view-btn.active {
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+  border-color: #5f4b3c;
+  color: #ffffff;
+}
+
+/* Fullscreen button */
+body.dark .fullscreen-btn {
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+}
+
+body.dark .fullscreen-btn:hover {
+  background: #ffffff;
+}
+
+body.dark .fullscreen-btn:hover svg path {
+  stroke: #5f4b3c !important;
+}
+
+  
 </style>
 </head>
 
@@ -655,6 +772,14 @@ if (fsBtn) {
     else fsBtn.classList.remove('exit');
   });
 }
+</script>
+<script>
+/* Receive dark mode from index */
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'RCO_THEME') {
+    document.body.classList.toggle('dark', event.data.theme === 'dark');
+  }
+});
 </script>
 
 </body>
