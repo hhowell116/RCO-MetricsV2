@@ -968,20 +968,30 @@ window.addEventListener('message', (event) => {
 <script>
 /* ================= TV MODE CONTROL: Orders =================
    Lets index.html force Calendar or Chart view.
+   Supports both TV_ACTION (flat) and TV_COMMAND (payload).
 ------------------------------------------------------------*/
 window.addEventListener('message', (event) => {
   const msg = event.data;
-  if (!msg || msg.type !== 'TV_COMMAND') return;
 
-  const view = msg.payload?.view; // 'calendar' | 'chart'
+  const isTvAction = msg?.type === 'TV_ACTION';
+  const isTvCommand = msg?.type === 'TV_COMMAND';
+  if (!isTvAction && !isTvCommand) return;
+
+  // Normalize view from either format
+  const payload = isTvAction ? msg : (msg.payload || {});
+
+  // Only handle orders-targeted commands
+  if (payload.target && payload.target !== 'orders') return;
+
+  const view = payload.view; // 'calendar' | 'chart'
   if (!view) return;
 
-  // use your existing function
   if (typeof switchView === 'function') {
     switchView(view);
   }
 });
 </script>
+
 
 </body>
 </html>
