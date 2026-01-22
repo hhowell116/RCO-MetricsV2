@@ -246,11 +246,13 @@ iframe {
 .footer-mini-row{
   display: flex;
   gap: 8px;
+  width: 100%;
 }
 
+
 .icon-btn{
-  width: 34px;          /* ~half the visual weight vs full-width button */
-  height: 34px;
+  flex: 1;                 /* 👈 makes both buttons equal width */
+  height: 38px;
   border-radius: 10px;
   border: 2px solid var(--border);
   background: var(--panel);
@@ -261,6 +263,7 @@ iframe {
   cursor: pointer;
   transition: all 0.2s ease;
 }
+
 
 .icon-btn svg{
   width: 18px;
@@ -333,7 +336,14 @@ body.tv-mode .content-area{
           <!-- icon injected by JS -->
         </button>
 
-        <button class="icon-btn" id="tvModeBtn" type="button" aria-label="TV Mode" title="TV Mode">
+       <button
+  class="icon-btn"
+  id="tvModeBtn"
+  type="button"
+  aria-label="TV Mode"
+  title="TV Mode — Auto rotate through dashboards"
+>
+
           <!-- TV icon -->
           <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <rect x="3.5" y="6.5" width="17" height="11" rx="2" stroke="currentColor" stroke-width="2"/>
