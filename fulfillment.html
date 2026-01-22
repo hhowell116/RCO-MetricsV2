@@ -698,15 +698,14 @@ window.addEventListener('message', (event) => {
 });
 </script>
 <script>
-/* EXISTING — KEEP */
+/* TV STATE — hide fullscreen button in TV mode */
 window.addEventListener('message', (event) => {
   if (event.data?.type === 'TV_VIEW_STATE') {
-    document.body.classList.toggle('tv-view-active', event.data.active);
+    document.body.classList.toggle('tv-view-active', !!event.data.active);
   }
 });
 
-<script>
-/* TV MODE COMMANDS (from index) */
+/* TV COMMANDS — switch dataset + view */
 window.addEventListener('message', (event) => {
   const msg = event.data;
 
@@ -718,7 +717,7 @@ window.addEventListener('message', (event) => {
   // Normalize payload
   const payload = isTvAction ? msg : (msg.payload || {});
 
-  // Optional safety: only handle fulfillment-targeted commands
+  // Only handle fulfillment-targeted commands
   if (payload.target && payload.target !== 'fulfillment') return;
 
   /* ---- Dataset toggle (Retail / Wholesale) ---- */
@@ -750,7 +749,6 @@ window.addEventListener('message', (event) => {
 });
 </script>
 
-</script>
 
 
 </body>
