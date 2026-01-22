@@ -654,19 +654,19 @@ function withTvFade(workFn, holdMs = 320){
 
 /* ✅ Playlist (no extra calendar flash after Orders chart) */
 const TV_PLAYLIST = [
-  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'retail', view: 'monthly' } },
-  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'retail', view: 'calendar' } },
-  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'wholesale', view: 'monthly' } },
-  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'wholesale', view: 'calendar' } },
+  { tab: 'fulfillment', command: { type:'TV_ACTION', target:'fulfillment', dataset:'retail', view:'monthly' } },
+  { tab: 'fulfillment', command: { type:'TV_ACTION', target:'fulfillment', dataset:'retail', view:'calendar' } },
+  { tab: 'fulfillment', command: { type:'TV_ACTION', target:'fulfillment', dataset:'wholesale', view:'monthly' } },
+  { tab: 'fulfillment', command: { type:'TV_ACTION', target:'fulfillment', dataset:'wholesale', view:'calendar' } },
 
   { tab: 'shipping' },
 
-  { tab: 'orders', command: { type: 'ORDERS_SET_VIEW', view: 'calendar' } },
-  { tab: 'orders', command: { type: 'ORDERS_SET_VIEW', view: 'chart' } },
+  { tab: 'orders', command: { type:'TV_ACTION', target:'orders', view:'calendar' } },
+  { tab: 'orders', command: { type:'TV_ACTION', target:'orders', view:'chart' } },
 
-  /* ✅ After Orders chart: go straight to Retail Monthly (no calendar step) */
-  { tab: 'fulfillment', command: { type: 'FULFILLMENT_SET_MODE', dataset: 'retail', view: 'monthly' } },
+  { tab: 'fulfillment', command: { type:'TV_ACTION', target:'fulfillment', dataset:'retail', view:'monthly' } },
 ];
+
 
 function runTvStep(i){
   const step = TV_PLAYLIST[i % TV_PLAYLIST.length];
