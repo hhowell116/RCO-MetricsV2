@@ -530,6 +530,11 @@ body.dark {
   background: #2b2f34 !important;  /* soft dark gray */
 }
 
+/* ================= TV MODE OVERRIDES ================= */
+body.tv-view-active .fullscreen-btn {
+  display: none !important;
+}
+
   
 </style>
 </head>
@@ -668,6 +673,13 @@ if (fsBtn) {
 window.addEventListener('message', (event) => {
   if (event.data?.type === 'RCO_THEME') {
     document.body.classList.toggle('dark', event.data.theme === 'dark');
+  }
+});
+</script>
+<script>
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'TV_VIEW_STATE') {
+    document.body.classList.toggle('tv-view-active', event.data.active);
   }
 });
 </script>
