@@ -601,39 +601,122 @@ document.querySelectorAll('iframe').forEach(f => {
 </script>
 
 <script>
-/* ================= TV MODE (FULLSCREEN + ROTATE TABS) ================= */
+/* ================= TV MODE (FULLSCREEN + PLAYLIST) =================
+   This runs the exact sequence you requested:
+
+   1) Fulfillment: Retail + Monthly
+   2) Fulfillment: Retail + Calendar
+   3) Fulfillment: Wholesale + Monthly
+   4) Fulfillment: Wholesale + Calendar
+   5) Shipping
+   6) Orders: Calendar
+   7) Orders: Chart
+   8) Back to Fulfillment: Retail + Monthly
+==================================================================== */
+
 const tvBtn = document.getElementById('tvModeBtn');
 
 let tvEnabled = false;
-let tvInterval = null;
-const tvOrder = ['fulfillment','shipping','orders'];
-let tvIndex = 0;
+let tvTimer = null;
+let stepIndex = 0;
 
-/* Change how fast it rotates here (ms) */
-const TV_ROTATE_MS = 20000;
+/* ✅ Faster rotation: change this number (milliseconds) */
+const TV_STEP_MS = 12000; // 12s per step (adjust to taste)
 
-function startTvRotation(){
-  stopTvRotation();
-  tvInterval = setInterval(() => {
-    tvIndex = (tvIndex + 1) % tvOrder.length;
-    setActiveTab(tvOrder[tvIndex]);
-    broadcastThemeToIframes(getSavedTheme());
-  }, TV_ROTATE_MS);
+/* Your exact playlist */
+const TV_PLAYLIST = [
+  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'retail', view: 'monthly' } } },
+  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'retail', view: 'calendar' } } },
+  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'wholesale', view: 'monthly' } } },
+  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'wholesale', view: 'calendar' } } },
+
+  { tab: 'shipping' },
+
+  { tab: 'orders', command: { type: 'TV_COMMAND', payload: { view: 'calendar' } } },
+  { tab: 'orders', command: { type: 'TV_COMMAND', payload: { view: 'chart' } } },
+
+  { tab: 'fulfillment', command: { type: 'TV_COMMAND', payload: { dataset: 'retail', view: 'monthly' } } },
+];
+
+/* ---------- helpers ---------- */
+
+function getIframeForTab(tab){
+  // Your iframe wrappers are: fulfillment-frame/shipping-frame/orders-frame
+  const wrapper = document.getElementById(`${tab}-frame`);
+  if (!wrapper) return null;
+  return wrapper.querySelector('iframe') || null;
 }
 
-function stopTvRotation(){
-  if (tvInterval){
-    clearInterval(tvInterval);
-    tvInterval = null;
+/* Send a message to a tab’s iframe with a few retries (iframe can be mid-load) */
+function postToTab(tab, message, tries = 8){
+  const iframe = getIframeForTab(tab);
+  if (!iframe || !iframe.contentWindow){
+    if (tries > 0) setTimeout(() => postToTab(tab, message, tries - 1), 250);
+    return;
+  }
+  try {
+    iframe.contentWindow.postMessage(message, '*');
+  } catch (e) {
+    if (tries > 0) setTimeout(() => postToTab(tab, message, tries - 1), 250);
   }
 }
+
+function broadcastThemeToIframes(theme){
+  document.querySelectorAll('iframe').forEach(f => {
+    try { f.contentWindow.postMessage({ type: 'RCO_THEME', theme }, '*'); } catch(e) {}
+  });
+}
+
+function broadcastTvStateToIframes(active){
+  document.querySelectorAll('iframe').forEach(f => {
+    try { f.contentWindow.postMessage({ type: 'TV_VIEW_STATE', active }, '*'); } catch(e) {}
+  });
+}
+
+function runTvStep(i){
+  const step = TV_PLAYLIST[i % TV_PLAYLIST.length];
+
+  // 1) switch tab in index
+  setActiveTab(step.tab);
+
+  // 2) ensure theme stays in sync
+  broadcastThemeToIframes(getSavedTheme());
+
+  // 3) send command to that dashboard (if any)
+  // give the iframe a beat to paint after switching
+  if (step.command){
+    setTimeout(() => postToTab(step.tab, step.command), 350);
+  }
+}
+
+function startTvPlaylist(){
+  stopTvPlaylist();
+  runTvStep(stepIndex);
+
+  tvTimer = setInterval(() => {
+    stepIndex = (stepIndex + 1) % TV_PLAYLIST.length;
+    runTvStep(stepIndex);
+  }, TV_STEP_MS);
+}
+
+function stopTvPlaylist(){
+  if (tvTimer){
+    clearInterval(tvTimer);
+    tvTimer = null;
+  }
+}
+
+/* ---------- enter/exit ---------- */
 
 async function enterTvMode(){
   tvEnabled = true;
   tvBtn?.classList.add('active');
   document.body.classList.add('tv-mode');
+
+  // tell iframes they're in TV mode (so they can hide fullscreen buttons, etc.)
   broadcastTvStateToIframes(true);
 
+  // full-screen the whole app
   try{
     if (!document.fullscreenElement){
       await document.documentElement.requestFullscreen();
@@ -642,16 +725,17 @@ async function enterTvMode(){
     console.error('Fullscreen failed:', e);
   }
 
-  tvIndex = 0;
-  setActiveTab(tvOrder[tvIndex]);
-  startTvRotation();
+  // start from step 0 every time
+  stepIndex = 0;
+  startTvPlaylist();
 }
 
 async function exitTvMode(){
   tvEnabled = false;
   tvBtn?.classList.remove('active');
-  stopTvRotation();
+  stopTvPlaylist();
   document.body.classList.remove('tv-mode');
+
   broadcastTvStateToIframes(false);
 
   try{
@@ -663,6 +747,7 @@ async function exitTvMode(){
   }
 }
 
+/* Button click */
 if (tvBtn){
   tvBtn.addEventListener('click', () => {
     if (!tvEnabled) enterTvMode();
@@ -670,16 +755,18 @@ if (tvBtn){
   });
 }
 
+/* If user hits ESC and exits fullscreen, turn TV mode off cleanly */
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement && tvEnabled){
     tvEnabled = false;
     tvBtn?.classList.remove('active');
-    stopTvRotation();
+    stopTvPlaylist();
     document.body.classList.remove('tv-mode');
     broadcastTvStateToIframes(false);
   }
 });
 </script>
+
 
 <script>
 /* Optional stub */
