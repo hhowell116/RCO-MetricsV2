@@ -206,8 +206,21 @@ const loadingIndicator = document.getElementById('loadingIndicator');
 // Check if already signed in
 auth.onAuthStateChanged((user) => {
   if (user) {
-    console.log('User already signed in:', user.email);
-    window.location.replace('index.html');
+    // Verify domain before redirecting
+    const email = user.email;
+    const allowedDomain = '@rowecasaorganics.com';
+    
+    if (email.endsWith(allowedDomain)) {
+      console.log('Authorized user already signed in:', user.email);
+      window.location.replace('index.html');
+    } else {
+      console.error('Unauthorized domain detected:', email);
+      errorMessage.textContent = 'Access denied. Only @rowecasaorganics.com accounts are allowed.';
+      errorMessage.classList.add('show');
+      
+      // Sign out unauthorized user
+      auth.signOut();
+    }
   }
 });
 
@@ -222,6 +235,17 @@ signInBtn.addEventListener('click', async () => {
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
     
+    // Check if email domain is allowed
+    const email = user.email;
+    const allowedDomain = '@rowecasaorganics.com';
+    
+    if (!email.endsWith(allowedDomain)) {
+      // Unauthorized domain - sign out immediately
+      await auth.signOut();
+      
+      throw new Error('Access denied. Only @rowecasaorganics.com accounts are allowed.');
+    }
+    
     console.log('Successfully signed in:', user.email);
     
     // Redirect to dashboard
@@ -231,7 +255,9 @@ signInBtn.addEventListener('click', async () => {
     console.error('Sign in error:', error);
     
     // Show error message
-    errorMessage.textContent = `Sign in failed: ${error.message}`;
+    errorMessage.textContent = error.message.includes('Access denied') 
+      ? error.message 
+      : `Sign in failed: ${error.message}`;
     errorMessage.classList.add('show');
     
     // Re-enable button
