@@ -958,5 +958,30 @@ window.addEventListener('message', (event) => {
   }
 });
 </script>
+  <script>
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'TV_VIEW_STATE') {
+    document.body.classList.toggle('tv-view-active', event.data.active);
+  }
+});
+</script>
+<script>
+/* ================= TV MODE CONTROL: Orders =================
+   Lets index.html force Calendar or Chart view.
+------------------------------------------------------------*/
+window.addEventListener('message', (event) => {
+  const msg = event.data;
+  if (!msg || msg.type !== 'TV_COMMAND') return;
+
+  const view = msg.payload?.view; // 'calendar' | 'chart'
+  if (!view) return;
+
+  // use your existing function
+  if (typeof switchView === 'function') {
+    switchView(view);
+  }
+});
+</script>
+
 </body>
 </html>
