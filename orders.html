@@ -243,18 +243,20 @@
     }
 
     /* ===== Month cards (INVERTED: light background + dark brown text) ===== */
-    .month-card {
-      background: linear-gradient(135deg, #ffffff 0%, #fbfaf8 100%);
-      color: #5f4b3c;
-      padding: 16px;
-      border-radius: 15px;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      position: relative;
-      overflow: hidden;
-      border: 2px solid #d7d1ca;
-      box-shadow: 0 5px 20px rgba(95,75,60,0.10);
-    }
+    /* Month cards = subtle tan gradient + dark text */
+.month-card{
+  background: linear-gradient(135deg, #ffffff 0%, #fbfaf8 55%, #f6f0e6 100%);
+  color: #5f4b3c;
+  padding: 16px;
+  border-radius: 15px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+  border: 2px solid #d7d1ca;
+  box-shadow: 0 5px 20px rgba(95,75,60,0.10);
+}
+
 
     .month-card .month-info {
       font-size: 0.85em;
@@ -313,6 +315,9 @@
       font-weight: 800;
       letter-spacing: 0.4px;
     }
+.month-card.current-month{
+  background: linear-gradient(135deg, #ffffff 0%, #fbfaf8 40%, rgba(189,153,121,0.18) 100%);
+}
 
     /* ===== Chart view ===== */
     .chart-view {
@@ -547,6 +552,13 @@
       transform: scale(0.96);
       box-shadow: 0 2px 6px rgba(95,75,60,0.26);
     }
+/* Calendar / Chart active state = dark brown gradient */
+.view-btn.active{
+  background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%) !important;
+  border-color: #5f4b3c !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 15px rgba(95,75,60,0.18);
+}
 
   </style>
 </head>
