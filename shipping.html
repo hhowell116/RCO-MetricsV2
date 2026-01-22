@@ -111,6 +111,17 @@ html, body {
   text-align: center;
 }
 
+/* Pin fullscreen button to the right inside the centered header */
+.header {
+  position: relative; /* needed for absolute button positioning */
+}
+
+.header .fullscreen-btn {
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+}
 
 
 
@@ -373,15 +384,24 @@ html, body {
 <body>
   <div class="wrap">
     <div class="header" role="banner">
-  <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Toggle Fullscreen">
-    <div class="fullscreen-icon"></div>
-  </button>
 
   <div class="header-center">
     <div class="title">Today's Shipping Leaderboard</div>
     <div id="weekRange" class="meta">Week: loading…</div>
   </div>
+
+  <!-- FULLSCREEN (SVG ICON) -->
+  <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 4H4v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M15 4h5v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M9 20H4v-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M15 20h5v-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </button>
+
 </div>
+
 
 
     <div id="boards" class="boards" aria-live="polite" style="margin-top:18px">
