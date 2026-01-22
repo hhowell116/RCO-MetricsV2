@@ -928,14 +928,16 @@ body.dark {
     document.addEventListener('fullscreenchange', () => {
       fullscreenBtn.classList.toggle('exit', !!document.fullscreenElement);
     });
-    /* Receive dark mode from index */
+
+  </script>
+
+  <script>
+/* Receive dark mode from index */
 window.addEventListener('message', (event) => {
   if (event.data?.type === 'RCO_THEME') {
     document.body.classList.toggle('dark', event.data.theme === 'dark');
   }
 });
-  </script>
-
-  
+</script>
 </body>
 </html>
