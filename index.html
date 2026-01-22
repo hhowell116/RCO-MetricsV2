@@ -445,19 +445,27 @@ body.tv-mode .content-area{ width:100vw; }
 <script>
 /* ================= NAVIGATION ================= */
 function setActiveTab(tab){
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-  document.querySelectorAll('.iframe-wrapper').forEach(f => f.classList.remove('active'));
+  // update button state (if sidebar is visible)
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+
+  // hard-hide all frames (not just class toggle)
+  document.querySelectorAll('.iframe-wrapper').forEach(f => {
+    f.classList.remove('active');
+    f.style.display = 'none';
+  });
+
+  // hard-show the selected frame
   const frame = document.getElementById(`${tab}-frame`);
-  if (frame) frame.classList.add('active');
+  if (frame){
+    frame.classList.add('active');
+    frame.style.display = 'block';
+  } else {
+    console.warn('Missing frame element for tab:', tab, `(expected id="${tab}-frame")`);
+  }
 }
 
-document.querySelectorAll('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const tab = btn.dataset.tab;
-    setActiveTab(tab);
-    broadcastThemeToIframes(getSavedTheme());
-  });
-});
 </script>
 
 <script>
