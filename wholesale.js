@@ -349,5 +349,20 @@ const wholesaleData = [
   {date:"12/14/2025",orders:20,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
   {date:"12/15/2025",orders:132,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
   {date:"12/16/2025",orders:95,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
-  {date:"12/17/2025",orders:158,rem4:0,rem7:0,rate4:100.00,rate7:100.00}
+  {date:"12/17/2025",orders:158,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
+  {date:"12/18/2025",orders:81,rem4:10,rem7:1,rate4:87.65,rate7:98.77},
+  {date:"12/19/2025",orders:67,rem4:12,rem7:0,rate4:82.09,rate7:100.00},
+  {date:"12/20/2025",orders:17,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
+  {date:"12/21/2025",orders:15,rem4:2,rem7:0,rate4:86.67,rate7:100.00},
+  {date:"12/22/2025",orders:63,rem4:12,rem7:0,rate4:80.95,rate7:100.00},
+  {date:"12/23/2025",orders:75,rem4:2,rem7:0,rate4:97.33,rate7:100.00},
+  {date:"12/24/2025",orders:25,rem4:5,rem7:0,rate4:80.00,rate7:100.00},
+  {date:"12/25/2025",orders:3,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
+  {date:"12/26/2025",orders:57,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
+  {date:"12/27/2025",orders:39,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
+  {date:"12/28/2025",orders:22,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
+  {date:"12/29/2025",orders:90,rem4:2,rem7:0,rate4:97.78,rate7:100.00},
+  {date:"12/30/2025",orders:90,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
+  {date:"12/31/2025",orders:78,rem4:0,rem7:0,rate4:100.00,rate7:100.00}
+
 ];
