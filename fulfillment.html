@@ -79,7 +79,8 @@ body {
 }
 
 .view-btn,
-#datasetToggleBtn {
+#datasetSelect,
+#totalBtn {
   background: white;
   color: #5f4b3c;
   border: 2px solid #d7d1ca;
@@ -91,15 +92,31 @@ body {
   transition: all 0.2s ease;
 }
 .view-btn:hover,
-#datasetToggleBtn:hover {
+#datasetSelect:hover,
+#totalBtn:hover {
   border-color: #bd9979;
   box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
 }
 .view-btn.active,
-#datasetToggleBtn.active {
+#totalBtn.active {
   background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
   color: #fff;
   border-color: #5f4b3c;
+}
+/* Make dropdown look like your buttons + add a caret */
+#datasetSelect {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 34px; /* room for caret */
+  background-image:
+    linear-gradient(45deg, transparent 50%, #8b7355 50%),
+    linear-gradient(135deg, #8b7355 50%, transparent 50%);
+  background-position:
+    calc(100% - 16px) calc(50% - 3px),
+    calc(100% - 11px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
 }
 
 /* FULLSCREEN BUTTON (Orders-style, darker brown) */
@@ -579,7 +596,12 @@ body.tv-view-active .fullscreen-btn {
     <div class="header-controls">
       <button class="view-btn active" data-view="monthly" id="monthlyBtn">Monthly</button>
       <button class="view-btn" data-view="calendar" id="calendarBtn">Calendar</button>
-      <button id="datasetToggleBtn">Wholesale</button>
+<select id="datasetSelect" class="view-btn">
+  <option value="retail">Retail</option>
+  <option value="wholesale">Wholesale</option>
+</select>
+
+<button id="totalBtn" class="view-btn">Total</button>
 
       <!-- FULLSCREEN (SVG ICON) -->
       <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">
