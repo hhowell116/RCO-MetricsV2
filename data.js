@@ -334,7 +334,7 @@ const fullData = [
   {date:"11/29/2025",orders:7454,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
   {date:"11/30/2025",orders:1489,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
   {date:"12/1/2025",orders:6481,rem4:0,rem7:0,rate4:100.00,rate7:100.00},
-  {date:"12/2/2025",orders:4180,rem4:3792,rem7:3781,rate4:9.28%,rate7:9.55%},
+  {date:"12/2/2025",orders:4180,rem4:3792,rem7:3781,rate4:9.28,rate7:9.55},
   {date:"12/1/2025",orders:6481,rem4:5883,rem7:2476,rate4:9.23,rate7:61.80},
   {date:"12/2/2025",orders:4180,rem4:3792,rem7:3781,rate4:9.28,rate7:9.55},
   {date:"12/3/2025",orders:1364,rem4:1072,rem7:1061,rate4:21.41,rate7:22.21},
