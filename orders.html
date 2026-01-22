@@ -4,23 +4,23 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ShipStation Monthly Orders Dashboard</title>
- <style>
+  <style>
 
     /* =========================================
-   HIDE DASHBOARD SCROLLBARS (VISUAL ONLY)
-========================================= */
+       HIDE DASHBOARD SCROLLBARS (VISUAL ONLY)
+    ========================================= */
 
-/* Chrome, Edge, Safari */
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-}
+    /* Chrome, Edge, Safari */
+    html::-webkit-scrollbar,
+    body::-webkit-scrollbar {
+      width: 0;
+      height: 0;
+    }
 
-/* Firefox */
-html, body {
-  scrollbar-width: none;
-}
+    /* Firefox */
+    html, body {
+      scrollbar-width: none;
+    }
 
     * {
       margin: 0;
@@ -28,31 +28,28 @@ html, body {
       box-sizing: border-box;
     }
 
-   body {
-  font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-background: #ffffff;
-  margin: 0;
-  padding: 0;        /* ✅ important */
-  min-height: 100vh;
-}
-
+    body {
+      font-family: "Avenir Next", Avenir, "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
 
     @media (min-width: 1200px) {
-      .container {
-        padding: 32px;
-      }
+      .container { padding: 32px; }
     }
 
     .container {
-    width: 100%;
-    max-width: none;         /* ✅ critical */
-    margin: 0 auto;
-    padding: 20px 45px 45px;           /* ✅ your requested spacing */
-}
+      width: 100%;
+      max-width: none;
+      margin: 0 auto;
+      padding: 20px 45px 45px;
+    }
 
     .header {
       position: relative;
-      background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
+      background: #ffffff !important; /* keep header white */
       padding: 18px 22px;
       border-radius: 15px;
       box-shadow: 0 10px 40px rgba(95,75,60,0.14);
@@ -74,9 +71,11 @@ background: #ffffff;
       gap: 10px;
     }
 
-    .header-center {
-      text-align: center;
+    .header-right {
+      justify-content: flex-end;
     }
+
+    .header-center { text-align: center; }
 
     .header-center h1 {
       margin: 0;
@@ -108,35 +107,42 @@ background: #ffffff;
     }
 
     .header select:hover {
-      border-color: #8d8173;
+      border-color: #bd9979;
       box-shadow: 0 2px 10px rgba(95,75,60,0.14);
     }
 
+    /* ===== Buttons (base) ===== */
     .header button:not(.fullscreen-btn) {
-  background: white;
-  color: #5f4b3c;
-  border: 2px solid #d7d1ca;
-  padding: 10px 20px;
-  border-radius: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-
-    .header button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(95,75,60,0.16);
-      background: #fbfaf8;
-      border-color: #bd9979;
+      background: #ffffff;
+      color: #5f4b3c;
+      border: 2px solid #d7d1ca;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
     }
 
-    .header button.active {
-      background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-      color: white;
+    .header button:not(.fullscreen-btn):hover {
       border-color: #bd9979;
+      box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
+      background: #fbfaf8;
+      transform: translateY(-1px);
+    }
+
+    /* ===== View toggle buttons (Calendar/Chart) -> dark brown gradient like other dashboards ===== */
+    .view-btn.active {
+      background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+      border-color: #5f4b3c;
+      color: #ffffff;
       box-shadow: 0 4px 15px rgba(95,75,60,0.18);
+    }
+
+    /* Ensure view-btn matches hover polish too */
+    .view-btn:hover {
+      border-color: #bd9979;
+      box-shadow: 0 2px 6px rgba(95, 75, 60, 0.12);
     }
 
     .view-toggle {
@@ -150,18 +156,15 @@ background: #ffffff;
         grid-template-columns: 1fr;
         gap: 15px;
       }
-
       .header-left,
       .header-right {
         justify-content: center;
         flex-wrap: wrap;
       }
-
-      .header-center h1 {
-        font-size: 1.5em;
-      }
+      .header-center h1 { font-size: 1.5em; }
     }
 
+    /* ===== Stats ===== */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -205,6 +208,7 @@ background: #ffffff;
       margin-top: 8px;
     }
 
+    /* ===== Calendar container ===== */
     .calendar-view {
       background: white;
       padding: 15px;
@@ -215,14 +219,10 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .calendar-view {
-        padding: 30px;
-      }
+      .calendar-view { padding: 30px; }
     }
 
-    .calendar-view.active {
-      display: block;
-    }
+    .calendar-view.active { display: block; }
 
     .calendar-grid {
       display: grid;
@@ -231,78 +231,90 @@ background: #ffffff;
     }
 
     @media (min-width: 600px) {
-      .calendar-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
+      .calendar-grid { grid-template-columns: repeat(2, 1fr); }
     }
 
     @media (min-width: 900px) {
-      .calendar-grid {
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-      }
+      .calendar-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
     }
 
     @media (min-width: 1200px) {
-      .calendar-grid {
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      }
+      .calendar-grid { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
     }
 
+    /* ===== Month cards (INVERTED: light background + dark brown text) ===== */
     .month-card {
-      background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
-      color: white;
+      background: linear-gradient(135deg, #ffffff 0%, #fbfaf8 100%);
+      color: #5f4b3c;
       padding: 16px;
       border-radius: 15px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 5px 20px rgba(95,75,60,0.20);
+      border: 2px solid #d7d1ca;
+      box-shadow: 0 5px 20px rgba(95,75,60,0.10);
     }
 
+    .month-card .month-info {
+      font-size: 0.85em;
+      opacity: 0.95;
+      color: #5f4b3c;
+    }
+
+    .month-card .month-info div { margin: 5px 0; }
+
+    .month-name {
+      font-size: 1.2em;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: #5f4b3c;
+      font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
+    }
+
+    .month-card:hover {
+      transform: translateY(-2px);
+      border-color: #bd9979;
+      box-shadow: 0 10px 26px rgba(95,75,60,0.16);
+    }
+
+    .month-card:active { transform: scale(0.99); }
+
+    /* Current month: white card + brown gradient accent border */
     .month-card.current-month {
-      background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-      border: 3px solid #fff;
-      box-shadow: 0 10px 30px rgba(95,75,60,0.22);
+      border: 2px solid #5f4b3c;
+      box-shadow: 0 12px 30px rgba(95,75,60,0.18);
+    }
+
+    .month-card.current-month::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 15px;
+      padding: 2px;
+      background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+      -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      pointer-events: none;
     }
 
     .month-card.current-month .month-badge {
       position: absolute;
       top: 8px;
       right: 8px;
-      background: rgba(255, 255, 255, 0.3);
-      padding: 3px 8px;
+      background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+      color: #ffffff;
+      padding: 4px 10px;
       border-radius: 20px;
       font-size: 0.65em;
-      font-weight: bold;
+      font-weight: 800;
+      letter-spacing: 0.4px;
     }
 
-    .month-card:hover {
-      transform: scale(1.05);
-      box-shadow: 0 15px 40px rgba(95,75,60,0.28);
-    }
-
-    .month-card:active {
-      transform: scale(0.98);
-    }
-
-    .month-name {
-      font-size: 1.2em;
-      font-weight: bold;
-      margin-bottom: 10px;
-      font-family: "Noto Serif", Georgia, "Times New Roman", Times, serif;
-    }
-
-    .month-card .month-info {
-      font-size: 0.85em;
-      opacity: 0.95;
-    }
-
-    .month-card .month-info div {
-      margin: 5px 0;
-    }
-
+    /* ===== Chart view ===== */
     .chart-view {
       background: white;
       padding: 15px;
@@ -312,16 +324,10 @@ background: #ffffff;
       display: none;
     }
 
-    .chart-view.active {
-      display: block;
-    }
+    .chart-view.active { display: block; }
 
     @media (min-width: 1024px) {
-      .chart-view {
-        padding: 30px;
-        display: none;
-      }
-      
+      .chart-view { padding: 30px; display: none; }
       .chart-view.active {
         display: grid;
         grid-template-columns: 1fr 280px;
@@ -338,10 +344,7 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .chart-view h2 {
-        font-size: 1.5em;
-        margin-bottom: 20px;
-      }
+      .chart-view h2 { font-size: 1.5em; margin-bottom: 20px; }
     }
 
     .chart-section {
@@ -372,9 +375,7 @@ background: #ffffff;
       }
     }
 
-    .chart-stat-item {
-      text-align: center;
-    }
+    .chart-stat-item { text-align: center; }
 
     .chart-stat-label {
       font-size: 0.8em;
@@ -392,9 +393,7 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .chart-stat-value {
-        font-size: 2em;
-      }
+      .chart-stat-value { font-size: 2em; }
     }
 
     .chart-wrapper {
@@ -404,15 +403,11 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .chart-wrapper {
-        height: 400px;
-      }
+      .chart-wrapper { height: 400px; }
     }
 
     @media (min-width: 1024px) {
-      .chart-wrapper {
-        height: 420px;
-      }
+      .chart-wrapper { height: 420px; }
     }
 
     .loading {
@@ -423,10 +418,7 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .loading {
-        padding: 50px;
-        font-size: 1.5em;
-      }
+      .loading { padding: 50px; font-size: 1.5em; }
     }
 
     .loading::after {
@@ -440,6 +432,7 @@ background: #ffffff;
       60%, 100% { content: '...'; }
     }
 
+    /* ===== Modal ===== */
     .detail-modal {
       display: none;
       position: fixed;
@@ -455,14 +448,10 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .detail-modal {
-        padding: 20px;
-      }
+      .detail-modal { padding: 20px; }
     }
 
-    .detail-modal.active {
-      display: flex;
-    }
+    .detail-modal.active { display: flex; }
 
     .detail-content {
       background: white;
@@ -477,10 +466,7 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .detail-content {
-        padding: 40px;
-        max-height: 80vh;
-      }
+      .detail-content { padding: 40px; max-height: 80vh; }
     }
 
     .close-modal {
@@ -495,15 +481,10 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .close-modal {
-        top: 15px;
-        font-size: 2em;
-      }
+      .close-modal { top: 15px; font-size: 2em; }
     }
 
-    .close-modal:hover {
-      color: #5f4b3c;
-    }
+    .close-modal:hover { color: #5f4b3c; }
 
     .error {
       background: white;
@@ -516,117 +497,73 @@ background: #ffffff;
     }
 
     @media (min-width: 768px) {
-      .error {
-        padding: 30px;
-      }
+      .error { padding: 30px; }
     }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     @keyframes pulse {
       0%, 100% { transform: scale(1); }
       50% { transform: scale(1.05); }
     }
-    
-    /* BUTTON */
-.fullscreen-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #d7d1ca 0%, #bd9979 100%);
-  border: 2px solid rgba(95,75,60,0.35);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 8px rgba(95,75,60,0.22);
-}
 
-/* ICON */
-.fullscreen-icon {
-  position: relative;
-  width: 18px;
-  height: 18px;
-  transition: transform 0.25s ease;
-}
+    /* ===== FULLSCREEN BUTTON (Shipping/Fulfillment style w/ SVG) ===== */
+    .fullscreen-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%);
+      border: 2px solid rgba(95,75,60,0.35);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 3px 8px rgba(95,75,60,0.22);
+    }
 
-/* TOP-LEFT ARROW */
-.fullscreen-icon::before,
-.fullscreen-icon::after {
-  content: "";
-  position: absolute;
-  width: 7px;
-  height: 7px;
-  border: 2px solid #fff;
-}
+    .fullscreen-btn svg{
+      width: 18px;
+      height: 18px;
+      display: block;
+    }
 
-/* ↖ arrow */
-.fullscreen-icon::before {
-  top: 0;
-  left: 0;
-  border-right: none;
-  border-bottom: none;
-}
+    .fullscreen-btn.exit svg {
+      transform: rotate(180deg);
+      transition: transform 0.25s ease;
+    }
 
-/* ↘ arrow */
-.fullscreen-icon::after {
-  bottom: 0;
-  right: 0;
-  border-left: none;
-  border-top: none;
-}
+    .fullscreen-btn:hover {
+      background: #ffffff;
+      border-color: #bd9979;
+      box-shadow: 0 4px 12px rgba(95,75,60,0.22);
+    }
 
-/* EXIT FULLSCREEN = INVERT ARROWS */
-.fullscreen-btn.exit .fullscreen-icon {
-  transform: rotate(180deg);
-}
-/* Fullscreen button hover — matches Orders dashboard */
-.fullscreen-btn:hover {
-  background: #ffffff;
-  border-color: #bd9979;
-  box-shadow: 0 4px 12px rgba(95,75,60,0.22);
-}
+    .fullscreen-btn:hover svg path {
+      stroke: #5f4b3c !important;
+    }
 
-/* Keep icon visible on white */
-.fullscreen-btn:hover .fullscreen-icon::before,
-.fullscreen-btn:hover .fullscreen-icon::after {
-  border-color: #5f4b3c;
-}
-.fullscreen-btn:active {
-  transform: scale(0.96);
-  box-shadow: 0 2px 6px rgba(95,75,60,0.26);
-}
-
-/* FORCE Orders overview header to white (override any gradients) */
-.header,
-.header.card,
-.orders-header,
-.orders-overview-header {
-  background: #ffffff !important;
-}
-
-
+    .fullscreen-btn:active {
+      transform: scale(0.96);
+      box-shadow: 0 2px 6px rgba(95,75,60,0.26);
+    }
 
   </style>
-
-
-
 </head>
+
 <body>
   <div class="container">
     <header class="header">
       <div class="header-bar">
-        
 
         <!-- LEFT -->
         <div class="header-left">
           <select id="yearFilter">
             <option value="all">All Years</option>
           </select>
-          <button onclick="jumpToCurrentMonth()">Current Month</button>
+
+          <!-- Current Month button: match dark brown gradient when "active-feeling" -->
+          <button id="currentMonthBtn" onclick="jumpToCurrentMonth()">Current Month</button>
         </div>
 
         <!-- CENTER -->
@@ -641,10 +578,17 @@ background: #ffffff;
             <button class="view-btn" onclick="switchView('chart')">Chart</button>
           </div>
 
-          <button id="fullscreenBtn" class="fullscreen-btn" aria-label="Toggle Fullscreen">
-            <div class="fullscreen-icon"></div>
+          <!-- FULLSCREEN (SVG ICON) -->
+          <button class="fullscreen-btn" id="fullscreenBtn" title="Fullscreen" aria-label="Fullscreen">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M9 4H4v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 4h5v5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M9 20H4v-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M15 20h5v-5" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
           </button>
         </div>
+
       </div>
     </header>
 
@@ -677,7 +621,7 @@ background: #ffffff;
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
     const SHEET_ID = '1fuXYhSNqwFA7nB9k3Nqd_Epp1BV8ZYlTi9JRm98KtNU';
-    
+
     let allData = [];
     let currentView = 'calendar';
     let chart = null;
@@ -685,28 +629,27 @@ background: #ffffff;
     const currentMonth = currentDate.toLocaleString('default', { month: 'long' });
     const currentYear = currentDate.getFullYear();
 
-window.addEventListener('message', (event) => {
-  if (event.data?.type === 'TV_VIEW_STATE') {
-    document.body.classList.toggle('tv-view-active', event.data.active);
-  }
-});
+    window.addEventListener('message', (event) => {
+      if (event.data?.type === 'TV_VIEW_STATE') {
+        document.body.classList.toggle('tv-view-active', event.data.active);
+      }
+    });
 
-    
     window.onload = function() {
       loadData();
     };
 
     function loadData() {
       document.getElementById('loading').style.display = 'block';
-      
+
       const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=Orders%20by%20Month`;
-      
+
       fetch(url)
         .then(response => response.text())
         .then(text => {
           const json = text.substring(47).slice(0, -2);
           const data = JSON.parse(json);
-          
+
           const rows = data.table.rows;
           const processedData = rows.map(row => ({
             month: row.c[0]?.v || '',
@@ -720,18 +663,18 @@ window.addEventListener('message', (event) => {
             topProduct: row.c[8]?.v || 'N/A',
             lastUpdated: row.c[9]?.v || ''
           }));
-          
+
           displayData(processedData);
         })
         .catch(error => {
           handleError(error);
         });
     }
-   
+
     function displayData(data) {
       document.getElementById('loading').style.display = 'none';
       allData = data;
-      
+
       if (data.length === 0) {
         document.getElementById('loading').innerHTML = `
           <div class="error">
@@ -747,7 +690,7 @@ window.addEventListener('message', (event) => {
       renderStats(data);
       renderCalendar(data);
       renderChart(data);
-      
+
       document.getElementById('statsGrid').style.display = 'grid';
       switchView(currentView);
     }
@@ -755,12 +698,12 @@ window.addEventListener('message', (event) => {
     function populateYearFilter(data) {
       const years = [...new Set(data.map(d => d.year))].sort((a, b) => b - a);
       const select = document.getElementById('yearFilter');
-      
+
       select.innerHTML = '<option value="all">All Years</option>';
       years.forEach(year => {
         select.innerHTML += `<option value="${year}">${year}</option>`;
       });
-      
+
       select.onchange = function() {
         const year = this.value;
         const filtered = year === 'all' ? allData : allData.filter(d => d.year == year);
@@ -769,7 +712,6 @@ window.addEventListener('message', (event) => {
         renderChart(filtered);
       };
     }
-
 
     function renderStats(data) {
       const totalOrders = data.reduce((sum, d) => sum + d.ordersPlaced, 0);
@@ -805,12 +747,12 @@ window.addEventListener('message', (event) => {
 
       data.forEach(month => {
         const isCurrentMonth = month.month === currentMonth && month.year === currentYear;
-        
+
         const card = document.createElement('div');
         card.className = 'month-card' + (isCurrentMonth ? ' current-month' : '');
         card.onclick = () => showMonthDetail(month);
         card.id = `month-${month.month}-${month.year}`;
-        
+
         card.innerHTML = `
           ${isCurrentMonth ? '<div class="month-badge">CURRENT</div>' : ''}
           <div class="month-name">${month.month} ${month.year}</div>
@@ -821,17 +763,15 @@ window.addEventListener('message', (event) => {
             <div>${month.uniqueCustomers.toLocaleString()} customers</div>
           </div>
         `;
-        
+
         grid.appendChild(card);
       });
     }
 
     function renderChart(data) {
       const ctx = document.getElementById('ordersChart').getContext('2d');
-      
-      if (chart) {
-        chart.destroy();
-      }
+
+      if (chart) chart.destroy();
 
       const labels = data.map(d => `${d.month} ${d.year}`).reverse();
       const ordersData = data.map(d => d.ordersPlaced).reverse();
@@ -875,10 +815,7 @@ window.addEventListener('message', (event) => {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          interaction: {
-            mode: 'index',
-            intersect: false
-          },
+          interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: {
               position: 'top',
@@ -894,9 +831,7 @@ window.addEventListener('message', (event) => {
               callbacks: {
                 label: function(context) {
                   let label = context.dataset.label || '';
-                  if (label) {
-                    label += ': ' + context.parsed.y.toLocaleString();
-                  }
+                  if (label) label += ': ' + context.parsed.y.toLocaleString();
                   return label;
                 }
               }
@@ -905,11 +840,9 @@ window.addEventListener('message', (event) => {
           scales: {
             y: {
               beginAtZero: true,
-              ticks: { 
+              ticks: {
                 color: '#a0906f',
-                callback: function(value) {
-                  return value.toLocaleString();
-                }
+                callback: function(value) { return value.toLocaleString(); }
               },
               grid: { color: 'rgba(210, 180, 140, 0.1)' }
             },
@@ -920,11 +853,11 @@ window.addEventListener('message', (event) => {
           }
         }
       });
-      
+
       const total = ordersData.reduce((a, b) => a + b, 0);
       const avg = Math.round(total / ordersData.length);
       const max = Math.max(...ordersData);
-      
+
       document.getElementById('chartStats').innerHTML = `
         <div class="chart-stat-item">
           <div class="chart-stat-label">Total</div>
@@ -943,11 +876,9 @@ window.addEventListener('message', (event) => {
 
     function switchView(view) {
       currentView = view;
-      
-      document.querySelectorAll('.view-btn').forEach(btn => {
-        btn.classList.remove('active');
-      });
-      
+
+      document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+
       if (view === 'calendar') {
         document.getElementById('calendarView').classList.add('active');
         document.getElementById('calendarView').style.display = 'block';
@@ -958,20 +889,31 @@ window.addEventListener('message', (event) => {
         document.getElementById('calendarView').style.display = 'none';
         document.getElementById('chartView').classList.add('active');
         document.querySelector('.view-btn:last-of-type').classList.add('active');
-        
+
         if (chart) {
-          setTimeout(() => {
-            chart.resize();
-          }, 100);
+          setTimeout(() => { chart.resize(); }, 100);
         }
       }
     }
 
     function jumpToCurrentMonth() {
+      // Make the Current Month button feel "active" momentarily
+      const btn = document.getElementById('currentMonthBtn');
+      if (btn) {
+        btn.style.background = 'linear-gradient(135deg, #5f4b3c 0%, #8d8173 100%)';
+        btn.style.borderColor = '#5f4b3c';
+        btn.style.color = '#ffffff';
+        setTimeout(() => {
+          btn.style.background = '#ffffff';
+          btn.style.borderColor = '#d7d1ca';
+          btn.style.color = '#5f4b3c';
+        }, 650);
+      }
+
       if (currentView !== 'calendar') {
         switchView('calendar');
       }
-      
+
       const yearFilter = document.getElementById('yearFilter');
       if (yearFilter.value !== 'all' && yearFilter.value != currentYear) {
         yearFilter.value = 'all';
@@ -979,15 +921,13 @@ window.addEventListener('message', (event) => {
         renderCalendar(allData);
         renderChart(allData);
       }
-      
+
       setTimeout(() => {
         const currentCard = document.getElementById(`month-${currentMonth}-${currentYear}`);
         if (currentCard) {
           currentCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
           currentCard.style.animation = 'pulse 0.5s ease-in-out';
-          setTimeout(() => {
-            currentCard.style.animation = '';
-          }, 500);
+          setTimeout(() => { currentCard.style.animation = ''; }, 500);
         }
       }, 100);
     }
@@ -995,47 +935,43 @@ window.addEventListener('message', (event) => {
     function showMonthDetail(month) {
       const modal = document.getElementById('detailModal');
       const content = document.getElementById('modalContent');
-      
+
       const isCurrentMonth = month.month === currentMonth && month.year === currentYear;
-      
+
       content.innerHTML = `
-        <h2 style="color: #8b7355; font-size: 1.5em; margin-bottom: 15px;">
+        <h2 style="color: #5f4b3c; font-size: 1.5em; margin-bottom: 15px;">
           ${month.month} ${month.year}
-          ${isCurrentMonth ? '<span style="color: #d2b48c; font-size: 0.6em; margin-left: 10px;">● CURRENT</span>' : ''}
+          ${isCurrentMonth ? '<span style="color: #8d8173; font-size: 0.6em; margin-left: 10px;">● CURRENT</span>' : ''}
         </h2>
         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 20px;">
           <div style="padding: 15px; background: #faf8f5; border-radius: 8px;">
-            <div style="color: #a0906f; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px;">Orders Placed</div>
-            <div style="color: #8b7355; font-size: 1.5em; font-weight: bold;">${month.ordersPlaced.toLocaleString()}</div>
+            <div style="color: #8d8173; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px;">Orders Placed</div>
+            <div style="color: #5f4b3c; font-size: 1.5em; font-weight: bold;">${month.ordersPlaced.toLocaleString()}</div>
           </div>
           <div style="padding: 15px; background: #faf8f5; border-radius: 8px;">
-            <div style="color: #a0906f; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px;">Orders Fulfilled</div>
-            <div style="color: #8b7355; font-size: 1.5em; font-weight: bold;">${month.ordersFulfilled.toLocaleString()}</div>
+            <div style="color: #8d8173; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px;">Orders Fulfilled</div>
+            <div style="color: #5f4b3c; font-size: 1.5em; font-weight: bold;">${month.ordersFulfilled.toLocaleString()}</div>
           </div>
           <div style="padding: 15px; background: #faf8f5; border-radius: 8px;">
-            <div style="color: #a0906f; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px;">Total Items</div>
-            <div style="color: #8b7355; font-size: 1.5em; font-weight: bold;">${month.totalItems.toLocaleString()}</div>
+            <div style="color: #8d8173; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px;">Total Items</div>
+            <div style="color: #5f4b3c; font-size: 1.5em; font-weight: bold;">${month.totalItems.toLocaleString()}</div>
           </div>
           <div style="padding: 15px; background: #faf8f5; border-radius: 8px;">
-            <div style="color: #a0906f; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px;">Unique Customers</div>
-            <div style="color: #8b7355; font-size: 1.5em; font-weight: bold;">${month.uniqueCustomers.toLocaleString()}</div>
+            <div style="color: #8d8173; font-size: 0.8em; text-transform: uppercase; margin-bottom: 5px;">Unique Customers</div>
+            <div style="color: #5f4b3c; font-size: 1.5em; font-weight: bold;">${month.uniqueCustomers.toLocaleString()}</div>
           </div>
         </div>
         <div style="margin-top: 20px; padding: 15px; background: #faf8f5; border-radius: 8px;">
-          <div style="color: #a0906f; text-transform: uppercase; font-size: 0.9em;">Top Product</div>
-          <div style="margin-top: 5px; font-size: 1.1em; color: #8b7355;">${month.topProduct}</div>
+          <div style="color: #8d8173; text-transform: uppercase; font-size: 0.9em;">Top Product</div>
+          <div style="margin-top: 5px; font-size: 1.1em; color: #5f4b3c;">${month.topProduct}</div>
         </div>
       `;
-      
+
       modal.classList.add('active');
     }
 
     function closeModal() {
       document.getElementById('detailModal').classList.remove('active');
-    }
-
-    function refreshData() {
-      loadData();
     }
 
     function handleError(error) {
@@ -1048,24 +984,28 @@ window.addEventListener('message', (event) => {
       `;
       document.getElementById('loading').style.display = 'block';
     }
-    
-    const fullscreenBtn = document.getElementById('fullscreenBtn');
 
-    fullscreenBtn.addEventListener('click', () => {
-      if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen();
-      } else {
-        document.exitFullscreen();
-      }
-    });
+    /* Fullscreen (Fulfillment/Shipping logic w/ try/catch + exit state) */
+    const fsBtn = document.getElementById('fullscreenBtn');
 
-    document.addEventListener('fullscreenchange', () => {
-      if (document.fullscreenElement) {
-        fullscreenBtn.classList.add('exit');
-      } else {
-        fullscreenBtn.classList.remove('exit');
-      }
-    });
+    if (fsBtn) {
+      fsBtn.addEventListener('click', async () => {
+        try {
+          if (!document.fullscreenElement) {
+            await document.documentElement.requestFullscreen();
+          } else {
+            await document.exitFullscreen();
+          }
+        } catch (e) {
+          console.error('Fullscreen failed:', e);
+        }
+      });
+
+      document.addEventListener('fullscreenchange', () => {
+        if (document.fullscreenElement) fsBtn.classList.add('exit');
+        else fsBtn.classList.remove('exit');
+      });
+    }
   </script>
 </body>
 </html>
