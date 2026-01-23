@@ -102,6 +102,7 @@ function updateDashboard() {
         updateTable(monthData);
     }
 }
+
 function forceHideTooltip() {
   const tooltip = document.getElementById('tooltip');
   if (!tooltip) return;
@@ -445,6 +446,7 @@ function updateCharts(monthData) {
         }
     });
 }
+
 const yearSelect = document.getElementById('yearSelect');
 const monthSelect = document.getElementById('monthSelect');
 
@@ -576,145 +578,113 @@ if (datasetLabel) {
 updateDashboard();
 
 // ============================================
-// ============================================
 // DATASET DROPDOWN (Retail / Wholesale / Total)
 // ============================================
 
 const datasetSelect = document.getElementById('datasetSelect');
 
 if (datasetSelect) {
-    // Backup retail the first time (so we always have the original)
-    let retailDataBackup = null;
+    // Hard backups that NEVER get mutated
+    const retailBackup = Array.isArray(fullData) ? fullData.map(x => ({ ...x })) : [];
+    const wholesaleBackup = (typeof wholesaleData !== 'undefined' && Array.isArray(wholesaleData))
+        ? wholesaleData.map(x => ({ ...x }))
+        : [];
 
-    // Helper: dedupe by date (keep first)
-    const dedupeByDate = (arr) => {
-        if (!Array.isArray(arr)) return [];
-        return arr.filter((row, idx, self) => idx === self.findIndex(r => r.date === row.date));
+    // Replace fullData IN PLACE (so rest of file keeps working)
+    const setFullData = (arr) => {
+        fullData.length = 0;
+        fullData.push(...arr);
     };
 
-    // Build Total dataset by summing retail + wholesale by date
-    const computeTotalDataset = (retailArr, wholesaleArr) => {
-        const r = dedupeByDate(retailArr || []);
-        const w = dedupeByDate(wholesaleArr || []);
-
+    // Build Total dataset: merge by date, sum orders/rem, recompute rates
+    const buildTotalData = () => {
         const map = new Map();
 
-        // seed with retail
-        r.forEach(row => {
-            map.set(row.date, {
-                date: row.date,
-                orders: Number(row.orders) || 0,
-                rem4: Number(row.rem4) || 0,
-                rem7: Number(row.rem7) || 0
-            });
-        });
+        const addRow = (row) => {
+            if (!row || !row.date) return;
 
-        // add wholesale
-        w.forEach(row => {
-            const existing = map.get(row.date) || { date: row.date, orders: 0, rem4: 0, rem7: 0 };
-            existing.orders += Number(row.orders) || 0;
-            existing.rem4 += Number(row.rem4) || 0;
-            existing.rem7 += Number(row.rem7) || 0;
-            map.set(row.date, existing);
-        });
+            const key = row.date;
+            if (!map.has(key)) {
+                map.set(key, { date: key, orders: 0, rem4: 0, rem7: 0 });
+            }
 
-        // compute rates from combined totals
-        const combined = [];
-        for (const item of map.values()) {
-            const orders = item.orders || 0;
-            const rem4 = item.rem4 || 0;
-            const rem7 = item.rem7 || 0;
+            const agg = map.get(key);
+            agg.orders += Number(row.orders) || 0;
+            agg.rem4 += Number(row.rem4) || 0;
+            agg.rem7 += Number(row.rem7) || 0;
+        };
 
-            const rate4 = orders > 0 ? ((orders - rem4) / orders) * 100 : 0;
-            const rate7 = orders > 0 ? ((orders - rem7) / orders) * 100 : 0;
+        retailBackup.forEach(addRow);
+        wholesaleBackup.forEach(addRow);
 
-            combined.push({
-                date: item.date,
+        const out = Array.from(map.values()).map(r => {
+            const orders = r.orders || 0;
+            const rate4 = orders > 0 ? ((orders - r.rem4) / orders) * 100 : 0;
+            const rate7 = orders > 0 ? ((orders - r.rem7) / orders) * 100 : 0;
+
+            return {
+                date: r.date,
                 orders,
-                rem4,
-                rem7,
+                rem4: r.rem4,
+                rem7: r.rem7,
                 rate4,
                 rate7
-            });
-        }
+            };
+        });
 
-        return combined;
+        out.sort((a, b) => parseDate(a.date) - parseDate(b.date));
+        return out;
     };
 
-    // Default dropdown value (keep what HTML says, but set label to match)
-   const syncLabel = (val) => {
-    const label = document.getElementById('datasetLabel');
-    if (!label) return;
-    if (val === 'wholesale') label.textContent = '- Wholesale';
-    else if (val === 'total') label.textContent = '- Retail + Wholesale';
-    else label.textContent = '- Retail';
-};
+    const syncLabel = (val) => {
+        const label = document.getElementById('datasetLabel');
+        if (!label) return;
+        if (val === 'wholesale') label.textContent = '- Wholesale';
+        else if (val === 'total') label.textContent = '- Retail + Wholesale';
+        else label.textContent = '- Retail';
+    };
 
-
-    // Make sure we keep Retail as default backup
-    if (!retailDataBackup) {
-        retailDataBackup = [...fullData];
-    }
-
-    // If your HTML defaults to retail, keep it
+    // Make sure label matches initial dropdown value on load
     syncLabel(datasetSelect.value || 'retail');
 
-    datasetSelect.addEventListener('change', (e) => {
-        const selected = e.target.value;
+    datasetSelect.addEventListener('change', () => {
+        const val = datasetSelect.value;
 
-        // Ensure we still have retail backup
-        if (!retailDataBackup) retailDataBackup = [...fullData];
-
-        if (selected === 'wholesale') {
-            if (typeof wholesaleData !== 'undefined' && Array.isArray(wholesaleData) && wholesaleData.length > 0) {
-                fullData.length = 0;
-                fullData.push(...wholesaleData);
-                syncLabel('wholesale');
-            } else {
+        if (val === 'retail') {
+            setFullData(retailBackup.map(x => ({ ...x })));
+        } else if (val === 'wholesale') {
+            if (!wholesaleBackup.length) {
                 alert('Wholesale data not available. Make sure wholesale.js is loaded.');
-                // revert dropdown to retail
                 datasetSelect.value = 'retail';
-                fullData.length = 0;
-                fullData.push(...retailDataBackup);
+                setFullData(retailBackup.map(x => ({ ...x })));
                 syncLabel('retail');
                 return;
             }
-        } else if (selected === 'total') {
-            if (typeof wholesaleData !== 'undefined' && Array.isArray(wholesaleData) && wholesaleData.length > 0) {
-                const totalData = computeTotalDataset(retailDataBackup, wholesaleData);
-                fullData.length = 0;
-                fullData.push(...totalData);
-                syncLabel('total');
-            } else {
-                alert('Wholesale data not available, so Total can’t be calculated. Make sure wholesale.js is loaded.');
-                // revert dropdown to retail
+            setFullData(wholesaleBackup.map(x => ({ ...x })));
+        } else if (val === 'total') {
+            if (!wholesaleBackup.length) {
+                alert('Wholesale data not available. Make sure wholesale.js is loaded.');
                 datasetSelect.value = 'retail';
-                fullData.length = 0;
-                fullData.push(...retailDataBackup);
+                setFullData(retailBackup.map(x => ({ ...x })));
                 syncLabel('retail');
                 return;
             }
-        } else {
-            // retail
-            fullData.length = 0;
-            fullData.push(...retailDataBackup);
-            syncLabel('retail');
+            setFullData(buildTotalData());
         }
 
-        // Find most recent data in new dataset
-        const recentData = getMostRecentDataMonth();
-        currentMonth = recentData.month;
-        currentYear = recentData.year;
+        syncLabel(val);
 
-        // Update selectors
+        // Reset to most recent month/year for the NEW dataset
+        const recent = getMostRecentDataMonth();
+        currentMonth = recent.month;
+        currentYear = recent.year;
+
         document.getElementById('monthSelect').value = currentMonth.toString();
         document.getElementById('yearSelect').value = currentYear.toString();
 
-        // Refresh dashboard
         updateDashboard();
     });
 }
-
 
 window.addEventListener('message', (event) => {
   if (event.data?.type === 'TV_VIEW_STATE') {
