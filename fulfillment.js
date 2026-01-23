@@ -642,13 +642,14 @@ if (datasetSelect) {
     };
 
     // Default dropdown value (keep what HTML says, but set label to match)
-    const syncLabel = (val) => {
-        const label = document.getElementById('datasetLabel');
-        if (!label) return;
-        if (val === 'wholesale') label.textContent = '- Wholesale';
-        else if (val === 'total') label.textContent = '- Total';
-        else label.textContent = '- Retail';
-    };
+   const syncLabel = (val) => {
+    const label = document.getElementById('datasetLabel');
+    if (!label) return;
+    if (val === 'wholesale') label.textContent = '- Wholesale';
+    else if (val === 'total') label.textContent = '- Retail + Wholesale';
+    else label.textContent = '- Retail';
+};
+
 
     // Make sure we keep Retail as default backup
     if (!retailDataBackup) {
