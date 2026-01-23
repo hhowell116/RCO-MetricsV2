@@ -1,528 +1,724 @@
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('[Fulfillment] Script loaded');
 
-  /* ===============================
-     HELPERS
-  =============================== */
-  const parseDate = (d) => {
-    const [m, day, y] = String(d).split('/');
-    return new Date(+y, +m - 1, +day);
-  };
-
-  const getRateClass = (rate) => {
-    if (rate >= 95) return 'rate-excellent';
-    if (rate >= 85) return 'rate-good';
-    if (rate >= 70) return 'rate-warning';
-    return 'rate-poor';
-  };
-
-  function showFatalError(msg) {
-    const dataTable = document.getElementById('dataTable');
-    if (dataTable) {
-      dataTable.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#b23b3b;padding:20px;">${msg}</td></tr>`;
+// Find the most recent month with data
+function getMostRecentDataMonth() {
+    if (!fullData || fullData.length === 0) {
+        return { month: new Date().getMonth(), year: new Date().getFullYear() };
     }
-  }
-
-  /* ===============================
-     BASE DATA (must exist)
-  =============================== */
-  const retailRaw = window.fullData;
-  const wholesaleRaw = window.wholesaleData;
-
-  if (!Array.isArray(retailRaw) || retailRaw.length === 0) {
-    console.error('[Fulfillment] fullData missing/empty');
-    showFatalError('fullData is missing or empty — check data.js is loading properly');
-    return;
-  }
-  if (!Array.isArray(wholesaleRaw) || wholesaleRaw.length === 0) {
-    console.warn('[Fulfillment] wholesaleData missing/empty (wholesale option will still show but may be blank)');
-  }
-
-  // Remove duplicates by date, keep first occurrence
-  function dedupeByDate(arr) {
-    if (!Array.isArray(arr)) return [];
-    return arr.filter((row, index, self) => {
-      const firstIndex = self.findIndex(r => r.date === row.date);
-      return index === firstIndex;
+    
+    // Sort data by date to find the most recent
+    const sortedData = [...fullData].sort((a, b) => {
+        const dateA = parseDate(a.date);
+        const dateB = parseDate(b.date);
+        return dateB - dateA;
     });
-  }
+    
+    // Get the most recent date
+    const mostRecent = parseDate(sortedData[0].date);
+    return {
+        month: mostRecent.getMonth(),
+        year: mostRecent.getFullYear()
+    };
+}
 
-  function computeTotalDataset(retailArr, wholesaleArr) {
-    const r = dedupeByDate(retailArr);
-    const w = dedupeByDate(wholesaleArr);
+// Initialize with most recent data month
+const recentData = getMostRecentDataMonth();
+let currentMonth = recentData.month;
+let currentYear = recentData.year;
+let currentView = 'monthly';
+let fillRateChart, ordersChart;
 
-    const map = new Map();
+function parseDate(dateStr) {
+    const parts = dateStr.split('/');
+    return new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
+}
 
-    // Seed with retail
-    for (const row of r) {
-      map.set(row.date, {
-        date: row.date,
-        orders: Number(row.orders) || 0,
-        rem4: Number(row.rem4) || 0,
-        rem7: Number(row.rem7) || 0
-      });
+function getMonthData(year, month) {
+    return fullData.filter(d => {
+        const date = parseDate(d.date);
+        return date.getFullYear() === year && date.getMonth() === month && d.orders > 0;
+    });
+}
+
+function getYearData(year) {
+    return fullData.filter(d => {
+        const date = parseDate(d.date);
+        return date.getFullYear() === year;
+    });
+}
+
+function updateDashboard() {
+    if (currentView === 'calendar') {
+        renderCalendarView();
+        const yearData = getYearData(currentYear);
+        const validData = yearData.filter(d => d.orders > 0);
+        
+        if (validData.length === 0) {
+            document.getElementById('fillRate4Day').textContent = 'N/A';
+            document.getElementById('fillRate7Day').textContent = 'N/A';
+            document.getElementById('totalOrders').textContent = '0';
+            document.getElementById('avgOrders').textContent = '0';
+            return;
+        }
+        
+        const avg4Day = validData.reduce((sum, d) => sum + d.rate4, 0) / validData.length;
+        const avg7Day = validData.reduce((sum, d) => sum + d.rate7, 0) / validData.length;
+        const totalOrders = validData.reduce((sum, d) => sum + d.orders, 0);
+        
+        document.getElementById('fillRate4Day').textContent = avg4Day.toFixed(0) + '%';
+        document.getElementById('fillRate7Day').textContent = avg7Day.toFixed(0) + '%';
+        document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
+        document.getElementById('avgOrders').textContent = Math.round(totalOrders / validData.length).toLocaleString();
+        document.getElementById('periodLabel').textContent = 'year';
+    } else {
+        const monthData = getMonthData(currentYear, currentMonth);
+        
+        if (monthData.length === 0) {
+            document.getElementById('fillRate4Day').textContent = 'N/A';
+            document.getElementById('fillRate7Day').textContent = 'N/A';
+            document.getElementById('totalOrders').textContent = '0';
+            document.getElementById('avgOrders').textContent = '0';
+            
+            if (fillRateChart) fillRateChart.destroy();
+            if (ordersChart) ordersChart.destroy();
+            
+            document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align: center;">No data available for this month</td></tr>';
+            
+            document.getElementById('periodLabel').textContent = 'month';
+            return;
+        }
+        
+        const avg4Day = monthData.reduce((sum, d) => sum + d.rate4, 0) / monthData.length;
+        const avg7Day = monthData.reduce((sum, d) => sum + d.rate7, 0) / monthData.length;
+        const totalOrders = monthData.reduce((sum, d) => sum + d.orders, 0);
+        
+        document.getElementById('fillRate4Day').textContent = avg4Day.toFixed(0) + '%';
+        document.getElementById('fillRate7Day').textContent = avg7Day.toFixed(0) + '%';
+        document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
+        document.getElementById('avgOrders').textContent = Math.round(totalOrders / monthData.length).toLocaleString();
+        document.getElementById('periodLabel').textContent = 'month';
+        
+        updateCharts(monthData);
+        updateTable(monthData);
     }
-
-    // Add wholesale
-    for (const row of w) {
-      const existing = map.get(row.date) || { date: row.date, orders: 0, rem4: 0, rem7: 0 };
-      existing.orders += Number(row.orders) || 0;
-      existing.rem4 += Number(row.rem4) || 0;
-      existing.rem7 += Number(row.rem7) || 0;
-      map.set(row.date, existing);
-    }
-
-    // Recompute rates from totals
-    const combined = [];
-    for (const item of map.values()) {
-      const orders = item.orders || 0;
-      const rem4 = item.rem4 || 0;
-      const rem7 = item.rem7 || 0;
-
-      const rate4 = orders > 0 ? ((orders - rem4) / orders) * 100 : 0;
-      const rate7 = orders > 0 ? ((orders - rem7) / orders) * 100 : 0;
-
-      combined.push({
-        date: item.date,
-        orders,
-        rem4,
-        rem7,
-        rate4,
-        rate7
-      });
-    }
-
-    return combined;
-  }
-
-  /* ===============================
-     ELEMENTS
-  =============================== */
-  const yearSelect = document.getElementById('yearSelect');
-  const monthSelect = document.getElementById('monthSelect');
-  const datasetSelect = document.getElementById('datasetSelect');
-  const datasetLabel = document.getElementById('datasetLabel');
-
-  const dataTable = document.getElementById('dataTable');
-  const fill4 = document.getElementById('fillRate4Day');
-  const fill7 = document.getElementById('fillRate7Day');
-  const totalOrders = document.getElementById('totalOrders');
-  const avgOrders = document.getElementById('avgOrders');
-  const periodLabel = document.getElementById('periodLabel');
-
-  const monthlyView = document.getElementById('monthlyView');
-  const calendarView = document.getElementById('calendarView');
-  const calendarGrid = document.getElementById('calendarGrid');
-
+}
+function forceHideTooltip() {
   const tooltip = document.getElementById('tooltip');
+  if (!tooltip) return;
+  tooltip.classList.remove('show');
+}
 
-  let fillRateChart, ordersChart;
+function renderCalendarView() {
+    forceHideTooltip();
+    const grid = document.getElementById('calendarGrid');
+    grid.innerHTML = '';
+    
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                  'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    for (let m = 0; m < 12; m++) {
+        const monthDiv = document.createElement('div');
+        monthDiv.className = 'month-calendar';
+        
+        const header = document.createElement('div');
+        header.className = 'month-header';
+        header.textContent = months[m];
+        monthDiv.appendChild(header);
+        
+        const daysContainer = document.createElement('div');
+        daysContainer.className = 'calendar-days';
+        
+        ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
+            const label = document.createElement('div');
+            label.className = 'day-label';
+            label.textContent = day;
+            daysContainer.appendChild(label);
+        });
+        
+        const firstDay = new Date(currentYear, m, 1).getDay();
+        const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
+        
+        for (let i = 0; i < firstDay; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'calendar-day empty';
+            daysContainer.appendChild(empty);
+        }
+        
+        for (let d = 1; d <= daysInMonth; d++) {
+            const dayData = fullData.find(item => {
+                const date = parseDate(item.date);
+                return date.getFullYear() === currentYear && 
+                       date.getMonth() === m && 
+                       date.getDate() === d;
+            });
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = 'calendar-day';
+            
+            if (dayData && dayData.orders > 0) {
+                const rate = dayData.rate7;
+                let rateClass = 'cal-rate-none';
+                
+                if (rate >= 95) rateClass = 'cal-rate-excellent';
+                else if (rate >= 85) rateClass = 'cal-rate-good';
+                else if (rate >= 70) rateClass = 'cal-rate-warning';
+                else if (rate > 0) rateClass = 'cal-rate-poor';
+                
+                dayDiv.classList.add(rateClass);
+                dayDiv.innerHTML = `<strong>${d}</strong><br>${rate.toFixed(0)}%`;
+                
+                dayDiv.addEventListener('mouseenter', (e) => showTooltip(e, dayData));
+                dayDiv.addEventListener('mouseleave', hideTooltip);
+                dayDiv.addEventListener('mousemove', moveTooltip);
+            } else {
+                dayDiv.classList.add('cal-rate-none');
+                dayDiv.innerHTML = `${d}`;
+            }
+            
+            daysContainer.appendChild(dayDiv);
+        }
+        
+        monthDiv.appendChild(daysContainer);
+        grid.appendChild(monthDiv);
+    }
+}
 
-  let currentDataset = 'retail';
-  let activeData = dedupeByDate(retailRaw);
-  let cleanData = []; // rebuilt per dataset
-  let currentView = 'monthly';
-
-  let currentYear = new Date().getFullYear();
-  let currentMonth = new Date().getMonth();
-
-  /* ===============================
-     TOOLTIP (calendar)
-  =============================== */
-  function forceHideTooltip() {
-    if (!tooltip) return;
-    tooltip.classList.remove('show');
-  }
-
-  function showTooltip(e, data) {
-    if (!tooltip) return;
+function showTooltip(e, data) {
+    const tooltip = document.getElementById('tooltip');
     const date = parseDate(data.date);
-
-    tooltip.innerHTML = `
+    
+   tooltip.innerHTML = `
 <strong>${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</strong><br>
-Orders: ${Number(data.orders || 0).toLocaleString()}<br>
-4-Day Rate: ${Number(data.rate4 || 0).toFixed(2)}%<br>
-7-Day Rate: ${Number(data.rate7 || 0).toFixed(2)}%<br>
-Remaining (4d): ${Number(data.rem4 || 0).toLocaleString()}<br>
-Remaining (7d): ${Number(data.rem7 || 0).toLocaleString()}
-    `.trim();
-
+Orders: ${data.orders.toLocaleString()}<br>
+4-Day Rate: ${data.rate4.toFixed(2)}%<br>
+7-Day Rate: ${data.rate7.toFixed(2)}%<br>
+Remaining (4d): ${data.rem4}<br>
+Remaining (7d): ${data.rem7}
+`.trim();
+    
     tooltip.classList.add('show');
     moveTooltip(e);
-  }
+}
 
-  function hideTooltip() {
-    if (!tooltip) return;
-    tooltip.classList.remove('show');
-  }
+function hideTooltip() {
+    document.getElementById('tooltip').classList.remove('show');
+}
 
-  function moveTooltip(e) {
-    if (!tooltip) return;
-    tooltip.style.left = (e.clientX + 15) + 'px';
-    tooltip.style.top = (e.clientY + 15) + 'px';
-  }
-
-  /* ===============================
-     DATA: BUILD CLEAN + SET LATEST
-  =============================== */
-  function rebuildCleanDataFromActive() {
-    // Keep only rows with valid numeric orders
-    cleanData = activeData
-      .map(r => ({
-        date: r.date,
-        orders: Number(r.orders) || 0,
-        rem4: Number(r.rem4) || 0,
-        rem7: Number(r.rem7) || 0,
-        rate4: Number(r.rate4) || 0,
-        rate7: Number(r.rate7) || 0
-      }))
-      .filter(r => r.date && !Number.isNaN(parseDate(r.date).getTime())); // valid date
-
-    // Sort newest-first
-    cleanData.sort((a, b) => parseDate(b.date) - parseDate(a.date));
-
-    // Pick most recent day with orders
-    const latestWithOrders = cleanData.find(d => d.orders > 0);
-    if (latestWithOrders) {
-      const dt = parseDate(latestWithOrders.date);
-      currentYear = dt.getFullYear();
-      currentMonth = dt.getMonth();
+function moveTooltip(e) {
+    const tooltip = document.getElementById('tooltip');
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const padding = 15;
+    
+    let left = e.clientX + padding;
+    let top = e.clientY + padding;
+    
+    // Check if tooltip goes off the right edge
+    if (left + tooltipRect.width > window.innerWidth) {
+        left = e.clientX - tooltipRect.width - padding;
     }
-  }
+    
+    // Check if tooltip goes off the bottom edge
+    if (top + tooltipRect.height > window.innerHeight) {
+        top = e.clientY - tooltipRect.height - padding;
+    }
+    
+    // Check if tooltip goes off the left edge
+    if (left < 0) {
+        left = padding;
+    }
+    
+    // Check if tooltip goes off the top edge
+    if (top < 0) {
+        top = padding;
+    }
+    
+    tooltip.style.left = left + 'px';
+    tooltip.style.top = top + 'px';
+}
 
-  /* ===============================
-     SELECTORS (year/month)
-  =============================== */
-  function populateSelectors() {
-    if (!yearSelect || !monthSelect) return;
+function updateCharts(monthData) {
+    const labels = monthData.map(d => parseDate(d.date).getDate());
+    
+    if (fillRateChart) fillRateChart.destroy();
+    
+    const ctx1 = document.getElementById('fillRateChart').getContext('2d');
+    
+    fillRateChart = new Chart(ctx1, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: '7 Day Fill Rate (Target: 95%)',
+                    data: monthData.map(d => d.rate7),
+                    borderColor: '#8b7355',
+                    backgroundColor: 'rgba(139, 115, 85, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#8b7355',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    order: 1
+                },
+                {
+                    label: '4 Day Fill Rate (Target: 85%)',
+                    data: monthData.map(d => d.rate4),
+                    borderColor: '#d2b48c',
+                    backgroundColor: 'rgba(210, 180, 140, 0.1)',
+                    tension: 0.3,
+                    fill: true,
+                    borderWidth: 3,
+                    pointRadius: 4,
+                    pointHoverRadius: 8,
+                    pointBackgroundColor: '#d2b48c',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    order: 2
+                },
+                {
+                    label: '95% Target Line',
+                    data: Array(labels.length).fill(95),
+                    borderColor: '#5a8c5a',
+                    borderWidth: 2,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    fill: false,
+                    order: 3
+                },
+                {
+                    label: '85% Target Line',
+                    data: Array(labels.length).fill(85),
+                    borderColor: '#d4a05c',
+                    borderWidth: 2,
+                    borderDash: [8, 4],
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    fill: false,
+                    order: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: { 
+                    display: true,
+                    labels: { 
+                        color: '#8b7355', 
+                        font: { size: 11 },
+                        usePointStyle: true,
+                        padding: 12,
+                        boxWidth: 15
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label && !label.includes('Target Line')) {
+                                label += ': ' + context.parsed.y.toFixed(1) + '%';
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    min: 0,
+                    max: 105,
+                    ticks: { 
+                        callback: v => v + '%',
+                        color: '#a0906f',
+                        stepSize: 10
+                    },
+                    grid: {
+                        color: 'rgba(210, 180, 140, 0.1)'
+                    }
+                },
+                x: {
+                    ticks: { 
+                        color: '#a0906f'
+                    },
+                    grid: {
+                        color: 'rgba(210, 180, 140, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+    
+    if (ordersChart) ordersChart.destroy();
+    
+    const ctx2 = document.getElementById('ordersChart').getContext('2d');
+    ordersChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Orders Remaining (4 Day)',
+                data: monthData.map(d => d.rem4),
+                borderColor: '#d2b48c',
+                backgroundColor: 'rgba(210, 180, 140, 0.1)',
+                tension: 0.3,
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#d2b48c',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }, {
+                label: 'Orders Remaining (7 Day)',
+                data: monthData.map(d => d.rem7),
+                borderColor: '#8b7355',
+                backgroundColor: 'rgba(139, 115, 85, 0.1)',
+                tension: 0.3,
+                fill: true,
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#8b7355',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            plugins: {
+                legend: { 
+                    display: true,
+                    labels: { 
+                        color: '#8b7355',
+                        font: { size: 11 },
+                        usePointStyle: true,
+                        padding: 12,
+                        boxWidth: 15
+                    }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ' + context.parsed.y.toLocaleString();
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: { 
+                    beginAtZero: true, 
+                    ticks: { 
+                        color: '#a0906f',
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(210, 180, 140, 0.1)'
+                    }
+                },
+                x: { 
+                    ticks: { color: '#a0906f' },
+                    grid: {
+                        color: 'rgba(210, 180, 140, 0.1)'
+                    }
+                }
+            }
+        }
+    });
+}
+const yearSelect = document.getElementById('yearSelect');
+const monthSelect = document.getElementById('monthSelect');
 
-    const yearsWithData = [...new Set(
-      cleanData
-        .filter(d => d.orders > 0)
-        .map(d => parseDate(d.date).getFullYear())
-    )].sort((a, b) => b - a);
-
+function populateYearMonthSelectors() {
+    // YEARS
     yearSelect.innerHTML = '';
-    yearsWithData.forEach(y => {
-      const o = document.createElement('option');
-      o.value = y;
-      o.textContent = y;
-      yearSelect.appendChild(o);
+    const years = [2025, 2026]; // adjust if needed
+
+    years.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
     });
 
+    // MONTHS
+    monthSelect.innerHTML = '';
     const months = [
-      'January','February','March','April','May','June',
-      'July','August','September','October','November','December'
+        'January','February','March','April','May','June',
+        'July','August','September','October','November','December'
     ];
 
-    monthSelect.innerHTML = '';
-    months.forEach((m, i) => {
-      const o = document.createElement('option');
-      o.value = i;
-      o.textContent = m;
-      monthSelect.appendChild(o);
+    months.forEach((month, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = month;
+        monthSelect.appendChild(option);
     });
 
-    // Default selection
-    yearSelect.value = String(currentYear);
-    monthSelect.value = String(currentMonth);
-  }
+    // Defaults
+    const now = new Date();
+    yearSelect.value = now.getFullYear();
+    monthSelect.value = now.getMonth();
+}
 
-  /* ===============================
-     FILTERS
-  =============================== */
-  function getMonthData() {
-    const y = +yearSelect.value;
-    const m = +monthSelect.value;
-
-    return cleanData
-      .filter(d => {
-        const dt = parseDate(d.date);
-        return dt.getFullYear() === y && dt.getMonth() === m && d.orders > 0;
-      })
-      .sort((a, b) => parseDate(a.date) - parseDate(b.date)); // chronological for charts/table
-  }
-
-  function getYearData() {
-    const y = +yearSelect.value;
-    return cleanData
-      .filter(d => parseDate(d.date).getFullYear() === y && d.orders > 0);
-  }
-
-  /* ===============================
-     TABLE
-  =============================== */
-  function updateTable(rows) {
-    if (!dataTable) return;
-
-    dataTable.innerHTML = '';
-
-    if (rows.length === 0) {
-      dataTable.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:#8d8173;">No data available for this month</td></tr>';
-      return;
-    }
-
-    rows.forEach(r => {
-      const tr = document.createElement('tr');
-      const dt = parseDate(r.date);
-
-      tr.innerHTML = `
-        <td>${dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-        <td>${Number(r.orders || 0).toLocaleString()}</td>
-        <td>${Number(r.rem4 || 0).toLocaleString()}</td>
-        <td>${Number(r.rem7 || 0).toLocaleString()}</td>
-        <td class="${getRateClass(r.rate4)}">${Number(r.rate4 || 0).toFixed(2)}%</td>
-        <td class="${getRateClass(r.rate7)}">${Number(r.rate7 || 0).toFixed(2)}%</td>
-      `;
-      dataTable.appendChild(tr);
+// UPDATED: Color-code Rate 4D and Rate 7D based on their specific targets
+function updateTable(monthData) {
+    const tbody = document.getElementById('dataTable');
+    tbody.innerHTML = '';
+    
+    // Rate 4D targets: 85% (good), below is warning/poor
+    const getRate4Class = rate => {
+        if (rate >= 85) return 'rate-excellent';  // At or above 85% target
+        if (rate >= 75) return 'rate-good';       // Close to target
+        if (rate >= 65) return 'rate-warning';    // Concerning
+        return 'rate-poor';                       // Below acceptable
+    };
+    
+    // Rate 7D targets: 95% (good), below is warning/poor
+    const getRate7Class = rate => {
+        if (rate >= 95) return 'rate-excellent';  // At or above 95% target
+        if (rate >= 85) return 'rate-good';       // Close to target
+        if (rate >= 75) return 'rate-warning';    // Concerning
+        return 'rate-poor';                       // Below acceptable
+    };
+    
+    monthData.forEach(row => {
+        const tr = document.createElement('tr');
+        const date = parseDate(row.date);
+        
+        tr.innerHTML = `
+            <td>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
+            <td>${row.orders.toLocaleString()}</td>
+            <td>${row.rem4.toLocaleString()}</td>
+            <td>${row.rem7.toLocaleString()}</td>
+            <td class="${getRate4Class(row.rate4)}">${row.rate4.toFixed(2)}%</td>
+            <td class="${getRate7Class(row.rate7)}">${row.rate7.toFixed(2)}%</td>
+        `;
+        
+        tbody.appendChild(tr);
     });
-  }
+}
 
-  /* ===============================
-     KPIs
-  =============================== */
-  function updateKPIs(rows, labelText) {
-    if (!fill4 || !fill7 || !totalOrders || !avgOrders) return;
+// FIXED: Event listeners for view switching
+document.getElementById('monthlyBtn').addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('monthlyBtn').classList.add('active');
+    
+    currentView = 'monthly';
+    
+    const monthlyView = document.getElementById('monthlyView');
+    const calendarView = document.getElementById('calendarView');
+    
+    monthlyView.style.display = 'grid';
+    calendarView.style.display = 'none';
+    document.getElementById('monthSelect').disabled = false;
+    
+    updateDashboard();
+});
 
-    if (!rows.length) {
-      fill4.textContent = 'N/A';
-      fill7.textContent = 'N/A';
-      totalOrders.textContent = '0';
-      avgOrders.textContent = '0';
-      if (periodLabel) periodLabel.textContent = labelText;
-      return;
-    }
+document.getElementById('calendarBtn').addEventListener('click', () => {
+    document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById('calendarBtn').classList.add('active');
+    
+    currentView = 'calendar';
+    
+    const monthlyView = document.getElementById('monthlyView');
+    const calendarView = document.getElementById('calendarView');
+    
+    monthlyView.style.display = 'none';
+    calendarView.style.display = 'block';
+    document.getElementById('monthSelect').disabled = true;
+    
+    updateDashboard();
+});
 
-    const avg4 = rows.reduce((s, d) => s + (Number(d.rate4) || 0), 0) / rows.length;
-    const avg7 = rows.reduce((s, d) => s + (Number(d.rate7) || 0), 0) / rows.length;
-    const total = rows.reduce((s, d) => s + (Number(d.orders) || 0), 0);
+document.getElementById('yearSelect').addEventListener('change', e => {
+    currentYear = parseInt(e.target.value);
+    updateDashboard();
+});
 
-    fill4.textContent = avg4.toFixed(0) + '%';
-    fill7.textContent = avg7.toFixed(0) + '%';
-    totalOrders.textContent = total.toLocaleString();
-    avgOrders.textContent = Math.round(total / rows.length).toLocaleString();
+document.getElementById('monthSelect').addEventListener('change', e => {
+    currentMonth = parseInt(e.target.value);
+    updateDashboard();
+});
 
-    if (periodLabel) periodLabel.textContent = labelText;
-  }
+populateYearMonthSelectors();
 
-  /* ===============================
-     CHARTS
-  =============================== */
-  function updateCharts(rows) {
-    if (!window.Chart) return;
+// Initialize with most recent data month
+document.getElementById('monthSelect').value = currentMonth.toString();
+document.getElementById('yearSelect').value = currentYear.toString();
 
-    if (fillRateChart) fillRateChart.destroy();
-    if (ordersChart) ordersChart.destroy();
+// Set initial title to show Retail
+const datasetLabel = document.getElementById('datasetLabel');
+if (datasetLabel) {
+    datasetLabel.textContent = '- Retail';
+}
 
-    if (!rows.length) return;
+updateDashboard();
 
-    const labels = rows.map(r => parseDate(r.date).getDate());
+// ============================================
+// ============================================
+// DATASET DROPDOWN (Retail / Wholesale / Total)
+// ============================================
 
-    fillRateChart = new Chart(document.getElementById('fillRateChart'), {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: '7-Day', data: rows.map(r => r.rate7), borderColor: '#5f4b3c', tension: 0.3 },
-          { label: '4-Day', data: rows.map(r => r.rate4), borderColor: '#bd9979', tension: 0.3 }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
+const datasetSelect = document.getElementById('datasetSelect');
 
-    ordersChart = new Chart(document.getElementById('ordersChart'), {
-      type: 'line',
-      data: {
-        labels,
-        datasets: [
-          { label: 'Remaining 4D', data: rows.map(r => r.rem4), borderColor: '#bd9979', tension: 0.3 },
-          { label: 'Remaining 7D', data: rows.map(r => r.rem7), borderColor: '#5f4b3c', tension: 0.3 }
-        ]
-      },
-      options: { responsive: true, maintainAspectRatio: false }
-    });
-  }
+if (datasetSelect) {
+    // Backup retail the first time (so we always have the original)
+    let retailDataBackup = null;
 
-  /* ===============================
-     CALENDAR VIEW RENDER
-  =============================== */
-  function renderCalendarView() {
-    forceHideTooltip();
-    if (!calendarGrid) return;
+    // Helper: dedupe by date (keep first)
+    const dedupeByDate = (arr) => {
+        if (!Array.isArray(arr)) return [];
+        return arr.filter((row, idx, self) => idx === self.findIndex(r => r.date === row.date));
+    };
 
-    calendarGrid.innerHTML = '';
+    // Build Total dataset by summing retail + wholesale by date
+    const computeTotalDataset = (retailArr, wholesaleArr) => {
+        const r = dedupeByDate(retailArr || []);
+        const w = dedupeByDate(wholesaleArr || []);
 
-    const months = ['January', 'February', 'March', 'April', 'May', 'June',
-                    'July', 'August', 'September', 'October', 'November', 'December'];
+        const map = new Map();
 
-    const y = +yearSelect.value;
-
-    for (let m = 0; m < 12; m++) {
-      const monthDiv = document.createElement('div');
-      monthDiv.className = 'month-calendar';
-
-      const header = document.createElement('div');
-      header.className = 'month-header';
-      header.textContent = months[m];
-      monthDiv.appendChild(header);
-
-      const daysContainer = document.createElement('div');
-      daysContainer.className = 'calendar-days';
-
-      ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
-        const label = document.createElement('div');
-        label.className = 'day-label';
-        label.textContent = day;
-        daysContainer.appendChild(label);
-      });
-
-      const firstDay = new Date(y, m, 1).getDay();
-      const daysInMonth = new Date(y, m + 1, 0).getDate();
-
-      for (let i = 0; i < firstDay; i++) {
-        const empty = document.createElement('div');
-        empty.className = 'calendar-day empty';
-        daysContainer.appendChild(empty);
-      }
-
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dayData = cleanData.find(item => {
-          const date = parseDate(item.date);
-          return date.getFullYear() === y &&
-                 date.getMonth() === m &&
-                 date.getDate() === d;
+        // seed with retail
+        r.forEach(row => {
+            map.set(row.date, {
+                date: row.date,
+                orders: Number(row.orders) || 0,
+                rem4: Number(row.rem4) || 0,
+                rem7: Number(row.rem7) || 0
+            });
         });
 
-        const dayDiv = document.createElement('div');
-        dayDiv.className = 'calendar-day';
+        // add wholesale
+        w.forEach(row => {
+            const existing = map.get(row.date) || { date: row.date, orders: 0, rem4: 0, rem7: 0 };
+            existing.orders += Number(row.orders) || 0;
+            existing.rem4 += Number(row.rem4) || 0;
+            existing.rem7 += Number(row.rem7) || 0;
+            map.set(row.date, existing);
+        });
 
-        if (dayData && dayData.orders > 0) {
-          const rate = Number(dayData.rate7 || 0);
-          let rateClass = 'cal-rate-none';
+        // compute rates from combined totals
+        const combined = [];
+        for (const item of map.values()) {
+            const orders = item.orders || 0;
+            const rem4 = item.rem4 || 0;
+            const rem7 = item.rem7 || 0;
 
-          if (rate >= 95) rateClass = 'cal-rate-excellent';
-          else if (rate >= 85) rateClass = 'cal-rate-good';
-          else if (rate >= 70) rateClass = 'cal-rate-warning';
-          else if (rate > 0) rateClass = 'cal-rate-poor';
+            const rate4 = orders > 0 ? ((orders - rem4) / orders) * 100 : 0;
+            const rate7 = orders > 0 ? ((orders - rem7) / orders) * 100 : 0;
 
-          dayDiv.classList.add(rateClass);
-          dayDiv.innerHTML = `<strong>${d}</strong>`;
-          dayDiv.setAttribute('data-rate', `${rate.toFixed(0)}%`);
-
-          dayDiv.addEventListener('mouseenter', (e) => showTooltip(e, dayData));
-          dayDiv.addEventListener('mouseleave', hideTooltip);
-          dayDiv.addEventListener('mousemove', moveTooltip);
-        } else {
-          dayDiv.classList.add('cal-rate-none');
-          dayDiv.innerHTML = `${d}`;
-          dayDiv.setAttribute('data-rate', ``);
+            combined.push({
+                date: item.date,
+                orders,
+                rem4,
+                rem7,
+                rate4,
+                rate7
+            });
         }
 
-        daysContainer.appendChild(dayDiv);
-      }
+        return combined;
+    };
 
-      monthDiv.appendChild(daysContainer);
-      calendarGrid.appendChild(monthDiv);
-    }
-  }
+    // Default dropdown value (keep what HTML says, but set label to match)
+    const syncLabel = (val) => {
+        const label = document.getElementById('datasetLabel');
+        if (!label) return;
+        if (val === 'wholesale') label.textContent = '- Wholesale';
+        else if (val === 'total') label.textContent = '- Total';
+        else label.textContent = '- Retail';
+    };
 
-  /* ===============================
-     DASHBOARD UPDATE
-  =============================== */
-  function updateDashboard() {
-    if (currentView === 'calendar') {
-      // KPI = year averages
-      const yearRows = getYearData();
-      updateKPIs(yearRows, 'year');
-      renderCalendarView();
-
-      // Clear monthly table/charts when on calendar
-      updateTable([]);
-      if (fillRateChart) fillRateChart.destroy();
-      if (ordersChart) ordersChart.destroy();
-      return;
+    // Make sure we keep Retail as default backup
+    if (!retailDataBackup) {
+        retailDataBackup = [...fullData];
     }
 
-    const monthRows = getMonthData();
-    updateKPIs(monthRows, 'month');
-    updateTable(monthRows);
-    updateCharts(monthRows);
-  }
+    // If your HTML defaults to retail, keep it
+    syncLabel(datasetSelect.value || 'retail');
 
-  /* ===============================
-     DATASET SWITCH
-  =============================== */
-  function setDataset(ds) {
-    currentDataset = ds;
-
-    if (ds === 'retail') {
-      activeData = dedupeByDate(retailRaw);
-      if (datasetLabel) datasetLabel.textContent = '- Retail';
-    } else if (ds === 'wholesale') {
-      activeData = dedupeByDate(wholesaleRaw || []);
-      if (datasetLabel) datasetLabel.textContent = '- Wholesale';
-    } else if (ds === 'total') {
-      activeData = computeTotalDataset(retailRaw, wholesaleRaw || []);
-      if (datasetLabel) datasetLabel.textContent = '- Total';
-    }
-
-    rebuildCleanDataFromActive();
-    populateSelectors();
-
-    // Keep month disabled in calendar mode
-    if (monthSelect) monthSelect.disabled = (currentView === 'calendar');
-
-    updateDashboard();
-  }
-
-  /* ===============================
-     VIEW TOGGLE
-  =============================== */
-  document.querySelectorAll('[data-view]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('[data-view]').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      currentView = btn.dataset.view;
-
-      if (currentView === 'monthly') {
-        if (monthlyView) monthlyView.style.display = 'grid';
-        if (calendarView) calendarView.style.display = 'none';
-        if (monthSelect) monthSelect.disabled = false;
-      } else {
-        if (monthlyView) monthlyView.style.display = 'none';
-        if (calendarView) calendarView.style.display = 'block';
-        if (monthSelect) monthSelect.disabled = true;
-      }
-
-      updateDashboard();
-    });
-  });
-
-  /* ===============================
-     EVENTS
-  =============================== */
-  if (yearSelect) yearSelect.addEventListener('change', updateDashboard);
-  if (monthSelect) monthSelect.addEventListener('change', updateDashboard);
-
-  if (datasetSelect) {
     datasetSelect.addEventListener('change', (e) => {
-      const ds = e.target.value;
-      setDataset(ds);
+        const selected = e.target.value;
+
+        // Ensure we still have retail backup
+        if (!retailDataBackup) retailDataBackup = [...fullData];
+
+        if (selected === 'wholesale') {
+            if (typeof wholesaleData !== 'undefined' && Array.isArray(wholesaleData) && wholesaleData.length > 0) {
+                fullData.length = 0;
+                fullData.push(...wholesaleData);
+                syncLabel('wholesale');
+            } else {
+                alert('Wholesale data not available. Make sure wholesale.js is loaded.');
+                // revert dropdown to retail
+                datasetSelect.value = 'retail';
+                fullData.length = 0;
+                fullData.push(...retailDataBackup);
+                syncLabel('retail');
+                return;
+            }
+        } else if (selected === 'total') {
+            if (typeof wholesaleData !== 'undefined' && Array.isArray(wholesaleData) && wholesaleData.length > 0) {
+                const totalData = computeTotalDataset(retailDataBackup, wholesaleData);
+                fullData.length = 0;
+                fullData.push(...totalData);
+                syncLabel('total');
+            } else {
+                alert('Wholesale data not available, so Total can’t be calculated. Make sure wholesale.js is loaded.');
+                // revert dropdown to retail
+                datasetSelect.value = 'retail';
+                fullData.length = 0;
+                fullData.push(...retailDataBackup);
+                syncLabel('retail');
+                return;
+            }
+        } else {
+            // retail
+            fullData.length = 0;
+            fullData.push(...retailDataBackup);
+            syncLabel('retail');
+        }
+
+        // Find most recent data in new dataset
+        const recentData = getMostRecentDataMonth();
+        currentMonth = recentData.month;
+        currentYear = recentData.year;
+
+        // Update selectors
+        document.getElementById('monthSelect').value = currentMonth.toString();
+        document.getElementById('yearSelect').value = currentYear.toString();
+
+        // Refresh dashboard
+        updateDashboard();
     });
+}
+
+
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'TV_VIEW_STATE') {
+    document.body.classList.toggle('tv-view-active', event.data.active);
   }
-
-  /* ===============================
-     START
-  =============================== */
-  rebuildCleanDataFromActive();
-  populateSelectors();
-
-  // Default dropdown to retail
-  if (datasetSelect) datasetSelect.value = 'retail';
-  if (datasetLabel) datasetLabel.textContent = '- Retail';
-
-  updateDashboard();
-
-  console.log('[Fulfillment] Dashboard initialized');
+});
+    
 });
