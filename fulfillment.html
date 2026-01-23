@@ -162,7 +162,6 @@ body {
   box-shadow: 0 2px 6px rgba(95,75,60,0.26);
 }
 
-
 /* ===== KPI ROW ===== */
 .kpi-row {
   display: grid;
@@ -339,10 +338,6 @@ canvas {
   min-height: 0;
 }
 
-.calendar-view.active {
-  display: block;
-}
-
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -429,9 +424,7 @@ canvas {
   text-overflow: clip;
 }
 
-.calendar-day br {
-  display: none;
-}
+.calendar-day br { display: none; }
 
 .calendar-day::after {
   content: attr(data-rate);
@@ -453,7 +446,6 @@ canvas {
   cursor: default;
   background: transparent !important;
 }
-
 .calendar-day.empty:hover {
   transform: none;
   box-shadow: none;
@@ -464,22 +456,18 @@ canvas {
   background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
   color: #2e7d32;
 }
-
 .cal-rate-good {
   background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%);
   color: #558b2f;
 }
-
 .cal-rate-warning {
   background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
   color: #e65100;
 }
-
 .cal-rate-poor {
   background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
   color: #c62828;
 }
-
 .cal-rate-none {
   background: #f5f5f5;
   color: #999;
@@ -500,40 +488,21 @@ canvas {
   max-width: 220px;
   box-shadow: 0 8px 24px rgba(0,0,0,0.3);
 }
-
-.tooltip.show {
-  display: block;
-}
+.tooltip.show { display: block; }
 
 /* Responsive */
 @media (max-width: 1200px) {
-  .content-grid {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-  }
-  .table-section { 
-    grid-row: span 1; 
-    grid-column: 1;
-    min-height: 300px; 
-  }
-  .fill-rate-section {
-    grid-row: auto;
-    grid-column: 1;
-  }
-  .orders-section {
-    grid-row: auto;
-    grid-column: 1;
-  }
+  .content-grid { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+  .table-section { grid-row: span 1; grid-column: 1; min-height: 300px; }
+  .fill-rate-section { grid-row: auto; grid-column: 1; }
+  .orders-section { grid-row: auto; grid-column: 1; }
   .kpi-row { grid-template-columns: repeat(2, 1fr); }
 }
 
 @media (max-width: 768px) {
   body { overflow: auto; }
   .dashboard-container { height: auto; }
-  .dashboard-header { 
-    grid-template-columns: 1fr; 
-    justify-items: center; 
-  }
+  .dashboard-header { grid-template-columns: 1fr; justify-items: center; }
   .header-controls { justify-content: center; }
   .kpi-row { grid-template-columns: 1fr; }
   .content-grid { display: flex; flex-direction: column; }
@@ -541,37 +510,16 @@ canvas {
 }
 
 /* ================= BACKGROUND-ONLY DARK MODE ================= */
-body.dark {
-  background: #2b2f34 !important;  /* soft dark gray */
-}
-/* ================= DARK MODE: FULFILLMENT CALENDAR BACKDROP ================= */
+body.dark { background: #2b2f34 !important; }
 
-/* Main calendar container */
-body.dark .calendar-view {
-  background: #2f343a !important;
-}
-
-/* Grid area (prevents white bleed between months) */
-body.dark .calendar-grid {
-  background: transparent !important;
-}
-
-/* Individual month cards already styled, but ensure borders don’t glow white */
-body.dark .month-calendar {
-  border-color: rgba(242,238,232,0.18) !important;
-}
-
-/* Safety: parent container behind calendar */
-body.dark .dashboard-container {
-  background: transparent !important;
-}
+/* Calendar dark */
+body.dark .calendar-view { background: #2f343a !important; }
+body.dark .calendar-grid { background: transparent !important; }
+body.dark .month-calendar { border-color: rgba(242,238,232,0.18) !important; }
+body.dark .dashboard-container { background: transparent !important; }
 
 /* ================= TV MODE OVERRIDES ================= */
-body.tv-view-active .fullscreen-btn {
-  display: none !important;
-}
-
-  
+body.tv-view-active .fullscreen-btn { display: none !important; }
 </style>
 </head>
 
@@ -595,11 +543,11 @@ body.tv-view-active .fullscreen-btn {
       <button class="view-btn active" data-view="monthly" id="monthlyBtn">Monthly</button>
       <button class="view-btn" data-view="calendar" id="calendarBtn">Calendar</button>
 
-      <!-- DATASET DROPDOWN (Retail / Wholesale / Retail + Wholesale) -->
+      <!-- DATASET DROPDOWN (Retail / Wholesale / Total) -->
       <select id="datasetSelect" class="view-btn">
         <option value="retail">Retail</option>
         <option value="wholesale">Wholesale</option>
-        <option value="total">Retail + Wholesale</option>
+        <option value="total">Total</option>
       </select>
 
       <!-- FULLSCREEN (SVG ICON) -->
@@ -674,7 +622,7 @@ body.tv-view-active .fullscreen-btn {
     </div>
   </div>
 
-  <!-- CALENDAR VIEW (kept for JS swapping) -->
+  <!-- CALENDAR VIEW -->
   <div class="calendar-view" id="calendarView" data-view="calendar">
     <div id="calendarGrid" class="calendar-grid"></div>
   </div>
@@ -710,6 +658,7 @@ if (fsBtn) {
   });
 }
 </script>
+
 <script>
 /* Receive dark mode from index */
 window.addEventListener('message', (event) => {
@@ -718,6 +667,7 @@ window.addEventListener('message', (event) => {
   }
 });
 </script>
+
 <script>
 /* TV STATE — hide fullscreen button in TV mode */
 window.addEventListener('message', (event) => {
@@ -730,25 +680,20 @@ window.addEventListener('message', (event) => {
 window.addEventListener('message', (event) => {
   const msg = event.data;
 
-  // Accept both newer and older formats safely
   const isTvAction = msg?.type === 'TV_ACTION';
   const isTvCommand = msg?.type === 'TV_COMMAND';
   if (!isTvAction && !isTvCommand) return;
 
-  // Normalize payload
   const payload = isTvAction ? msg : (msg.payload || {});
-
-  // Only handle fulfillment-targeted commands
   if (payload.target && payload.target !== 'fulfillment') return;
 
-  /* ---- Dataset select (Retail / Wholesale / Total) ---- */
+  /* ---- Dataset dropdown ---- */
   if (payload.dataset) {
-    const datasetSelect = document.getElementById('datasetSelect');
-    if (datasetSelect) {
-      // Accept: "retail" | "wholesale" | "total"
-      datasetSelect.value = payload.dataset;
-      // Trigger change so fulfillment.js can react
-      datasetSelect.dispatchEvent(new Event('change'));
+    const ds = String(payload.dataset).toLowerCase(); // retail|wholesale|total
+    const select = document.getElementById('datasetSelect');
+    if (select && ['retail','wholesale','total'].includes(ds)) {
+      select.value = ds;
+      select.dispatchEvent(new Event('change', { bubbles: true }));
     }
   }
 
