@@ -597,44 +597,60 @@ if (datasetSelect) {
     };
 
     // Build Total dataset: merge by date, sum orders/rem, recompute rates
-    const buildTotalData = () => {
+    // Build Total dataset: dedupe each dataset by date, then sum + recompute rates
+const buildTotalData = () => {
+
+    // Keep ONLY the last occurrence of each date (prevents double-counting)
+    const keepLastByDate = (arr) => {
         const map = new Map();
-
-        const addRow = (row) => {
+        (arr || []).forEach(row => {
             if (!row || !row.date) return;
-
-            const key = row.date;
-            if (!map.has(key)) {
-                map.set(key, { date: key, orders: 0, rem4: 0, rem7: 0 });
-            }
-
-            const agg = map.get(key);
-            agg.orders += Number(row.orders) || 0;
-            agg.rem4 += Number(row.rem4) || 0;
-            agg.rem7 += Number(row.rem7) || 0;
-        };
-
-        retailBackup.forEach(addRow);
-        wholesaleBackup.forEach(addRow);
-
-        const out = Array.from(map.values()).map(r => {
-            const orders = r.orders || 0;
-            const rate4 = orders > 0 ? ((orders - r.rem4) / orders) * 100 : 0;
-            const rate7 = orders > 0 ? ((orders - r.rem7) / orders) * 100 : 0;
-
-            return {
-                date: r.date,
-                orders,
-                rem4: r.rem4,
-                rem7: r.rem7,
-                rate4,
-                rate7
-            };
+            map.set(row.date, { ...row }); // overwrite -> keep last
         });
-
-        out.sort((a, b) => parseDate(a.date) - parseDate(b.date));
-        return out;
+        return Array.from(map.values());
     };
+
+    const retailOnePerDate = keepLastByDate(retailBackup);
+    const wholesaleOnePerDate = keepLastByDate(wholesaleBackup);
+
+    const map = new Map();
+
+    const addRow = (row) => {
+        if (!row || !row.date) return;
+
+        const key = row.date;
+        if (!map.has(key)) {
+            map.set(key, { date: key, orders: 0, rem4: 0, rem7: 0 });
+        }
+
+        const agg = map.get(key);
+        agg.orders += Number(row.orders) || 0;
+        agg.rem4 += Number(row.rem4) || 0;
+        agg.rem7 += Number(row.rem7) || 0;
+    };
+
+    retailOnePerDate.forEach(addRow);
+    wholesaleOnePerDate.forEach(addRow);
+
+    const out = Array.from(map.values()).map(r => {
+        const orders = r.orders || 0;
+        const rate4 = orders > 0 ? ((orders - r.rem4) / orders) * 100 : 0;
+        const rate7 = orders > 0 ? ((orders - r.rem7) / orders) * 100 : 0;
+
+        return {
+            date: r.date,
+            orders,
+            rem4: r.rem4,
+            rem7: r.rem7,
+            rate4,
+            rate7
+        };
+    });
+
+    out.sort((a, b) => parseDate(a.date) - parseDate(b.date));
+    return out;
+};
+
 
     const syncLabel = (val) => {
         const label = document.getElementById('datasetLabel');
