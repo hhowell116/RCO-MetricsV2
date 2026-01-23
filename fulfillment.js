@@ -5,14 +5,14 @@ function getMostRecentDataMonth() {
     if (!fullData || fullData.length === 0) {
         return { month: new Date().getMonth(), year: new Date().getFullYear() };
     }
-    
+
     // Sort data by date to find the most recent
     const sortedData = [...fullData].sort((a, b) => {
         const dateA = parseDate(a.date);
         const dateB = parseDate(b.date);
         return dateB - dateA;
     });
-    
+
     // Get the most recent date
     const mostRecent = parseDate(sortedData[0].date);
     return {
@@ -33,10 +33,23 @@ function parseDate(dateStr) {
     return new Date(parseInt(parts[2]), parseInt(parts[0]) - 1, parseInt(parts[1]));
 }
 
+// ✅ NEW: safe number helper (handles "13,045", "80%", etc.)
+function n(val) {
+    if (val === null || val === undefined) return 0;
+    if (typeof val === 'number') return val;
+    if (typeof val === 'string') {
+        const cleaned = val.replace(/,/g, '').replace(/%/g, '').trim();
+        const num = parseFloat(cleaned);
+        return Number.isFinite(num) ? num : 0;
+    }
+    const num = Number(val);
+    return Number.isFinite(num) ? num : 0;
+}
+
 function getMonthData(year, month) {
     return fullData.filter(d => {
         const date = parseDate(d.date);
-        return date.getFullYear() === year && date.getMonth() === month && d.orders > 0;
+        return date.getFullYear() === year && date.getMonth() === month && n(d.orders) > 0;
     });
 }
 
@@ -51,8 +64,8 @@ function updateDashboard() {
     if (currentView === 'calendar') {
         renderCalendarView();
         const yearData = getYearData(currentYear);
-        const validData = yearData.filter(d => d.orders > 0);
-        
+        const validData = yearData.filter(d => n(d.orders) > 0);
+
         if (validData.length === 0) {
             document.getElementById('fillRate4Day').textContent = 'N/A';
             document.getElementById('fillRate7Day').textContent = 'N/A';
@@ -60,11 +73,11 @@ function updateDashboard() {
             document.getElementById('avgOrders').textContent = '0';
             return;
         }
-        
-        const avg4Day = validData.reduce((sum, d) => sum + d.rate4, 0) / validData.length;
-        const avg7Day = validData.reduce((sum, d) => sum + d.rate7, 0) / validData.length;
-        const totalOrders = validData.reduce((sum, d) => sum + d.orders, 0);
-        
+
+        const avg4Day = validData.reduce((sum, d) => sum + n(d.rate4), 0) / validData.length;
+        const avg7Day = validData.reduce((sum, d) => sum + n(d.rate7), 0) / validData.length;
+        const totalOrders = validData.reduce((sum, d) => sum + n(d.orders), 0);
+
         document.getElementById('fillRate4Day').textContent = avg4Day.toFixed(0) + '%';
         document.getElementById('fillRate7Day').textContent = avg7Day.toFixed(0) + '%';
         document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
@@ -72,32 +85,32 @@ function updateDashboard() {
         document.getElementById('periodLabel').textContent = 'year';
     } else {
         const monthData = getMonthData(currentYear, currentMonth);
-        
+
         if (monthData.length === 0) {
             document.getElementById('fillRate4Day').textContent = 'N/A';
             document.getElementById('fillRate7Day').textContent = 'N/A';
             document.getElementById('totalOrders').textContent = '0';
             document.getElementById('avgOrders').textContent = '0';
-            
+
             if (fillRateChart) fillRateChart.destroy();
             if (ordersChart) ordersChart.destroy();
-            
+
             document.getElementById('dataTable').innerHTML = '<tr><td colspan="6" style="text-align: center;">No data available for this month</td></tr>';
-            
+
             document.getElementById('periodLabel').textContent = 'month';
             return;
         }
-        
-        const avg4Day = monthData.reduce((sum, d) => sum + d.rate4, 0) / monthData.length;
-        const avg7Day = monthData.reduce((sum, d) => sum + d.rate7, 0) / monthData.length;
-        const totalOrders = monthData.reduce((sum, d) => sum + d.orders, 0);
-        
+
+        const avg4Day = monthData.reduce((sum, d) => sum + n(d.rate4), 0) / monthData.length;
+        const avg7Day = monthData.reduce((sum, d) => sum + n(d.rate7), 0) / monthData.length;
+        const totalOrders = monthData.reduce((sum, d) => sum + n(d.orders), 0);
+
         document.getElementById('fillRate4Day').textContent = avg4Day.toFixed(0) + '%';
         document.getElementById('fillRate7Day').textContent = avg7Day.toFixed(0) + '%';
         document.getElementById('totalOrders').textContent = totalOrders.toLocaleString();
         document.getElementById('avgOrders').textContent = Math.round(totalOrders / monthData.length).toLocaleString();
         document.getElementById('periodLabel').textContent = 'month';
-        
+
         updateCharts(monthData);
         updateTable(monthData);
     }
@@ -113,61 +126,61 @@ function renderCalendarView() {
     forceHideTooltip();
     const grid = document.getElementById('calendarGrid');
     grid.innerHTML = '';
-    
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+
+    const months = ['January', 'February', 'March', 'April', 'May', 'June',
                   'July', 'August', 'September', 'October', 'November', 'December'];
-    
+
     for (let m = 0; m < 12; m++) {
         const monthDiv = document.createElement('div');
         monthDiv.className = 'month-calendar';
-        
+
         const header = document.createElement('div');
         header.className = 'month-header';
         header.textContent = months[m];
         monthDiv.appendChild(header);
-        
+
         const daysContainer = document.createElement('div');
         daysContainer.className = 'calendar-days';
-        
+
         ['S', 'M', 'T', 'W', 'T', 'F', 'S'].forEach(day => {
             const label = document.createElement('div');
             label.className = 'day-label';
             label.textContent = day;
             daysContainer.appendChild(label);
         });
-        
+
         const firstDay = new Date(currentYear, m, 1).getDay();
         const daysInMonth = new Date(currentYear, m + 1, 0).getDate();
-        
+
         for (let i = 0; i < firstDay; i++) {
             const empty = document.createElement('div');
             empty.className = 'calendar-day empty';
             daysContainer.appendChild(empty);
         }
-        
+
         for (let d = 1; d <= daysInMonth; d++) {
             const dayData = fullData.find(item => {
                 const date = parseDate(item.date);
-                return date.getFullYear() === currentYear && 
-                       date.getMonth() === m && 
+                return date.getFullYear() === currentYear &&
+                       date.getMonth() === m &&
                        date.getDate() === d;
             });
-            
+
             const dayDiv = document.createElement('div');
             dayDiv.className = 'calendar-day';
-            
-            if (dayData && dayData.orders > 0) {
-                const rate = dayData.rate7;
+
+            if (dayData && n(dayData.orders) > 0) {
+                const rate = n(dayData.rate7);
                 let rateClass = 'cal-rate-none';
-                
+
                 if (rate >= 95) rateClass = 'cal-rate-excellent';
                 else if (rate >= 85) rateClass = 'cal-rate-good';
                 else if (rate >= 70) rateClass = 'cal-rate-warning';
                 else if (rate > 0) rateClass = 'cal-rate-poor';
-                
+
                 dayDiv.classList.add(rateClass);
                 dayDiv.innerHTML = `<strong>${d}</strong><br>${rate.toFixed(0)}%`;
-                
+
                 dayDiv.addEventListener('mouseenter', (e) => showTooltip(e, dayData));
                 dayDiv.addEventListener('mouseleave', hideTooltip);
                 dayDiv.addEventListener('mousemove', moveTooltip);
@@ -175,10 +188,10 @@ function renderCalendarView() {
                 dayDiv.classList.add('cal-rate-none');
                 dayDiv.innerHTML = `${d}`;
             }
-            
+
             daysContainer.appendChild(dayDiv);
         }
-        
+
         monthDiv.appendChild(daysContainer);
         grid.appendChild(monthDiv);
     }
@@ -187,16 +200,16 @@ function renderCalendarView() {
 function showTooltip(e, data) {
     const tooltip = document.getElementById('tooltip');
     const date = parseDate(data.date);
-    
+
    tooltip.innerHTML = `
 <strong>${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</strong><br>
-Orders: ${data.orders.toLocaleString()}<br>
-4-Day Rate: ${data.rate4.toFixed(2)}%<br>
-7-Day Rate: ${data.rate7.toFixed(2)}%<br>
-Remaining (4d): ${data.rem4}<br>
-Remaining (7d): ${data.rem7}
+Orders: ${n(data.orders).toLocaleString()}<br>
+4-Day Rate: ${n(data.rate4).toFixed(2)}%<br>
+7-Day Rate: ${n(data.rate7).toFixed(2)}%<br>
+Remaining (4d): ${n(data.rem4).toLocaleString()}<br>
+Remaining (7d): ${n(data.rem7).toLocaleString()}
 `.trim();
-    
+
     tooltip.classList.add('show');
     moveTooltip(e);
 }
@@ -209,41 +222,37 @@ function moveTooltip(e) {
     const tooltip = document.getElementById('tooltip');
     const tooltipRect = tooltip.getBoundingClientRect();
     const padding = 15;
-    
+
     let left = e.clientX + padding;
     let top = e.clientY + padding;
-    
-    // Check if tooltip goes off the right edge
+
     if (left + tooltipRect.width > window.innerWidth) {
         left = e.clientX - tooltipRect.width - padding;
     }
-    
-    // Check if tooltip goes off the bottom edge
+
     if (top + tooltipRect.height > window.innerHeight) {
         top = e.clientY - tooltipRect.height - padding;
     }
-    
-    // Check if tooltip goes off the left edge
+
     if (left < 0) {
         left = padding;
     }
-    
-    // Check if tooltip goes off the top edge
+
     if (top < 0) {
         top = padding;
     }
-    
+
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
 }
 
 function updateCharts(monthData) {
     const labels = monthData.map(d => parseDate(d.date).getDate());
-    
+
     if (fillRateChart) fillRateChart.destroy();
-    
+
     const ctx1 = document.getElementById('fillRateChart').getContext('2d');
-    
+
     fillRateChart = new Chart(ctx1, {
         type: 'line',
         data: {
@@ -251,7 +260,7 @@ function updateCharts(monthData) {
             datasets: [
                 {
                     label: '7 Day Fill Rate (Target: 95%)',
-                    data: monthData.map(d => d.rate7),
+                    data: monthData.map(d => n(d.rate7)),
                     borderColor: '#8b7355',
                     backgroundColor: 'rgba(139, 115, 85, 0.1)',
                     tension: 0.3,
@@ -266,7 +275,7 @@ function updateCharts(monthData) {
                 },
                 {
                     label: '4 Day Fill Rate (Target: 85%)',
-                    data: monthData.map(d => d.rate4),
+                    data: monthData.map(d => n(d.rate4)),
                     borderColor: '#d2b48c',
                     backgroundColor: 'rgba(210, 180, 140, 0.1)',
                     tension: 0.3,
@@ -311,10 +320,10 @@ function updateCharts(monthData) {
                 intersect: false
             },
             plugins: {
-                legend: { 
+                legend: {
                     display: true,
-                    labels: { 
-                        color: '#8b7355', 
+                    labels: {
+                        color: '#8b7355',
                         font: { size: 11 },
                         usePointStyle: true,
                         padding: 12,
@@ -337,7 +346,7 @@ function updateCharts(monthData) {
                 y: {
                     min: 0,
                     max: 105,
-                    ticks: { 
+                    ticks: {
                         callback: v => v + '%',
                         color: '#a0906f',
                         stepSize: 10
@@ -347,7 +356,7 @@ function updateCharts(monthData) {
                     }
                 },
                 x: {
-                    ticks: { 
+                    ticks: {
                         color: '#a0906f'
                     },
                     grid: {
@@ -357,9 +366,9 @@ function updateCharts(monthData) {
             }
         }
     });
-    
+
     if (ordersChart) ordersChart.destroy();
-    
+
     const ctx2 = document.getElementById('ordersChart').getContext('2d');
     ordersChart = new Chart(ctx2, {
         type: 'line',
@@ -367,7 +376,7 @@ function updateCharts(monthData) {
             labels: labels,
             datasets: [{
                 label: 'Orders Remaining (4 Day)',
-                data: monthData.map(d => d.rem4),
+                data: monthData.map(d => n(d.rem4)),
                 borderColor: '#d2b48c',
                 backgroundColor: 'rgba(210, 180, 140, 0.1)',
                 tension: 0.3,
@@ -380,7 +389,7 @@ function updateCharts(monthData) {
                 pointBorderWidth: 2
             }, {
                 label: 'Orders Remaining (7 Day)',
-                data: monthData.map(d => d.rem7),
+                data: monthData.map(d => n(d.rem7)),
                 borderColor: '#8b7355',
                 backgroundColor: 'rgba(139, 115, 85, 0.1)',
                 tension: 0.3,
@@ -401,9 +410,9 @@ function updateCharts(monthData) {
                 intersect: false
             },
             plugins: {
-                legend: { 
+                legend: {
                     display: true,
-                    labels: { 
+                    labels: {
                         color: '#8b7355',
                         font: { size: 11 },
                         usePointStyle: true,
@@ -424,9 +433,9 @@ function updateCharts(monthData) {
                 }
             },
             scales: {
-                y: { 
-                    beginAtZero: true, 
-                    ticks: { 
+                y: {
+                    beginAtZero: true,
+                    ticks: {
                         color: '#a0906f',
                         callback: function(value) {
                             return value.toLocaleString();
@@ -436,7 +445,7 @@ function updateCharts(monthData) {
                         color: 'rgba(210, 180, 140, 0.1)'
                     }
                 },
-                x: { 
+                x: {
                     ticks: { color: '#a0906f' },
                     grid: {
                         color: 'rgba(210, 180, 140, 0.1)'
@@ -486,36 +495,34 @@ function populateYearMonthSelectors() {
 function updateTable(monthData) {
     const tbody = document.getElementById('dataTable');
     tbody.innerHTML = '';
-    
-    // Rate 4D targets: 85% (good), below is warning/poor
+
     const getRate4Class = rate => {
-        if (rate >= 85) return 'rate-excellent';  // At or above 85% target
-        if (rate >= 75) return 'rate-good';       // Close to target
-        if (rate >= 65) return 'rate-warning';    // Concerning
-        return 'rate-poor';                       // Below acceptable
+        if (rate >= 85) return 'rate-excellent';
+        if (rate >= 75) return 'rate-good';
+        if (rate >= 65) return 'rate-warning';
+        return 'rate-poor';
     };
-    
-    // Rate 7D targets: 95% (good), below is warning/poor
+
     const getRate7Class = rate => {
-        if (rate >= 95) return 'rate-excellent';  // At or above 95% target
-        if (rate >= 85) return 'rate-good';       // Close to target
-        if (rate >= 75) return 'rate-warning';    // Concerning
-        return 'rate-poor';                       // Below acceptable
+        if (rate >= 95) return 'rate-excellent';
+        if (rate >= 85) return 'rate-good';
+        if (rate >= 75) return 'rate-warning';
+        return 'rate-poor';
     };
-    
+
     monthData.forEach(row => {
         const tr = document.createElement('tr');
         const date = parseDate(row.date);
-        
+
         tr.innerHTML = `
             <td>${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</td>
-            <td>${row.orders.toLocaleString()}</td>
-            <td>${row.rem4.toLocaleString()}</td>
-            <td>${row.rem7.toLocaleString()}</td>
-            <td class="${getRate4Class(row.rate4)}">${row.rate4.toFixed(2)}%</td>
-            <td class="${getRate7Class(row.rate7)}">${row.rate7.toFixed(2)}%</td>
+            <td>${n(row.orders).toLocaleString()}</td>
+            <td>${n(row.rem4).toLocaleString()}</td>
+            <td>${n(row.rem7).toLocaleString()}</td>
+            <td class="${getRate4Class(n(row.rate4))}">${n(row.rate4).toFixed(2)}%</td>
+            <td class="${getRate7Class(n(row.rate7))}">${n(row.rate7).toFixed(2)}%</td>
         `;
-        
+
         tbody.appendChild(tr);
     });
 }
@@ -524,32 +531,32 @@ function updateTable(monthData) {
 document.getElementById('monthlyBtn').addEventListener('click', () => {
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('monthlyBtn').classList.add('active');
-    
+
     currentView = 'monthly';
-    
+
     const monthlyView = document.getElementById('monthlyView');
     const calendarView = document.getElementById('calendarView');
-    
+
     monthlyView.style.display = 'grid';
     calendarView.style.display = 'none';
     document.getElementById('monthSelect').disabled = false;
-    
+
     updateDashboard();
 });
 
 document.getElementById('calendarBtn').addEventListener('click', () => {
     document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
     document.getElementById('calendarBtn').classList.add('active');
-    
+
     currentView = 'calendar';
-    
+
     const monthlyView = document.getElementById('monthlyView');
     const calendarView = document.getElementById('calendarView');
-    
+
     monthlyView.style.display = 'none';
     calendarView.style.display = 'block';
     document.getElementById('monthSelect').disabled = true;
-    
+
     updateDashboard();
 });
 
@@ -597,60 +604,44 @@ if (datasetSelect) {
     };
 
     // Build Total dataset: merge by date, sum orders/rem, recompute rates
-    // Build Total dataset: dedupe each dataset by date, then sum + recompute rates
-const buildTotalData = () => {
-
-    // Keep ONLY the last occurrence of each date (prevents double-counting)
-    const keepLastByDate = (arr) => {
+    const buildTotalData = () => {
         const map = new Map();
-        (arr || []).forEach(row => {
+
+        const addRow = (row) => {
             if (!row || !row.date) return;
-            map.set(row.date, { ...row }); // overwrite -> keep last
-        });
-        return Array.from(map.values());
-    };
 
-    const retailOnePerDate = keepLastByDate(retailBackup);
-    const wholesaleOnePerDate = keepLastByDate(wholesaleBackup);
+            const key = row.date;
+            if (!map.has(key)) {
+                map.set(key, { date: key, orders: 0, rem4: 0, rem7: 0 });
+            }
 
-    const map = new Map();
-
-    const addRow = (row) => {
-        if (!row || !row.date) return;
-
-        const key = row.date;
-        if (!map.has(key)) {
-            map.set(key, { date: key, orders: 0, rem4: 0, rem7: 0 });
-        }
-
-        const agg = map.get(key);
-        agg.orders += Number(row.orders) || 0;
-        agg.rem4 += Number(row.rem4) || 0;
-        agg.rem7 += Number(row.rem7) || 0;
-    };
-
-    retailOnePerDate.forEach(addRow);
-    wholesaleOnePerDate.forEach(addRow);
-
-    const out = Array.from(map.values()).map(r => {
-        const orders = r.orders || 0;
-        const rate4 = orders > 0 ? ((orders - r.rem4) / orders) * 100 : 0;
-        const rate7 = orders > 0 ? ((orders - r.rem7) / orders) * 100 : 0;
-
-        return {
-            date: r.date,
-            orders,
-            rem4: r.rem4,
-            rem7: r.rem7,
-            rate4,
-            rate7
+            const agg = map.get(key);
+            agg.orders += n(row.orders);
+            agg.rem4 += n(row.rem4);
+            agg.rem7 += n(row.rem7);
         };
-    });
 
-    out.sort((a, b) => parseDate(a.date) - parseDate(b.date));
-    return out;
-};
+        retailBackup.forEach(addRow);
+        wholesaleBackup.forEach(addRow);
 
+        const out = Array.from(map.values()).map(r => {
+            const orders = r.orders || 0;
+            const rate4 = orders > 0 ? ((orders - r.rem4) / orders) * 100 : 0;
+            const rate7 = orders > 0 ? ((orders - r.rem7) / orders) * 100 : 0;
+
+            return {
+                date: r.date,
+                orders,
+                rem4: r.rem4,
+                rem7: r.rem7,
+                rate4,
+                rate7
+            };
+        });
+
+        out.sort((a, b) => parseDate(a.date) - parseDate(b.date));
+        return out;
+    };
 
     const syncLabel = (val) => {
         const label = document.getElementById('datasetLabel');
@@ -707,5 +698,5 @@ window.addEventListener('message', (event) => {
     document.body.classList.toggle('tv-view-active', event.data.active);
   }
 });
-    
+
 });
